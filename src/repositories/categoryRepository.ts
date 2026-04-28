@@ -49,6 +49,17 @@ export async function categoryHasTransactions(id: number): Promise<boolean> {
   return (rows<{cnt: number}>(result)[0]?.cnt ?? 0) > 0;
 }
 
+/**
+ * Returns a single category by name (case-insensitive), or null.
+ */
+export async function getCategoryByName(name: string): Promise<Category | null> {
+  const result = await getDb().execute(
+    'SELECT * FROM categories WHERE name = ? COLLATE NOCASE',
+    [name.trim()],
+  );
+  return rows<Category>(result)[0] ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Writes
 // ---------------------------------------------------------------------------

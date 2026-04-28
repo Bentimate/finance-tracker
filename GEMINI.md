@@ -265,12 +265,40 @@ Budget setup per category
 - Normalized all currency displays to SGD.
 - Standardized minimalist UI across all core modules.
 
-### Phase 3 — Visualizations [IN PROGRESS]
+### Phase 3 — Visualizations [DONE]
 Cash flow waterfall
 Donut chart (category spend)
 Income vs expense bar chart
 Budget progress bars
 
-### Phase 4 — Export + Widget
-CSV export to local storage
-Android home-screen widget (AppWidgetProvider)
+### Phase 4 — Export + Widget [DONE]
+CSV export to local storage (done)
+Android home-screen widget (AppWidgetProvider) (done)
+
+## Progress:
+Everything works from phase 1 to phase 4.
+
+### Improvements
+Overall: Improve english and understandability
+- Improve widget
+  - User to choose from a drop down instead of being shown everything at once?
+  - Add a done or add button to add entry (ignore 3 interactions rule)
+  - widget to be changed to have the same theme as app
+- Allow user to add expenses with a negative sign, but still saved as income/expense
+- Add more views in transactions
+  - default shows this week
+  - allow user to choose time period to show all transactions
+- Make visualisations more useful
+  - replace the savings / expenditure graph to be an expenditure or savings trend
+  
+### Future features
+- Add nested categories
+- add savings
+  - add feature to show how much they saved per month
+  - add visualisation to show savings trend
+  - add saving goal
+  - add visualisation to saving goal progress
+- Add recurring in/out rules
+
+nice to haves:
+- Calendar view
