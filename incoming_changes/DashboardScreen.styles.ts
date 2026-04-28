@@ -19,7 +19,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // gap: theme.spacing.md, // Removed for compatibility, using margins in components
+    gap: theme.spacing.md,
   },
   errorText: {
     fontSize: theme.typography.fontSizes.sm,
@@ -32,7 +32,6 @@ export const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.primary,
-    marginTop: theme.spacing.md,
   },
   retryText: {
     fontSize: theme.typography.fontSizes.sm,

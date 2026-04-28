@@ -7,6 +7,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {BudgetProgress} from '../../types';
 import {getAllBudgetProgress} from '../../repositories/budgetRepository';
 import {Typography} from '../../components/Typography';
+import {formatCurrency} from '../../utils/formatCurrency';
 import {theme} from '../../theme';
 import {styles} from './styles/BudgetListScreen.styles';
 import {BudgetStackParamList} from '../../navigation/types';
@@ -27,14 +28,6 @@ const BudgetListScreen: React.FC = () => {
       loadBudgets();
     }, [loadBudgets])
   );
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-SG', {
-      style: 'currency',
-      currency: 'SGD',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const renderItem = ({item}: {item: BudgetProgress}) => {
     const isOver = item.percentage > 100;

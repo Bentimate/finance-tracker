@@ -7,6 +7,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Transaction} from '../../types';
 import {getTransactionsByMonth} from '../../repositories/transactionRepository';
 import {Typography} from '../../components/Typography';
+import {formatCurrency} from '../../utils/formatCurrency';
 import {theme} from '../../theme';
 import {styles} from './styles/TransactionListScreen.styles';
 import {TransactionStackParamList} from '../../navigation/types';
@@ -50,13 +51,6 @@ const TransactionListScreen: React.FC = () => {
       loadTransactions();
     }, [loadTransactions])
   );
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-SG', {
-      style: 'currency',
-      currency: 'SGD',
-    }).format(amount);
-  };
 
   const formatDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
