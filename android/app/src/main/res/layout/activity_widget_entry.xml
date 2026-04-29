@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Layout for WidgetEntryActivity.
+  Rendered inside Theme.AppCompat.Light.Dialog so Android automatically
+  frames this as a floating dialog — no explicit dialog chrome needed here.
+
+  Design matches the app aesthetic:
+    · White surface, #f9fafb background for input fields
+    · #6366f1 indigo accent for the save button
+    · #111827 primary text, #6b7280 secondary
+    · 12dp corner radius on inputs/buttons
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@android:color/white">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quick Add"
+        android:textColor="#111827"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Amount field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AMOUNT"
+        android:textColor="#9ca3af"
+        android:textSize="10sp"
+        android:letterSpacing="0.08"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_background"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S$"
+            android:textColor="#6b7280"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="4dp" />
+
+        <EditText
+            android:id="@+id/amount_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="numberDecimal"
+            android:hint="0.00"
+            android:textColorHint="#9ca3af"
+            android:textColor="#111827"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:background="@null"
+            android:importantForAutofill="no" />
+
+    </LinearLayout>
+
+    <!-- Amount error -->
+    <TextView
+        android:id="@+id/amount_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#ef4444"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"
+        android:visibility="gone" />
+
+    <!-- Category field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CATEGORY"
+        android:textColor="#9ca3af"
+        android:textSize="10sp"
+        android:letterSpacing="0.08"
+        android:textStyle="bold"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="6dp" />
+
+    <Button
+        android:id="@+id/category_btn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Select a category"
+        android:textColor="#6b7280"
+        android:textSize="14sp"
+        android:gravity="start|center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:background="@drawable/category_btn_bg"
+        android:layout_marginBottom="4dp"
+        style="?attr/borderlessButtonStyle" />
+
+    <!-- Category error -->
+    <TextView
+        android:id="@+id/category_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#ef4444"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"
+        android:visibility="gone" />
+
+    <!-- Save button -->
+    <Button
+        android:id="@+id/save_btn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Save Expense"
+        android:textColor="#ffffff"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:background="@drawable/dialog_button_bg"
+        android:layout_marginTop="20dp"
+        style="?attr/borderlessButtonStyle" />
+
+</LinearLayout>

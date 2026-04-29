@@ -1,117 +1,184 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { pick, isCancel } from '@react-native-documents/picker';
-import { styles } from './SettingsScreen.styles';
-import { exportToCsv } from '../../utils/csvExport';
-import { detectAndImportCsv } from '../../utils/csvImport';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useExport} from '../../hooks/useExport';
+import {styles} from './SettingsScreen.styles';
+import {theme} from '../../theme';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April',
+  'May', 'June', 'July', 'August',
+  'September', 'October', 'November', 'December',
+];
+
+function prevMonth(year: number, month: number) {
+  return month === 1 ? {year: year - 1, month: 12} : {year, month: month - 1};
+}
+
+function nextMonth(year: number, month: number) {
+  return month === 12 ? {year: year + 1, month: 1} : {year, month: month + 1};
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+interface MonthRowProps {
+  year: number;
+  month: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+const MonthRow: React.FC<MonthRowProps> = ({year, month, onPrev, onNext}) => {
+  const now = new Date();
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth() + 1;
+
+  return (
+    <View style={styles.monthRow}>
+      <TouchableOpacity onPress={onPrev} hitSlop={12} style={styles.chevronBtn}>
+        <Text style={styles.chevron}>‹</Text>
+      </TouchableOpacity>
+      <Text style={styles.monthLabel}>
+        {MONTH_NAMES[month - 1]} {year}
+      </Text>
+      <TouchableOpacity
+        onPress={onNext}
+        hitSlop={12}
+        style={styles.chevronBtn}
+        disabled={isCurrentMonth}>
+        <Text style={[styles.chevron, isCurrentMonth && styles.chevronDisabled]}>
+          ›
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
 
 const SettingsScreen: React.FC = () => {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
 
-  const handleExport = async () => {
-    setIsProcessing(true);
-    try {
-      const now = new Date();
-      const result = await exportToCsv(now.getFullYear(), now.getMonth() + 1);
+  const {status, runExport, reset} = useExport();
+  const isLoading = status.kind === 'loading';
 
-      if (result.success) {
-        Alert.alert(
-          'Export Successful',
-          `Transactions and categories have been exported to your downloads folder.\n\nTransactions: ${result.transactionsPath}\n\nCategories: ${result.categoriesPath}`,
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('Export Failed', result.error ?? 'An unexpected error occurred.', [
-          { text: 'OK' },
-        ]);
-      }
-    } finally {
-      setIsProcessing(false);
+  // Show result alerts once per export attempt
+  React.useEffect(() => {
+    if (status.kind === 'success') {
+      Alert.alert(
+        'Export Complete',
+        `Files saved to your Downloads folder:\n\n• transactions_${year}-${String(month).padStart(2, '0')}.csv\n• categories_${year}-${String(month).padStart(2, '0')}.csv`,
+        [{text: 'OK', onPress: reset}],
+      );
     }
+    if (status.kind === 'error') {
+      Alert.alert('Export Failed', status.message, [
+        {text: 'OK', onPress: reset},
+      ]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status.kind]);
+
+  const handleExport = () => {
+    runExport(year, month);
   };
 
-  const handleImport = async () => {
-    try {
-      const results = await pick({
-        type: ['text/csv', 'text/comma-separated-values', 'application/csv'],
-      });
+  const handlePrev = () => {
+    const p = prevMonth(year, month);
+    setYear(p.year);
+    setMonth(p.month);
+  };
 
-      if (results.length === 0) return;
-
-      const file = results[0];
-      if (!file.name?.toLowerCase().endsWith('.csv')) {
-        Alert.alert('Invalid File', 'Please select a CSV file.');
-        return;
-      }
-
-      setIsProcessing(true);
-      const result = await detectAndImportCsv(file.uri);
-
-      if (result.success) {
-        const typeLabel = result.type === 'transactions' ? 'transactions' : 'categories';
-        Alert.alert(
-          'Import Successful',
-          `Successfully imported ${result.count} ${typeLabel}.`,
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('Import Failed', result.error ?? 'An unexpected error occurred.', [
-          { text: 'OK' },
-        ]);
-      }
-    } catch (err) {
-      if (isCancel(err)) {
-        // User cancelled the picker
-      } else {
-        Alert.alert('Error', 'An error occurred while picking the file.');
-        console.error(err);
-      }
-    } finally {
-      setIsProcessing(false);
+  const handleNext = () => {
+    const isCurrentMonth =
+      year === now.getFullYear() && month === now.getMonth() + 1;
+    if (!isCurrentMonth) {
+      const n = nextMonth(year, month);
+      setYear(n.year);
+      setMonth(n.month);
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>
-          Categories · CSV export · App preferences
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
 
+        {/* ── Export section ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Portability</Text>
-          <Text style={styles.sectionDescription}>
-            Export your transaction history or import data from a CSV file.
-          </Text>
+          <Text style={styles.sectionLabel}>Data Export</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Export Monthly Data</Text>
+            <Text style={styles.cardBody}>
+              Exports all transactions and categories for the selected month as
+              CSV files to your Downloads folder.
+            </Text>
 
-          <View style={styles.buttonContainer}>
+            <MonthRow
+              year={year}
+              month={month}
+              onPrev={handlePrev}
+              onNext={handleNext}
+            />
+
             <TouchableOpacity
-              style={[styles.button, styles.exportButton]}
+              style={[styles.exportBtn, isLoading && styles.exportBtnDisabled]}
               onPress={handleExport}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.buttonText}>Export to CSV</Text>
-              )}
+              disabled={isLoading}
+              activeOpacity={0.75}>
+              {isLoading ? (
+                <ActivityIndicator
+                  color="#ffffff"
+                  size="small"
+                  style={styles.btnSpinner}
+                />
+              ) : null}
+              <Text style={styles.exportBtnText}>
+                {isLoading ? 'Exporting…' : 'Export to CSV'}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.button, styles.importButton]}
-              onPress={handleImport}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.buttonText}>Import from CSV</Text>
-              )}
-            </TouchableOpacity>
+            <Text style={styles.exportNote}>
+              Files are saved to{' '}
+              <Text style={styles.exportNoteMono}>Downloads/</Text> on your
+              device and are not uploaded anywhere.
+            </Text>
           </View>
         </View>
+
+        {/* ── About section ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>About</Text>
+          <View style={styles.card}>
+            <View style={styles.aboutRow}>
+              <Text style={styles.aboutKey}>Version</Text>
+              <Text style={styles.aboutValue}>1.0.0</Text>
+            </View>
+            <View style={[styles.aboutRow, styles.aboutRowLast]}>
+              <Text style={styles.aboutKey}>Data storage</Text>
+              <Text style={styles.aboutValue}>Local only</Text>
+            </View>
+          </View>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

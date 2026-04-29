@@ -1,4 +1,4 @@
-package com.financetracker   // ← Replace with your actual package name
+package com.finance_tracker_rn
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -11,14 +11,9 @@ import android.widget.RemoteViews
 /**
  * Home-screen widget provider.
  *
- * Responsibilities:
- *   1. Inflate the widget layout via RemoteViews.
- *   2. Attach a PendingIntent to the "Add" button that launches
- *      WidgetEntryActivity — a transparent React Native activity that renders
- *      the WidgetEntryScreen component.
- *
- * The widget itself holds no state and performs no DB operations.
- * All data entry logic lives in the React Native layer (WidgetEntryScreen).
+ * Tapping the "Add" button launches WidgetEntryActivity — a fully native,
+ * dialog-style Activity that writes directly to the SQLite database.
+ * The React Native bridge is not involved at any point.
  */
 class FinanceWidget : AppWidgetProvider() {
 
@@ -27,17 +22,12 @@ class FinanceWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        // Called for every widget instance on the home screen.
         appWidgetIds.forEach { appWidgetId ->
             updateWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
     companion object {
-        /**
-         * Builds and pushes the RemoteViews for a single widget instance.
-         * Extracted so it can be called from onUpdate and onEnabled.
-         */
         fun updateWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -45,10 +35,9 @@ class FinanceWidget : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_finance)
 
-            // Build the intent that opens WidgetEntryActivity.
-            val entryIntent = Intent(context, WidgetEntryActivity::class.java).apply {
-                // Clear the back stack so pressing Back from the entry screen
-                // returns to the home screen, not a previous app task.
+            val intent = Intent(context, WidgetEntryActivity::class.java).apply {
+                // Each widget instance gets its own back-stack so pressing Back
+                // returns to the home screen rather than a stale app task.
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
 
@@ -60,8 +49,8 @@ class FinanceWidget : AppWidgetProvider() {
 
             val pendingIntent = PendingIntent.getActivity(
                 context,
-                appWidgetId,   // unique requestCode per widget instance
-                entryIntent,
+                appWidgetId,
+                intent,
                 flags,
             )
 

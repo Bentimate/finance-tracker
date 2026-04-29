@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <application
       android:name=".MainApplication"
@@ -23,21 +25,25 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- Native widget entry dialog -->
       <activity
-        android:name=".QuickAddActivity"
-        android:theme="@style/Theme.AppCompat.Light.Dialog.MinWidth"
-        android:excludeFromRecents="true"
-        android:taskAffinity=""
-        android:launchMode="singleInstance" />
+          android:name=".WidgetEntryActivity"
+          android:theme="@style/Theme.AppCompat.Light.Dialog"
+          android:exported="false"
+          android:windowSoftInputMode="stateVisible|adjustResize"
+          android:excludeFromRecents="true" />
+
+      <!-- Widget broadcast receiver -->
       <receiver
-          android:name=".QuickAddWidgetProvider"
+          android:name=".FinanceWidget"
           android:exported="true">
           <intent-filter>
               <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
           </intent-filter>
           <meta-data
               android:name="android.appwidget.provider"
-              android:resource="@xml/quick_add_widget_info" />
+              android:resource="@xml/widget_info" />
       </receiver>
     </application>
 </manifest>
