@@ -29,7 +29,7 @@
       <!-- Native widget entry dialog -->
       <activity
           android:name=".WidgetEntryActivity"
-          android:theme="@style/Theme.AppCompat.Light.Dialog"
+          android:theme="@style/Theme.WidgetEntryDialog"
           android:exported="false"
           android:windowSoftInputMode="stateVisible|adjustResize"
           android:excludeFromRecents="true" />
