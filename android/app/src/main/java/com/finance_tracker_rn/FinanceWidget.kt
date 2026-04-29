@@ -36,9 +36,11 @@ class FinanceWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_finance)
 
             val intent = Intent(context, WidgetEntryActivity::class.java).apply {
-                // Each widget instance gets its own back-stack so pressing Back
-                // returns to the home screen rather than a stale app task.
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                // Use a separate task for the widget entry so it doesn't bring 
+                // the main app to the background if it's currently hidden.
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK
             }
 
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

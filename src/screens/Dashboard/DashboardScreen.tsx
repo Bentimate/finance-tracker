@@ -1,15 +1,17 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {
   View,
   ScrollView,
   Text,
   ActivityIndicator,
   TouchableOpacity,
+  DeviceEventEmitter,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 
 import {useDashboardData} from '../../hooks/useDashboardData';
+// ...
 import MonthSelector from './components/MonthSelector';
 import CashFlowCard from './components/CashFlowCard';
 import TopSpendingCard from './components/TopSpendingCard';
@@ -40,6 +42,17 @@ const DashboardScreen: React.FC = () => {
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const {data, loading, error, refresh} = useDashboardData(year, month);
+
+  // Re-fetch when the widget adds a transaction while the app is in the background
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      'WidgetTransactionAdded',
+      () => {
+        refresh();
+      },
+    );
+    return () => subscription.remove();
+  }, [refresh]);
 
   // Re-fetch when navigating back from other tabs
   useFocusEffect(

@@ -73,31 +73,33 @@ interface CreateCategoryData {
  * Inserts a new category.
  * Throws a user-friendly error on duplicate name (case-insensitive).
  */
-export async function createCategory({name, color}: CreateCategoryData): Promise<number | undefined> {
+export async function createCategory({
+  name,
+  color,
+}: CreateCategoryData): Promise<number | undefined> {
   const trimmedName = name.trim();
+  let insertId: number | undefined;
 
-  // Manual check for uniqueness to provide a consistent error message
-  const existing = await getDb().execute(
-    'SELECT id FROM categories WHERE name = ? COLLATE NOCASE',
-    [trimmedName],
-  );
+  // Use a transaction to ensure uniqueness check and insert are atomic
+  // and durable across processes.
+  await getDb().transaction(async tx => {
+    const existing = await tx.execute(
+      'SELECT id FROM categories WHERE name = ? COLLATE NOCASE',
+      [trimmedName],
+    );
 
-  if (rows(existing).length > 0) {
-    throw new Error(`A category named "${trimmedName}" already exists.`);
-  }
+    if (rows(existing).length > 0) {
+      throw new Error(`A category named "${trimmedName}" already exists.`);
+    }
 
-  try {
-    const result = await getDb().execute(
+    const result = await tx.execute(
       'INSERT INTO categories (name, color) VALUES (?, ?)',
       [trimmedName, color],
     );
-    return result.insertId;
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) {
-      throw new Error(`A category named "${trimmedName}" already exists.`);
-    }
-    throw e;
-  }
+    insertId = result.insertId;
+  });
+
+  return insertId;
 }
 
 /**

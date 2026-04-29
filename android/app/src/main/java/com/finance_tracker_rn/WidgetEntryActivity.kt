@@ -1,17 +1,23 @@
 package com.finance_tracker_rn
 
 import android.content.ContentValues
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import kotlin.math.roundToInt
 
 /**
  * Fully native, dialog-style Activity launched by the home-screen widget.
@@ -108,11 +114,42 @@ class WidgetEntryActivity : AppCompatActivity() {
      * of the device or any future package changes.
      */
     private fun openDatabase() {
+        val dbFile = getDatabasePath("finance_tracker.db")
+        val sentinelFile = File(filesDir, ".db_initialized")
+
+        // CRITICAL: Only attempt to open if JS has finished migrations.
+        // If we open too early, we might create a "stub" file that crashes the app.
+        if (!sentinelFile.exists() || !dbFile.exists()) {
+            Toast.makeText(
+                this,
+                "Please open the app first to finish setup.",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
+            return
+        }
+
         try {
-            val path = getDatabasePath("finance_tracker.db").absolutePath
-            db = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+            db = SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE,
+            )
+            // CRITICAL: Explicitly enable WAL to match the JS layer.
+            // This allows the Widget and the App to access the file concurrently.
+            db?.enableWriteAheadLogging()
+
+            // Set a busy timeout on the native side as well.
+            db?.rawQuery("PRAGMA busy_timeout = 5000", null)?.close()
+
+            // Ensure writes are durable and fully committed to disk.
+            db?.rawQuery("PRAGMA synchronous = FULL", null)?.close()
         } catch (e: Exception) {
-            Toast.makeText(this, "Could not open database. Please open the app first.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "Could not open database. Please open the app first.",
+                Toast.LENGTH_LONG,
+            ).show()
             finish()
         }
     }
@@ -192,19 +229,53 @@ class WidgetEntryActivity : AppCompatActivity() {
     private fun showCategoryPicker() {
         if (categories.isEmpty()) return
 
-        val names = categories.map { it.name }.toTypedArray()
+        val names = categories.map { it.name }
         val currentIndex = selectedCategory?.let { sel -> categories.indexOfFirst { it.id == sel.id } } ?: -1
 
-        AlertDialog.Builder(this)
-            .setTitle("Select category")
-            .setSingleChoiceItems(names, currentIndex) { dialog, which ->
-                selectedCategory = categories[which]
-                categoryBtn.text = selectedCategory?.name
-                hideError(categoryError)
-                dialog.dismiss()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_category_picker, null)
+        val listView = dialogView.findViewById<ListView>(R.id.category_list_view)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice, names)
+        listView.adapter = adapter
+        listView.choiceMode = ListView.CHOICE_MODE_SINGLE
+        if (currentIndex != -1) {
+            listView.setItemChecked(currentIndex, true)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        listView.setOnItemClickListener { _, _, position, _ ->
+            selectedCategory = categories[position]
+            categoryBtn.text = selectedCategory?.name
+            hideError(categoryError)
+            dialog.dismiss()
+        }
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+
+        // Limit height to 50% of screen
+        val displayMetrics = resources.displayMetrics
+        val maxHeight = (displayMetrics.heightPixels * 0.5).roundToInt()
+        
+        dialogView.post {
+            if (dialogView.height > maxHeight) {
+                val params = listView.layoutParams
+                // Calculate how much space other views take
+                val title = dialogView.findViewById<View>(R.id.dialog_title)
+                val cancel = dialogView.findViewById<View>(R.id.btn_cancel)
+                val otherViewsHeight = title.height + cancel.height + (44 * displayMetrics.density).roundToInt() // padding + margins
+                
+                params.height = maxHeight - otherViewsHeight
+                listView.layoutParams = params
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
 
     // ── Save ──────────────────────────────────────────────────────────────────
@@ -335,6 +406,10 @@ class WidgetEntryActivity : AppCompatActivity() {
             }
 
             database.insertOrThrow("transactions", null, values)
+
+            // Notify the React Native app that a transaction was added so it can refresh the UI
+            val intent = Intent("com.finance_tracker_rn.TRANSACTION_ADDED")
+            sendBroadcast(intent)
 
             Toast.makeText(this, "Added!", Toast.LENGTH_SHORT).show()
             finish()

@@ -205,7 +205,7 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.borderRadius.lg,
     borderTopRightRadius: theme.borderRadius.lg,
-    maxHeight: '80%',
+    maxHeight: '50%',
   },
   modalHeader: {
     padding: theme.spacing.lg,

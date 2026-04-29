@@ -32,7 +32,9 @@
           android:theme="@style/Theme.WidgetEntryDialog"
           android:exported="false"
           android:windowSoftInputMode="stateVisible|adjustResize"
-          android:excludeFromRecents="true" />
+          android:excludeFromRecents="true"
+          android:taskAffinity=""
+          android:launchMode="standard" />
 
       <!-- Widget broadcast receiver -->
       <receiver
