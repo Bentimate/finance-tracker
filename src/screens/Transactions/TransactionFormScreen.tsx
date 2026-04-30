@@ -7,7 +7,14 @@ import {
   Modal,
   FlatList,
   Alert,
+  Keyboard,
+  Platform,
+  TextStyle,
 } from 'react-native';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import {useNavigation, useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -30,12 +37,37 @@ import {styles} from './styles/TransactionFormScreen.styles';
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionForm'>;
 type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
 
+const normalizeSignedAmount = (
+  rawAmount: string,
+): {amount: number; type: 'income' | 'expense'} | null => {
+  const trimmed = rawAmount.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const hasNegativeSign = trimmed.startsWith('-');
+  const hasPositiveSign = trimmed.startsWith('+');
+  const parsed = parseFloat(trimmed);
+
+  if (isNaN(parsed) || parsed === 0) {
+    return null;
+  }
+
+  if (hasNegativeSign) {
+    return {amount: Math.abs(parsed), type: 'expense'};
+  }
+
+  return {
+    amount: hasPositiveSign ? Math.abs(parsed) : Math.abs(parsed),
+    type: 'income',
+  };
+};
+
 const TransactionFormScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
   const {transactionId} = route.params;
 
-  const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [note, setNote] = useState('');
@@ -43,6 +75,8 @@ const TransactionFormScreen: React.FC = () => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [isAmountKeypadVisible, setAmountKeypadVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useFocusEffect(
@@ -57,8 +91,7 @@ const TransactionFormScreen: React.FC = () => {
         if (transactionId) {
           const tx = await getTransactionById(transactionId);
           if (tx && isMounted) {
-            setType(tx.type);
-            setAmount(tx.amount.toString());
+            setAmount(tx.type === 'expense' ? `-${tx.amount}` : tx.amount.toString());
             setCategoryId(tx.category_id);
             setNote(tx.note || '');
             setDate(tx.date);
@@ -72,11 +105,114 @@ const TransactionFormScreen: React.FC = () => {
   );
 
   const selectedCategory = categories.find(c => c.id === categoryId);
+  const selectedDate = new Date(date);
+  const isExpenseInput = amount.trim().startsWith('-');
+  const closeAmountKeypad = () => {
+    setAmountKeypadVisible(false);
+    Keyboard.dismiss();
+  };
+
+  const handleDateChange = (_event: DateTimePickerEvent, pickedDate?: Date) => {
+    if (pickedDate) {
+      setDate(pickedDate.toISOString());
+    }
+  };
+
+  const appendDigit = (digit: string) => {
+    setAmount((currentAmount) => {
+      const trimmed = currentAmount.trim();
+      if (!trimmed) {
+        return digit;
+      }
+
+      const hasSign = trimmed.startsWith('-') || trimmed.startsWith('+');
+      const sign = hasSign ? trimmed[0] : '';
+      const numericPart = hasSign ? trimmed.slice(1) : trimmed;
+      const nextNumericPart = numericPart === '0' ? digit : `${numericPart}${digit}`;
+      return `${sign}${nextNumericPart}`;
+    });
+  };
+
+  const appendDecimal = () => {
+    setAmount((currentAmount) => {
+      const trimmed = currentAmount.trim();
+      const hasSign = trimmed.startsWith('-') || trimmed.startsWith('+');
+      const sign = hasSign ? trimmed[0] : '';
+      const numericPart = hasSign ? trimmed.slice(1) : trimmed;
+
+      if (numericPart.includes('.')) {
+        return trimmed;
+      }
+
+      if (!numericPart) {
+        return `${sign}0.`;
+      }
+
+      return `${sign}${numericPart}.`;
+    });
+  };
+
+  const toggleSign = () => {
+    setAmount((currentAmount) => {
+      const trimmed = currentAmount.trim();
+      if (!trimmed) {
+        return '-';
+      }
+
+      if (trimmed.startsWith('-')) {
+        return trimmed.slice(1);
+      }
+
+      if (trimmed.startsWith('+')) {
+        return `-${trimmed.slice(1)}`;
+      }
+
+      return `-${trimmed}`;
+    });
+  };
+
+  const backspace = () => {
+    setAmount((currentAmount) => {
+      const trimmed = currentAmount.trim();
+      if (!trimmed) {
+        return '';
+      }
+
+      const nextAmount = trimmed.slice(0, -1);
+      if (nextAmount === '-' || nextAmount === '+') {
+        return '';
+      }
+
+      return nextAmount;
+    });
+  };
+
+  const clearAmount = () => {
+    setAmount('');
+  };
+
+  const doneKeypad = () => {
+    closeAmountKeypad();
+  };
+
+  const openDatePicker = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: selectedDate,
+        onChange: handleDateChange,
+        mode: 'date',
+        is24Hour: true,
+      });
+      return;
+    }
+
+    setDatePickerVisible(true);
+  };
 
   const handleSave = async () => {
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount.');
+    const normalized = normalizeSignedAmount(amount);
+    if (!normalized) {
+      Alert.alert('Invalid Amount', 'Enter a non-zero amount like 120 or -120.');
       return;
     }
 
@@ -86,8 +222,8 @@ const TransactionFormScreen: React.FC = () => {
     }
 
     const data = {
-      amount: numAmount,
-      type,
+      amount: normalized.amount,
+      type: normalized.type,
       category_id: categoryId,
       note: note.trim() || undefined,
       date,
@@ -131,44 +267,27 @@ const TransactionFormScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.typeContainer}>
-          <TouchableOpacity
-            style={[styles.typeButton, type === 'expense' && styles.typeButtonActive]}
-            onPress={() => setType('expense')}>
-            <Typography
-              variant="label"
-              color={type === 'expense' ? 'error' : 'textSecondary'}
-              weight={type === 'expense' ? 'bold' : 'medium'}>
-              EXPENSE
-            </Typography>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.typeButton, type === 'income' && styles.typeButtonActive]}
-            onPress={() => setType('income')}>
-            <Typography
-              variant="label"
-              color={type === 'income' ? 'success' : 'textSecondary'}
-              weight={type === 'income' ? 'bold' : 'medium'}>
-              INCOME
-            </Typography>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.amountContainer}>
           <TextInput
             style={[
-              styles.amountInput,
-              {color: type === 'income' ? theme.colors.success : theme.colors.error}
+              styles.amountInput as TextStyle,
+              {color: isExpenseInput ? theme.colors.error : theme.colors.success}
             ]}
             value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
+            onChangeText={() => {}}
+            editable
+            showSoftInputOnFocus={false}
+            contextMenuHidden
+            caretHidden
             placeholder="0.00"
             placeholderTextColor={theme.colors.textMuted}
-            autoFocus={!transactionId}
+            onFocus={() => setAmountKeypadVisible(true)}
           />
           <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
             AMOUNT IN SGD
+          </Typography>
+          <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
+            Use "-" for expense, "+" or no sign for income
           </Typography>
         </View>
 
@@ -178,7 +297,10 @@ const TransactionFormScreen: React.FC = () => {
           </Typography>
           <TouchableOpacity
             style={styles.categorySelector}
-            onPress={() => setCategoryModalVisible(true)}>
+            onPress={() => {
+              closeAmountKeypad();
+              setCategoryModalVisible(true);
+            }}>
             {selectedCategory ? (
               <>
                 <View style={[styles.categoryDot, {backgroundColor: selectedCategory.color}]} />
@@ -196,14 +318,35 @@ const TransactionFormScreen: React.FC = () => {
           onChangeText={setNote}
           placeholder="What was this for?"
           multiline
+          onFocus={closeAmountKeypad}
         />
 
-        <Input
-          label="DATE"
-          value={new Date(date).toLocaleDateString()}
-          editable={false}
-          onPressIn={() => {/* TODO: Date Picker */}}
-        />
+        <View style={styles.section}>
+          <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+            DATE
+          </Typography>
+          <TouchableOpacity
+            style={styles.dateSelector}
+            onPress={() => {
+              closeAmountKeypad();
+              openDatePicker();
+            }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Select transaction date">
+            <Typography variant="body" style={styles.dateValue}>
+              {selectedDate.toLocaleDateString()}
+            </Typography>
+            <View style={styles.dateHintContainer}>
+              <Typography variant="caption" color="textMuted">
+                Tap to change
+              </Typography>
+              <Typography variant="body" color="textMuted" style={styles.dateChevron}>
+                {'>'}
+              </Typography>
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -223,6 +366,74 @@ const TransactionFormScreen: React.FC = () => {
           style={{flex: 2}}
         />
       </View>
+
+      <Modal
+        visible={isAmountKeypadVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeAmountKeypad}>
+        <View style={styles.amountKeypadModalBackdrop}>
+          <TouchableOpacity
+            style={styles.amountKeypadBackdropPressable}
+            activeOpacity={1}
+            onPress={closeAmountKeypad}
+          />
+          <View style={styles.amountKeypadSheet}>
+            <View style={styles.keypadContainer}>
+              <View style={styles.keypadGrid}>
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+                  <TouchableOpacity
+                    key={digit}
+                    style={styles.keypadKey}
+                    onPress={() => appendDigit(digit)}>
+                    <Typography variant="h3" style={styles.keypadKeyText}>
+                      {digit}
+                    </Typography>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity style={styles.keypadKey} onPress={toggleSign}>
+                  <Typography variant="h3" style={styles.keypadKeyText}>
+                    +/-
+                  </Typography>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.keypadKey} onPress={() => appendDigit('0')}>
+                  <Typography variant="h3" style={styles.keypadKeyText}>
+                    0
+                  </Typography>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.keypadKey} onPress={appendDecimal}>
+                  <Typography variant="h3" style={styles.keypadKeyText}>
+                    .
+                  </Typography>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.keypadActionsRow}>
+                <TouchableOpacity style={styles.keypadActionKey} onPress={clearAmount}>
+                  <Typography variant="label" style={styles.keypadActionText}>
+                    Clear
+                  </Typography>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.keypadActionKey} onPress={backspace}>
+                  <Typography variant="label" style={styles.keypadActionText}>
+                    Backspace
+                  </Typography>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.keypadActionKey, styles.keypadDoneKey]}
+                  onPress={doneKeypad}>
+                  <Typography variant="label" style={styles.keypadDoneText}>
+                    Done
+                  </Typography>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={isCategoryModalVisible}
@@ -254,11 +465,34 @@ const TransactionFormScreen: React.FC = () => {
                   <View style={[styles.categoryDot, {backgroundColor: item.color}]} />
                   <Typography
                     variant="body"
-                    weight={categoryId === item.id ? 'bold' : 'regular'}>
+                    weight={categoryId === item.id ? 'bold' : 'normal'}>
                     {item.name}
                   </Typography>
                 </TouchableOpacity>
               )}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isDatePickerVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDatePickerVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Typography variant="h3">Select Date</Typography>
+              <TouchableOpacity onPress={() => setDatePickerVisible(false)}>
+                <Typography color="primary">Done</Typography>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
             />
           </View>
         </View>

@@ -1,7 +1,44 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, TextStyle, ViewStyle} from 'react-native';
 import {theme} from '../../../theme';
 
-export const styles = StyleSheet.create({
+interface TransactionFormStyles {
+  container: ViewStyle;
+  content: ViewStyle;
+  typeContainer: ViewStyle;
+  typeButton: ViewStyle;
+  typeButtonActive: ViewStyle;
+  amountContainer: ViewStyle;
+  amountInput: TextStyle;
+  amountLabel: TextStyle;
+  keypadContainer: ViewStyle;
+  keypadGrid: ViewStyle;
+  keypadKey: ViewStyle;
+  keypadKeyText: TextStyle;
+  keypadActionsRow: ViewStyle;
+  keypadActionKey: ViewStyle;
+  keypadActionText: TextStyle;
+  keypadDoneKey: ViewStyle;
+  keypadDoneText: TextStyle;
+  amountKeypadModalBackdrop: ViewStyle;
+  amountKeypadBackdropPressable: ViewStyle;
+  amountKeypadSheet: ViewStyle;
+  section: ViewStyle;
+  categorySelector: ViewStyle;
+  dateSelector: ViewStyle;
+  dateValue: TextStyle;
+  dateHintContainer: ViewStyle;
+  dateChevron: TextStyle;
+  categoryDot: ViewStyle;
+  footer: ViewStyle;
+  modalContainer: ViewStyle;
+  modalContent: ViewStyle;
+  modalHeader: ViewStyle;
+  categoryList: ViewStyle;
+  categoryOption: ViewStyle;
+  categoryOptionSelected: ViewStyle;
+}
+
+export const styles = StyleSheet.create<TransactionFormStyles>({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -31,13 +68,85 @@ export const styles = StyleSheet.create({
   },
   amountInput: {
     fontSize: 48,
-    fontWeight: theme.typography.fontWeights.bold,
+    fontWeight: '700',
     color: theme.colors.text,
     textAlign: 'center',
     width: '100%',
   },
   amountLabel: {
     marginTop: theme.spacing.xs,
+  },
+  keypadContainer: {
+    width: '100%',
+    marginTop: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  keypadGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+  },
+  keypadKey: {
+    width: '31%',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keypadKeyText: {
+    color: theme.colors.text,
+  },
+  keypadActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+  },
+  keypadActionKey: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keypadActionText: {
+    color: theme.colors.textSecondary,
+  },
+  keypadDoneKey: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  keypadDoneText: {
+    color: theme.colors.surface,
+  },
+  amountKeypadModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-end',
+  },
+  amountKeypadBackdropPressable: {
+    flex: 1,
+  },
+  amountKeypadSheet: {
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.borderRadius.lg,
+    borderTopRightRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: -3},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 6,
   },
   section: {
     marginBottom: theme.spacing.lg,
@@ -50,6 +159,28 @@ export const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  dateValue: {
+    flex: 1,
+  },
+  dateHintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  dateChevron: {
+    fontSize: theme.typography.fontSizes.lg,
+    lineHeight: theme.typography.fontSizes.lg,
   },
   categoryDot: {
     width: 12,
@@ -74,7 +205,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.borderRadius.lg,
     borderTopRightRadius: theme.borderRadius.lg,
-    maxHeight: '80%',
+    maxHeight: '50%',
   },
   modalHeader: {
     padding: theme.spacing.lg,

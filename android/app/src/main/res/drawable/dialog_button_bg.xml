@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Indigo save button background with a subtle pressed state.
+  Matches the app's primary accent colour #6366f1.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Disabled state -->
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#a5b4fc" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#4f46e5" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Default state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#6366f1" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+</selector>

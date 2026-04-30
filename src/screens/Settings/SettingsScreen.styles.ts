@@ -6,61 +6,122 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
   },
-  title: {
-    fontSize: theme.typography.fontSizes.xxl,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  subtitle: {
-    fontSize: theme.typography.fontSizes.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
-  },
+
+  // Sections
   section: {
-    marginTop: theme.spacing.xl,
-    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  sectionLabel: {
+    fontSize: theme.typography.fontSizes.xs,
+    fontWeight: theme.typography.fontWeights.semibold as any,
+    color: theme.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    paddingHorizontal: theme.spacing.xs,
+  },
+  card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSizes.md,
-    fontWeight: theme.typography.fontWeights.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  sectionDescription: {
-    fontSize: theme.typography.fontSizes.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: 20,
-  },
-  buttonContainer: {
+    padding: theme.spacing.md,
     gap: theme.spacing.md,
   },
-  button: {
-    paddingVertical: theme.spacing.md,
+  cardTitle: {
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.semibold as any,
+    color: theme.colors.text,
+  },
+  cardBody: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
+  },
+
+  // Month picker row
+  monthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  chevronBtn: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    flex: 1,
   },
-  exportButton: {
-    backgroundColor: theme.colors.primary,
+  chevron: {
+    fontSize: 22,
+    color: theme.colors.text,
+    lineHeight: 26,
   },
-  importButton: {
-    backgroundColor: theme.colors.success,
+  chevronDisabled: {
+    color: theme.colors.textMuted,
   },
-  buttonText: {
-    color: '#ffffff',
+  monthLabel: {
     fontSize: theme.typography.fontSizes.md,
-    fontWeight: theme.typography.fontWeights.semibold,
+    fontWeight: theme.typography.fontWeights.medium as any,
+    color: theme.colors.text,
+  },
+
+  // Export button
+  exportBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.sm + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  exportBtnDisabled: {
+    opacity: 0.6,
+  },
+  exportBtnText: {
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: theme.typography.fontWeights.semibold as any,
+    color: '#ffffff',
+  },
+  btnSpinner: {
+    marginRight: theme.spacing.xs,
+  },
+  exportNote: {
+    fontSize: theme.typography.fontSizes.xs,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  exportNoteMono: {
+    fontFamily: 'monospace',
+    color: theme.colors.textSecondary,
+  },
+
+  // About rows
+  aboutRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  aboutRowLast: {
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+  },
+  aboutKey: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  aboutValue: {
+    fontSize: theme.typography.fontSizes.sm,
+    fontWeight: theme.typography.fontWeights.medium as any,
+    color: theme.colors.text,
   },
 });

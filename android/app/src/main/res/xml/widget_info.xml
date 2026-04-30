@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppWidgetProviderInfo — declares widget dimensions and update behaviour.
+
+  minWidth/minHeight target a 2×1 cell widget (each cell ≈ 74dp).
+  updatePeriodMillis = 0: we don't need periodic updates since the widget
+  is display-only (just a launch button). The OS ignores values below 30 min
+  anyway, so 0 is the correct choice for a pure-action widget.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="148dp"
+    android:minHeight="74dp"
+    android:minResizeWidth="74dp"
+    android:minResizeHeight="74dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/widget_finance"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

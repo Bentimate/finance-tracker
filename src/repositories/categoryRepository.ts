@@ -1,4 +1,4 @@
-import {getDb} from '../database/db';
+import {getDb, checkpoint} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Category} from '../types';
 
@@ -73,29 +73,36 @@ interface CreateCategoryData {
  * Inserts a new category.
  * Throws a user-friendly error on duplicate name (case-insensitive).
  */
-export async function createCategory({name, color}: CreateCategoryData): Promise<number | undefined> {
+export async function createCategory({
+  name,
+  color,
+}: CreateCategoryData): Promise<number | undefined> {
   const trimmedName = name.trim();
+  const db = getDb();
 
-  // Manual check for uniqueness to provide a consistent error message
-  const existing = await getDb().execute(
-    'SELECT id FROM categories WHERE name = ? COLLATE NOCASE',
-    [trimmedName],
-  );
-
-  if (rows(existing).length > 0) {
-    throw new Error(`A category named "${trimmedName}" already exists.`);
-  }
+  await db.execute('BEGIN IMMEDIATE TRANSACTION');
 
   try {
-    const result = await getDb().execute(
+    const existing = await db.execute(
+      'SELECT id FROM categories WHERE name = ? COLLATE NOCASE',
+      [trimmedName],
+    );
+
+    if (rows(existing).length > 0) {
+      throw new Error(`A category named "${trimmedName}" already exists.`);
+    }
+
+    const result = await db.execute(
       'INSERT INTO categories (name, color) VALUES (?, ?)',
       [trimmedName, color],
     );
+
+    await db.execute('COMMIT');
+    await checkpoint();
+
     return result.insertId;
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) {
-      throw new Error(`A category named "${trimmedName}" already exists.`);
-    }
+  } catch (e) {
+    await db.execute('ROLLBACK');
     throw e;
   }
 }
@@ -104,27 +111,35 @@ export async function createCategory({name, color}: CreateCategoryData): Promise
  * Updates the name and/or colour of a category.
  * Throws a user-friendly error on duplicate name.
  */
-export async function updateCategory(id: number, {name, color}: CreateCategoryData): Promise<void> {
+export async function updateCategory(
+  id: number,
+  {name, color}: CreateCategoryData,
+): Promise<void> {
   const trimmedName = name.trim();
+  const db = getDb();
 
-  // Manual check for uniqueness (excluding current record)
-  const existing = await getDb().execute(
-    'SELECT id FROM categories WHERE name = ? COLLATE NOCASE AND id != ?',
-    [trimmedName, id],
-  );
-  if (rows(existing).length > 0) {
-    throw new Error(`A category named "${trimmedName}" already exists.`);
-  }
+  await db.execute('BEGIN IMMEDIATE TRANSACTION');
 
   try {
-    await getDb().execute(
-      'UPDATE categories SET name = ?, color = ? WHERE id = ?',
-      [trimmedName, color, id],
+    const existing = await db.execute(
+      'SELECT id FROM categories WHERE name = ? COLLATE NOCASE AND id != ?',
+      [trimmedName, id],
     );
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) {
+
+    if (rows(existing).length > 0) {
       throw new Error(`A category named "${trimmedName}" already exists.`);
     }
+
+    await db.execute('UPDATE categories SET name = ?, color = ? WHERE id = ?', [
+      trimmedName,
+      color,
+      id,
+    ]);
+
+    await db.execute('COMMIT');
+    await checkpoint();
+  } catch (e) {
+    await db.execute('ROLLBACK');
     throw e;
   }
 }
@@ -134,14 +149,20 @@ export async function updateCategory(id: number, {name, color}: CreateCategoryDa
  * Preferred over deletion when the category has linked transactions (§3.2).
  */
 export async function archiveCategory(id: number): Promise<void> {
-  await getDb().execute('UPDATE categories SET is_archived = 1 WHERE id = ?', [id]);
+  await getDb().execute('UPDATE categories SET is_archived = 1 WHERE id = ?', [
+    id,
+  ]);
+  await checkpoint();
 }
 
 /**
  * Restores a previously archived category.
  */
 export async function unarchiveCategory(id: number): Promise<void> {
-  await getDb().execute('UPDATE categories SET is_archived = 0 WHERE id = ?', [id]);
+  await getDb().execute('UPDATE categories SET is_archived = 0 WHERE id = ?', [
+    id,
+  ]);
+  await checkpoint();
 }
 
 /**
@@ -150,4 +171,5 @@ export async function unarchiveCategory(id: number): Promise<void> {
  */
 export async function hardDeleteCategory(id: number): Promise<void> {
   await getDb().execute('DELETE FROM categories WHERE id = ?', [id]);
+  await checkpoint();
 }

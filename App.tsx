@@ -1,14 +1,16 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {StatusBar} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
-import {initDb} from './src/database/db';
 
+/**
+ * App.tsx
+ *
+ * The root component. It no longer handles DB initialization directly
+ * (that is moved to index.js via withDb) to prevent race conditions
+ * with the navigation state.
+ */
 function App() {
-  useEffect(() => {
-    initDb();
-  }, []);
-
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" />
