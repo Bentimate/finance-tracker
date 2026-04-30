@@ -19,7 +19,8 @@ See your expenses in pie charts and bar graphs
 Add transactions ON THE GO with the widget, without having to open the app at all!
 
 ## How to download
-1. Click on the releases under `Releases` on the right --->
+1. Click on the releases under `Releases` on the right if you are on your computer, or below if you
+are on your phone
 2. Download the APK and install it on your phone
 > Note: Your phone will scream at you but I swear it's not a virus (yet?)
 
