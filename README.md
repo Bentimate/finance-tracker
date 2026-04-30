@@ -12,11 +12,14 @@ Add your income and expenses, and categorize them into your own categories you c
 ### 2. Set your budget
 Set budgets for certain categories eg. You can set a $100 weekly budget for Food 
 
-### 3. Visualise your expenses
-See your expenses in pie charts and bar graphs
+### 3. Visualise your money
+See your money in pie charts and bar graphs
 
 ### 4. Widget on your home screen
-Add transactions ON THE GO with the widget, without having to open the app at all!
+For lazy people like me, you can add transactions on the go with the widget, without having to open the app at all
+
+### 5. Export your data
+You can export your data into a CSV file stored on your phone
 
 ## How to download
 1. Click on the releases under `Releases` on the right if you are on your computer, or below if you
