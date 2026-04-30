@@ -407,6 +407,9 @@ class WidgetEntryActivity : AppCompatActivity() {
 
             database.insertOrThrow("transactions", null, values)
 
+            // Flush WAL to main DB file so the app sees it immediately
+            database.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null)?.close()
+
             // Notify the React Native app that a transaction was added so it can refresh the UI
             val intent = Intent("com.finance_tracker_rn.TRANSACTION_ADDED")
             sendBroadcast(intent)

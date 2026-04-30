@@ -1,4 +1,4 @@
-import {getDb} from '../database/db';
+import {getDb, checkpoint} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Budget, BudgetProgress} from '../types';
 
@@ -136,20 +136,38 @@ interface UpsertBudgetData {
 /**
  * Creates or fully replaces the budget for a category.
  */
-export async function upsertBudget({category_id, budget_amount, period}: UpsertBudgetData): Promise<void> {
-  await getDb().execute(
-    `INSERT INTO budgets (category_id, budget_amount, period)
-     VALUES (?, ?, ?)
-     ON CONFLICT (category_id)
-     DO UPDATE SET budget_amount = excluded.budget_amount,
-                   period        = excluded.period`,
-    [category_id, budget_amount, period],
-  );
+export async function upsertBudget({
+  category_id,
+  budget_amount,
+  period,
+}: UpsertBudgetData): Promise<void> {
+  const db = getDb();
+  await db.execute('BEGIN IMMEDIATE TRANSACTION');
+
+  try {
+    await db.execute(
+      `INSERT INTO budgets (category_id, budget_amount, period)
+       VALUES (?, ?, ?)
+       ON CONFLICT (category_id)
+       DO UPDATE SET budget_amount = excluded.budget_amount,
+                     period        = excluded.period`,
+      [category_id, budget_amount, period],
+    );
+
+    await db.execute('COMMIT');
+    await checkpoint();
+  } catch (e) {
+    await db.execute('ROLLBACK');
+    throw e;
+  }
 }
 
 /**
  * Removes the budget definition for a category.
  */
 export async function deleteBudget(categoryId: number): Promise<void> {
-  await getDb().execute('DELETE FROM budgets WHERE category_id = ?', [categoryId]);
+  await getDb().execute('DELETE FROM budgets WHERE category_id = ?', [
+    categoryId,
+  ]);
+  await checkpoint();
 }

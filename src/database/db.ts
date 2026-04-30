@@ -21,6 +21,20 @@ export function getDb(): DB {
 }
 
 /**
+ * Manually flushes the Write-Ahead Log (WAL) into the main database file.
+ * This ensures that data written in JS is immediately visible to other
+ * processes (like the Android Widget) and persists across force-kills.
+ */
+export async function checkpoint(): Promise<void> {
+  if (!_db) {
+    return;
+  }
+  // TRUNCATE mode merges WAL pages into the DB file and resets the WAL file size.
+  // This is the most robust way to ensure process-wide visibility.
+  await _db.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+}
+
+/**
  * Opens the SQLite database and applies any pending schema migrations.
  * Call once at app startup (App.js) before rendering any screens.
  */

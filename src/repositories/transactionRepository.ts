@@ -1,4 +1,4 @@
-import {getDb} from '../database/db';
+import {getDb, checkpoint} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Transaction} from '../types';
 
@@ -120,35 +120,69 @@ interface CreateTransactionData {
 /**
  * Inserts a new transaction.
  */
-export async function createTransaction({amount, type, category_id, date, note}: CreateTransactionData): Promise<number | undefined> {
+export async function createTransaction({
+  amount,
+  type,
+  category_id,
+  date,
+  note,
+}: CreateTransactionData): Promise<number | undefined> {
   const ts = now();
-  const result = await getDb().execute(
-    `INSERT INTO transactions (amount, type, category_id, date, note, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [amount, type, category_id, date ?? ts, note ?? null, ts, ts],
-  );
-  return result.insertId;
+  const db = getDb();
+
+  await db.execute('BEGIN IMMEDIATE TRANSACTION');
+
+  try {
+    const result = await db.execute(
+      `INSERT INTO transactions (amount, type, category_id, date, note, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [amount, type, category_id, date ?? ts, note ?? null, ts, ts],
+    );
+
+    await db.execute('COMMIT');
+    await checkpoint();
+
+    return result.insertId;
+  } catch (e) {
+    await db.execute('ROLLBACK');
+    throw e;
+  }
 }
 
 /**
  * Updates mutable fields of an existing transaction.
  */
-export async function updateTransaction(id: number, {amount, type, category_id, date, note}: CreateTransactionData & { date: string }): Promise<void> {
-  await getDb().execute(
-    `UPDATE transactions
-     SET    amount = ?, type = ?, category_id = ?, date = ?, note = ?, updated_at = ?
-     WHERE  id = ?
-       AND  deleted_at IS NULL`,
-    [amount, type, category_id, date, note ?? null, now(), id],
-  );
+export async function updateTransaction(
+  id: number,
+  {amount, type, category_id, date, note}: CreateTransactionData & {date: string},
+): Promise<void> {
+  const db = getDb();
+  await db.execute('BEGIN IMMEDIATE TRANSACTION');
+
+  try {
+    await db.execute(
+      `UPDATE transactions
+       SET    amount = ?, type = ?, category_id = ?, date = ?, note = ?, updated_at = ?
+       WHERE  id = ?
+         AND  deleted_at IS NULL`,
+      [amount, type, category_id, date, note ?? null, now(), id],
+    );
+
+    await db.execute('COMMIT');
+    await checkpoint();
+  } catch (e) {
+    await db.execute('ROLLBACK');
+    throw e;
+  }
 }
 
 /**
  * Soft-deletes a transaction by setting deleted_at.
  */
 export async function deleteTransaction(id: number): Promise<void> {
-  await getDb().execute(
-    'UPDATE transactions SET deleted_at = ? WHERE id = ?',
-    [now(), id],
-  );
+  await getDb().execute('UPDATE transactions SET deleted_at = ? WHERE id = ?', [
+    now(),
+    id,
+  ]);
+  await checkpoint();
 }
