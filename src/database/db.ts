@@ -22,16 +22,10 @@ export function getDb(): DB {
 
 /**
  * Manually flushes the Write-Ahead Log (WAL) into the main database file.
- * This ensures that data written in JS is immediately visible to other
- * processes (like the Android Widget) and persists across force-kills.
+ * (Now a no-op as we switched to DELETE mode for multi-engine compatibility).
  */
 export async function checkpoint(): Promise<void> {
-  if (!_db) {
-    return;
-  }
-  // TRUNCATE mode merges WAL pages into the DB file and resets the WAL file size.
-  // This is the most robust way to ensure process-wide visibility.
-  await _db.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+  // No-op in DELETE mode.
 }
 
 /**
@@ -60,13 +54,16 @@ export async function initDb(): Promise<void> {
     // Enable foreign-key enforcement
     await _db.execute('PRAGMA foreign_keys = ON');
 
-    // WAL mode for better concurrent performance
-    await _db.execute('PRAGMA journal_mode = WAL');
+    // Use DELETE journal mode instead of WAL.
+    // This is much safer when sharing the same database file between two
+    // different SQLite engines (the JS op-sqlite bundled engine and the
+    // Android system native engine used by the widget).
+    await _db.execute('PRAGMA journal_mode = DELETE');
 
-    // Wait up to 5s if the database is locked by another process
+    // Wait up to 5s if the database is locked by another process (like the widget)
     await _db.execute('PRAGMA busy_timeout = 5000');
 
-    // Ensure transactions are durable (Wait for disk sync)
+    // Ensure transactions are durable
     await _db.execute('PRAGMA synchronous = FULL');
 
     await runMigrations(_db);

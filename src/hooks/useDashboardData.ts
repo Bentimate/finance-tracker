@@ -42,8 +42,10 @@ export function useDashboardData(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const [totals, categorySpend, weeklyTrend] = await Promise.all([
@@ -60,8 +62,10 @@ export function useDashboardData(
   }, [year, month]);
 
   useEffect(() => {
-    load();
+    load(true); // Show spinner on initial mount or month change
   }, [load]);
 
-  return {data, loading, error, refresh: load};
+  const refresh = useCallback(() => load(false), [load]);
+
+  return {data, loading, error, refresh};
 }

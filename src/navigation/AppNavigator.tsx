@@ -13,6 +13,7 @@ import BudgetFormScreen from '../screens/Budgets/BudgetFormScreen';
 import CategoryListScreen from '../screens/Categories/CategoryListScreen';
 import CategoryFormScreen from '../screens/Categories/CategoryFormScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
+import {RefreshHeader} from '../components/RefreshHeader';
 
 import {theme} from '../theme';
 import {styles} from './styles/AppNavigator.styles';
@@ -28,12 +29,50 @@ const TransactionStack = createNativeStackNavigator<TransactionStackParamList>()
 const BudgetStack = createNativeStackNavigator<BudgetStackParamList>();
 const CategoryStack = createNativeStackNavigator<CategoryStackParamList>();
 
+const DashboardStack = createNativeStackNavigator();
+
+const DashboardNavigator = () => (
+  <DashboardStack.Navigator screenOptions={{headerShown: true}}>
+    <DashboardStack.Screen
+      name="DashboardScreen"
+      component={DashboardScreen}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isRefreshing = params?.isRefreshing || false;
+          return (
+            <RefreshHeader
+              title="Dashboard"
+              onRefresh={handleRefresh}
+              isLoading={isRefreshing}
+            />
+          );
+        },
+      })}
+    />
+  </DashboardStack.Navigator>
+);
+
 const TransactionNavigator = () => (
   <TransactionStack.Navigator screenOptions={{headerShown: true}}>
     <TransactionStack.Screen
       name="TransactionList"
       component={TransactionListScreen}
-      options={{title: 'Transactions'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Transactions"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <TransactionStack.Screen
       name="TransactionForm"
@@ -50,7 +89,20 @@ const BudgetNavigator = () => (
     <BudgetStack.Screen
       name="BudgetList"
       component={BudgetListScreen}
-      options={{title: 'Budgets'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Budgets"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <BudgetStack.Screen
       name="BudgetForm"
@@ -65,7 +117,20 @@ const CategoryNavigator = () => (
     <CategoryStack.Screen
       name="CategoryList"
       component={CategoryListScreen}
-      options={{title: 'Categories'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Categories"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <CategoryStack.Screen
       name="CategoryForm"
@@ -101,8 +166,8 @@ export default function AppNavigator() {
         })}>
         <Tab.Screen
           name="Dashboard"
-          component={DashboardScreen}
-          options={{title: 'Dashboard', headerShown: true}}
+          component={DashboardNavigator}
+          options={{headerShown: false}}
         />
         <Tab.Screen name="Transactions" component={TransactionNavigator} />
         <Tab.Screen name="Budgets" component={BudgetNavigator} />

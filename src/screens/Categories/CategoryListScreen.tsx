@@ -1,6 +1,6 @@
-import React, {useState, useCallback} from 'react';
-import {View, FlatList, TouchableOpacity, Alert} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import React, {useState, useCallback, useEffect} from 'react';
+import {View, FlatList, TouchableOpacity, Alert, DeviceEventEmitter} from 'react-native';
+import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
@@ -16,7 +16,9 @@ type NavigationProp = NativeStackNavigationProp<CategoryStackParamList, 'Categor
 
 const CategoryListScreen: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
 
   const loadCategories = useCallback(async () => {
     console.log('Fetching categories...');
@@ -24,6 +26,26 @@ const CategoryListScreen: React.FC = () => {
     console.log('Categories fetched:', JSON.stringify(data));
     setCategories(data);
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    DeviceEventEmitter.emit('AppRefresh');
+    await loadCategories();
+    setIsLoading(false);
+  }, [loadCategories]);
+
+  // Pass refresh handler to navigation params
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
+      navigation.setParams({handleRefresh, isLoading} as any);
+    }
+  }, [navigation, handleRefresh, isLoading, route.params]);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('AppRefresh', loadCategories);
+    return () => sub.remove();
+  }, [loadCategories]);
 
   useFocusEffect(
     useCallback(() => {

@@ -10,6 +10,7 @@ import {
   Keyboard,
   Platform,
   TextStyle,
+  DeviceEventEmitter,
 } from 'react-native';
 import DateTimePicker, {
   DateTimePickerAndroid,
@@ -240,6 +241,7 @@ const TransactionFormScreen: React.FC = () => {
       } else {
         await createTransaction(data);
       }
+      DeviceEventEmitter.emit('AppRefresh');
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to save transaction.');
@@ -260,6 +262,7 @@ const TransactionFormScreen: React.FC = () => {
           onPress: async () => {
             if (transactionId) {
               await deleteTransaction(transactionId);
+              DeviceEventEmitter.emit('AppRefresh');
               navigation.goBack();
             }
           },

@@ -6,6 +6,7 @@ import {
   Modal,
   FlatList,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -81,6 +82,7 @@ const BudgetFormScreen: React.FC = () => {
         budget_amount: numAmount,
         period,
       });
+      DeviceEventEmitter.emit('AppRefresh');
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to save budget.');
@@ -99,6 +101,7 @@ const BudgetFormScreen: React.FC = () => {
           onPress: async () => {
             if (categoryId) {
               await deleteBudget(categoryId);
+              DeviceEventEmitter.emit('AppRefresh');
               navigation.goBack();
             }
           },

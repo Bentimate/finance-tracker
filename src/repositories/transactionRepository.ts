@@ -1,4 +1,4 @@
-import {getDb, checkpoint} from '../database/db';
+import {getDb} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Transaction} from '../types';
 
@@ -140,7 +140,6 @@ export async function createTransaction({
     );
 
     await db.execute('COMMIT');
-    await checkpoint();
 
     return result.insertId;
   } catch (e) {
@@ -169,7 +168,6 @@ export async function updateTransaction(
     );
 
     await db.execute('COMMIT');
-    await checkpoint();
   } catch (e) {
     await db.execute('ROLLBACK');
     throw e;
@@ -184,5 +182,4 @@ export async function deleteTransaction(id: number): Promise<void> {
     now(),
     id,
   ]);
-  await checkpoint();
 }

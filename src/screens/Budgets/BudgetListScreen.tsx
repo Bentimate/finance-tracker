@@ -1,6 +1,6 @@
-import React, {useState, useCallback} from 'react';
-import {View, FlatList, TouchableOpacity} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import React, {useState, useCallback, useEffect} from 'react';
+import {View, FlatList, TouchableOpacity, DeviceEventEmitter} from 'react-native';
+import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
@@ -16,12 +16,34 @@ type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetLis
 
 const BudgetListScreen: React.FC = () => {
   const [budgets, setBudgets] = useState<BudgetProgress[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
 
   const loadBudgets = useCallback(async () => {
     const data = await getAllBudgetProgress();
     setBudgets(data);
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    DeviceEventEmitter.emit('AppRefresh');
+    await loadBudgets();
+    setIsLoading(false);
+  }, [loadBudgets]);
+
+  // Pass refresh handler to navigation params
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
+      navigation.setParams({handleRefresh, isLoading} as any);
+    }
+  }, [navigation, handleRefresh, isLoading, route.params]);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('AppRefresh', loadBudgets);
+    return () => sub.remove();
+  }, [loadBudgets]);
 
   useFocusEffect(
     useCallback(() => {

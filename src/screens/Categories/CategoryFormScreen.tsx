@@ -6,6 +6,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  DeviceEventEmitter,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -75,6 +76,7 @@ const CategoryFormScreen: React.FC = () => {
       } else {
         await createCategory({name, color});
       }
+      DeviceEventEmitter.emit('AppRefresh');
       navigation.goBack();
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to save category');

@@ -1,4 +1,4 @@
-import {getDb, checkpoint} from '../database/db';
+import {getDb} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Category} from '../types';
 
@@ -99,7 +99,6 @@ export async function createCategory({
           [trimmedName, color, existing.id],
         );
         await db.execute('COMMIT');
-        await checkpoint();
         return existing.id;
       }
     }
@@ -110,7 +109,6 @@ export async function createCategory({
     );
 
     await db.execute('COMMIT');
-    await checkpoint();
 
     return result.insertId;
   } catch (e) {
@@ -149,7 +147,6 @@ export async function updateCategory(
     ]);
 
     await db.execute('COMMIT');
-    await checkpoint();
   } catch (e) {
     await db.execute('ROLLBACK');
     throw e;
@@ -164,7 +161,6 @@ export async function archiveCategory(id: number): Promise<void> {
   await getDb().execute('UPDATE categories SET is_archived = 1 WHERE id = ?', [
     id,
   ]);
-  await checkpoint();
 }
 
 /**
@@ -174,7 +170,6 @@ export async function unarchiveCategory(id: number): Promise<void> {
   await getDb().execute('UPDATE categories SET is_archived = 0 WHERE id = ?', [
     id,
   ]);
-  await checkpoint();
 }
 
 /**
@@ -183,5 +178,4 @@ export async function unarchiveCategory(id: number): Promise<void> {
  */
 export async function hardDeleteCategory(id: number): Promise<void> {
   await getDb().execute('DELETE FROM categories WHERE id = ?', [id]);
-  await checkpoint();
 }

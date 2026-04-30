@@ -1,6 +1,6 @@
-import React, {useState, useCallback} from 'react';
-import {View, FlatList, TouchableOpacity, SectionList} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import React, {useState, useCallback, useEffect} from 'react';
+import {View, FlatList, TouchableOpacity, SectionList, DeviceEventEmitter} from 'react-native';
+import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
@@ -23,7 +23,9 @@ const TransactionListScreen: React.FC = () => {
   const [sections, setSections] = useState<TransactionSection[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
 
   const loadTransactions = useCallback(async () => {
     const data = await getTransactionsByMonth(currentYear, currentMonth);
@@ -45,6 +47,26 @@ const TransactionListScreen: React.FC = () => {
 
     setSections(sectionData);
   }, [currentMonth, currentYear]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    DeviceEventEmitter.emit('AppRefresh');
+    await loadTransactions();
+    setIsLoading(false);
+  }, [loadTransactions]);
+
+  // Pass refresh handler to navigation params
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
+      navigation.setParams({handleRefresh, isLoading} as any);
+    }
+  }, [navigation, handleRefresh, isLoading, route.params]);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('AppRefresh', loadTransactions);
+    return () => sub.remove();
+  }, [loadTransactions]);
 
   useFocusEffect(
     useCallback(() => {

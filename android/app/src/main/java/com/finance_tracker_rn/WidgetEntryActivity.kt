@@ -135,9 +135,8 @@ class WidgetEntryActivity : AppCompatActivity() {
                 null,
                 SQLiteDatabase.OPEN_READWRITE,
             )
-            // CRITICAL: Explicitly enable WAL to match the JS layer.
-            // This allows the Widget and the App to access the file concurrently.
-            db?.enableWriteAheadLogging()
+            // Use DELETE mode (default) instead of WAL to prevent corruption
+            // when accessed by two different SQLite versions/engines.
 
             // Set a busy timeout on the native side as well.
             db?.rawQuery("PRAGMA busy_timeout = 5000", null)?.close()
@@ -406,9 +405,6 @@ class WidgetEntryActivity : AppCompatActivity() {
             }
 
             database.insertOrThrow("transactions", null, values)
-
-            // Flush WAL to main DB file so the app sees it immediately
-            database.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null)?.close()
 
             // Notify the React Native app that a transaction was added so it can refresh the UI
             val intent = Intent("com.finance_tracker_rn.TRANSACTION_ADDED")

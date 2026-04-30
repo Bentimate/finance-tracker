@@ -6,9 +6,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   DeviceEventEmitter,
+  AppState,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import {useDashboardData} from '../../hooks/useDashboardData';
 // ...
@@ -40,10 +42,51 @@ const DashboardScreen: React.FC = () => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   const {data, loading, error, refresh} = useDashboardData(year, month);
+  const route = useRoute();
 
-  // Re-fetch when the widget adds a transaction while the app is in the background
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    // Broadcast a global refresh event so other screens (like Transaction List, Budgets)
+    // will re-fetch data from the database if they are mounted.
+    DeviceEventEmitter.emit('AppRefresh');
+
+    // Specifically refresh dashboard data
+    await refresh();
+
+    setIsRefreshing(false);
+  }, [refresh]);
+
+  // Pass refresh handler to navigation params
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isRefreshing !== isRefreshing) {
+      navigation.setParams({handleRefresh, isRefreshing} as any);
+    }
+  }, [navigation, handleRefresh, isRefreshing, route.params]);
+
+  // Re-fetch when ANY part of the app triggers a global refresh
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('AppRefresh', () => {
+      refresh();
+    });
+    return () => subscription.remove();
+  }, [refresh]);
+
+  // Refresh when app returns from background to catch widget writes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        refresh();
+      }
+    });
+    return () => subscription.remove();
+  }, [refresh]);
+
+  // Re-fetch when the widget adds a transaction
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(
       'WidgetTransactionAdded',

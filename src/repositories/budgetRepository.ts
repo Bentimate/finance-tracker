@@ -1,4 +1,4 @@
-import {getDb, checkpoint} from '../database/db';
+import {getDb} from '../database/db';
 import {QueryResult} from '@op-engineering/op-sqlite';
 import {Budget, BudgetProgress} from '../types';
 
@@ -155,7 +155,6 @@ export async function upsertBudget({
     );
 
     await db.execute('COMMIT');
-    await checkpoint();
   } catch (e) {
     await db.execute('ROLLBACK');
     throw e;
@@ -169,5 +168,4 @@ export async function deleteBudget(categoryId: number): Promise<void> {
   await getDb().execute('DELETE FROM budgets WHERE category_id = ?', [
     categoryId,
   ]);
-  await checkpoint();
 }
