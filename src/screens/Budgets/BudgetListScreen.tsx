@@ -89,10 +89,6 @@ const BudgetListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.header}>
-        <Typography variant="h2">Budgets</Typography>
-      </View>
-
       <FlatList
         data={budgets}
         keyExtractor={(item) => item.category_id.toString()}

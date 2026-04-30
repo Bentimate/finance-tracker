@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Text} from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import TransactionListScreen from '../screens/Transactions/TransactionListScreen';
@@ -76,19 +77,15 @@ const CategoryNavigator = () => (
   </CategoryStack.Navigator>
 );
 
-interface TabIconProps {
-  label: keyof RootTabParamList;
-}
-
-function TabIcon({label}: TabIconProps) {
+function TabIcon({label, color, size}: {label: keyof RootTabParamList; color: string; size: number}) {
   const icons: Record<keyof RootTabParamList, string> = {
-    Dashboard: '⬡',
-    Transactions: '↕',
-    Budgets: '◫',
-    Categories: '📁',
-    Settings: '⚙',
+    Dashboard: 'view-dashboard-outline',
+    Transactions: 'swap-vertical',
+    Budgets: 'chart-arc',
+    Categories: 'folder-outline',
+    Settings: 'cog-outline',
   };
-  return <Text style={styles.icon}>{icons[label] ?? '•'}</Text>;
+  return <MaterialIcon name={icons[label] ?? 'circle'} size={size} color={color} />;
 }
 
 export default function AppNavigator() {
@@ -96,7 +93,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({route}) => ({
-          tabBarIcon: () => <TabIcon label={route.name} />,
+          tabBarIcon: ({color, size}) => <TabIcon label={route.name} color={color} size={size} />,
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.textMuted,
           tabBarStyle: styles.tabBar,

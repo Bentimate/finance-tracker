@@ -18,6 +18,7 @@ import DateTimePicker, {
 import {useNavigation, useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {theme} from '../../theme';
 import {Typography} from '../../components/Typography';
@@ -37,30 +38,21 @@ import {styles} from './styles/TransactionFormScreen.styles';
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionForm'>;
 type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
 
-const normalizeSignedAmount = (
-  rawAmount: string,
-): {amount: number; type: 'income' | 'expense'} | null => {
-  const trimmed = rawAmount.trim();
-  if (!trimmed) {
-    return null;
+const formatDisplayAmount = (raw: string): string => {
+  if (!raw) return '$0.00';
+  const hasSign = raw.startsWith('-') || raw.startsWith('+');
+  const sign = hasSign ? raw[0] : '';
+  const numericPart = hasSign ? raw.slice(1) : raw;
+  if (!numericPart) return `${sign}$0.00`;
+
+  const parts = numericPart.split('.');
+  const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const decPart = parts.length > 1 ? parts[1].slice(0, 2) : '';
+
+  if (parts.length > 1) {
+    return `${sign}$${intPart}.${decPart}`;
   }
-
-  const hasNegativeSign = trimmed.startsWith('-');
-  const hasPositiveSign = trimmed.startsWith('+');
-  const parsed = parseFloat(trimmed);
-
-  if (isNaN(parsed) || parsed === 0) {
-    return null;
-  }
-
-  if (hasNegativeSign) {
-    return {amount: Math.abs(parsed), type: 'expense'};
-  }
-
-  return {
-    amount: hasPositiveSign ? Math.abs(parsed) : Math.abs(parsed),
-    type: 'income',
-  };
+  return `${sign}$${intPart}`;
 };
 
 const TransactionFormScreen: React.FC = () => {
@@ -107,6 +99,8 @@ const TransactionFormScreen: React.FC = () => {
   const selectedCategory = categories.find(c => c.id === categoryId);
   const selectedDate = new Date(date);
   const isExpenseInput = amount.trim().startsWith('-');
+  const displayAmount = formatDisplayAmount(amount);
+
   const closeAmountKeypad = () => {
     setAmountKeypadVisible(false);
     Keyboard.dismiss();
@@ -210,11 +204,21 @@ const TransactionFormScreen: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const normalized = normalizeSignedAmount(amount);
-    if (!normalized) {
+    const trimmed = amount.trim();
+    const hasNegativeSign = trimmed.startsWith('-');
+    const hasPositiveSign = trimmed.startsWith('+');
+    const numericPart = (hasNegativeSign || hasPositiveSign) ? trimmed.slice(1) : trimmed;
+    const parsed = parseFloat(numericPart);
+
+    if (isNaN(parsed) || parsed === 0) {
       Alert.alert('Invalid Amount', 'Enter a non-zero amount like 120 or -120.');
       return;
     }
+
+    const normalized = {
+      amount: Math.abs(parsed),
+      type: hasNegativeSign ? 'expense' : 'income' as 'income' | 'expense'
+    };
 
     if (!categoryId) {
       Alert.alert('Category Required', 'Please select a category.');
@@ -273,13 +277,13 @@ const TransactionFormScreen: React.FC = () => {
               styles.amountInput as TextStyle,
               {color: isExpenseInput ? theme.colors.error : theme.colors.success}
             ]}
-            value={amount}
+            value={displayAmount}
             onChangeText={() => {}}
             editable
             showSoftInputOnFocus={false}
             contextMenuHidden
             caretHidden
-            placeholder="0.00"
+            placeholder="$0.00"
             placeholderTextColor={theme.colors.textMuted}
             onFocus={() => {
               Keyboard.dismiss();
@@ -290,7 +294,7 @@ const TransactionFormScreen: React.FC = () => {
             AMOUNT IN SGD
           </Typography>
           <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
-            Use "-" for expense, "+" or no sign for income
+            press +/- to toggle between expense and income
           </Typography>
         </View>
 
@@ -340,12 +344,7 @@ const TransactionFormScreen: React.FC = () => {
               {selectedDate.toLocaleDateString()}
             </Typography>
             <View style={styles.dateHintContainer}>
-              <Typography variant="caption" color="textMuted">
-                Tap to change
-              </Typography>
-              <Typography variant="body" color="textMuted" style={styles.dateChevron}>
-                {'>'}
-              </Typography>
+              <MaterialIcon name="calendar-month" size={24} color={theme.colors.textMuted} />
             </View>
           </TouchableOpacity>
         </View>

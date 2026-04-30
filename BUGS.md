@@ -25,6 +25,25 @@
 3. **Sentinel File**: Created `.db_initialized` after JS migrations to block Widget access during setup.
 4. **Task Isolation**: Set `taskAffinity=""` and `FLAG_ACTIVITY_MULTIPLE_TASK` for the Widget.
 
+### 2. Category Recovery (High Priority #3)
+**Issue:** Adding a new category with the same name as a deleted (archived) one would throw a "already exists" error, preventing recovery.
+**Fix:** Updated `createCategory` to detect archived categories with the same name and unarchive them (updating color and name casing) instead of throwing an error.
+
+### 3. UI Fixes (Medium Priority #1-5)
+**Issues:**
+- Double "Budgets" title on Budget screen.
+- Misleading "Active Categories" title on Category screen.
+- Date picker label was too verbose.
+- Transaction amount was plain number instead of currency format.
+- Transaction form instructions were misleading.
+
+**Fixes:**
+- Removed redundant "Budgets" title from `BudgetListScreen`.
+- Removed misleading "Active Categories" header from `CategoryListScreen`.
+- Replaced "Tap to change" date picker text with a calendar emoji 📅.
+- Implemented `formatDisplayAmount` in `TransactionFormScreen` to show currency-formatted input (e.g., S$1,234.56).
+- Updated transaction form instructions to "press +/- to toggle between expense and income".
+
 ---
 
 ## High Priority
@@ -56,17 +75,7 @@ Flow:
 4. The kayboard appears for a split second before disappearing
 ```
 
-3. No way to recover deleted categories. eg. if i delete a used category,
-it will be archived, and adding a new one with the same name will not bring it back,
-instead it will throw error saying that category already exists.
-
-Fix: When users add back the same category, simply unarchive it.
 ## Medium Priority
-1. Budgets title in budget screen appears twice
-2. Active Category title in category is misleading
-3. Date picker tap to change is too verbose, change to calendar icon
-4. transaction form amount should be in $xx.xx format, to 2 dp instead of plain number
-5. transaction form instructions misleading, change to "+/- to toggle between expense and income"
 6. Tapping on widget while app is open in background also opens the app.
 Intended is to open the widget no matter what
 7. 

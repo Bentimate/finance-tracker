@@ -93,11 +93,6 @@ const CategoryListScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View style={styles.sectionHeader}>
-            <Typography variant="label" color="textSecondary">Active Categories</Typography>
-          </View>
-        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Typography variant="body" color="textMuted" align="center">
