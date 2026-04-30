@@ -3,14 +3,17 @@ If you think you can afford that thing you wanted
 
 > _Better start tracking your money huh_
 
-This is a finance tracker app built for personal use.
+This is a finance tracker app built for personal use, on Android.
+
+## Requirements
+Minimum: Android 7.0
 
 ## Features
 ### 1. Manage your transactions
 Add your income and expenses, and categorize them into your own categories you created
 
 ### 2. Set your budget
-Set budgets for certain categories eg. You can set a $100 weekly budget for Food 
+Set budgets for your categories
 
 ### 3. Visualise your money
 See your money in pie charts and bar graphs
