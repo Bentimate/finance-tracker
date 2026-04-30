@@ -1,8 +1,0 @@
-./node_modules
-./ios
-./android/gradle
-./__tests__
-./.idea
-./.bundle
-./README.md
-./INSTALL.md
