@@ -284,7 +284,7 @@ class WidgetEntryActivity : AppCompatActivity() {
     private fun appendDigit(digit: String) {
         val trimmed = amountInput.text.toString().trim()
         val next = if (trimmed.isEmpty()) {
-            digit
+            "-" + digit
         } else {
             val hasSign = trimmed.startsWith("-") || trimmed.startsWith("+")
             val sign = if (hasSign) trimmed.substring(0, 1) else ""

@@ -25,6 +25,13 @@ const MIGRATIONS: Migration[] = [
         )
       `);
 
+      // Initialise db with common categories
+      db.execute(`
+          INSERT INTO categories (name, color) VALUES
+          ('Food', '#f59e0b'),
+          ('Transport', '#64748b')
+      `)
+
       db.execute(`
         CREATE TABLE IF NOT EXISTS transactions (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,

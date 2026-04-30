@@ -28,7 +28,8 @@ export const RefreshHeader: React.FC<RefreshHeaderProps> = ({
         style={{
           backgroundColor: theme.colors.primary,
           paddingHorizontal: theme.spacing.md,
-          paddingBottom: theme.spacing.md
+          paddingBottom: theme.spacing.md,
+          height: 45
         }}
         elevated={false}
       >

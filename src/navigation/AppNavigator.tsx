@@ -147,7 +147,7 @@ function TabIcon({label, color, size}: {label: keyof RootTabParamList; color: st
   const icons: Record<keyof RootTabParamList, string> = {
     Dashboard: 'view-dashboard-outline',
     Transactions: 'swap-vertical',
-    Budgets: 'chart-arc',
+    Budgets: 'currency-usd',
     Categories: 'folder-outline',
     Settings: 'cog-outline',
   };
