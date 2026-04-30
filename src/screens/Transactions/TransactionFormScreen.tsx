@@ -281,7 +281,10 @@ const TransactionFormScreen: React.FC = () => {
             caretHidden
             placeholder="0.00"
             placeholderTextColor={theme.colors.textMuted}
-            onFocus={() => setAmountKeypadVisible(true)}
+            onFocus={() => {
+              Keyboard.dismiss();
+              setAmountKeypadVisible(true);
+            }}
           />
           <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
             AMOUNT IN SGD
@@ -318,7 +321,6 @@ const TransactionFormScreen: React.FC = () => {
           onChangeText={setNote}
           placeholder="What was this for?"
           multiline
-          onFocus={closeAmountKeypad}
         />
 
         <View style={styles.section}>

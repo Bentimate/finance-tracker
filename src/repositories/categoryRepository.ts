@@ -83,13 +83,25 @@ export async function createCategory({
   await db.execute('BEGIN IMMEDIATE TRANSACTION');
 
   try {
-    const existing = await db.execute(
-      'SELECT id FROM categories WHERE name = ? COLLATE NOCASE',
+    const existingResult = await db.execute(
+      'SELECT id, is_archived FROM categories WHERE name = ? COLLATE NOCASE',
       [trimmedName],
     );
+    const existing = rows<Category>(existingResult)[0];
 
-    if (rows(existing).length > 0) {
-      throw new Error(`A category named "${trimmedName}" already exists.`);
+    if (existing) {
+      if (existing.is_archived === 0) {
+        throw new Error(`A category named "${trimmedName}" already exists.`);
+      } else {
+        // Unarchive and update name/color
+        await db.execute(
+          'UPDATE categories SET is_archived = 0, name = ?, color = ? WHERE id = ?',
+          [trimmedName, color, existing.id],
+        );
+        await db.execute('COMMIT');
+        await checkpoint();
+        return existing.id;
+      }
     }
 
     const result = await db.execute(
