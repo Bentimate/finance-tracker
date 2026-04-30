@@ -44,11 +44,15 @@
 - Implemented `formatDisplayAmount` in `TransactionFormScreen` to show currency-formatted input (e.g., S$1,234.56).
 - Updated transaction form instructions to "press +/- to toggle between expense and income".
 
+### 4. Samsung/Android 14 Widget Launch (High Priority #1)
+**Issue:** Tapping the widget while the app is in the background would bring the entire app task to the foreground on Samsung OneUI (Android 14+).
+**Fix:** Explicitly opted into `MODE_BACKGROUND_ACTIVITY_START_ALLOWED` for the widget's `PendingIntent` to satisfy Android 14+ Background Activity Launch (BAL) restrictions.
+
 ---
 
 ## High Priority
 1. Trying to open widget immediately after installing the app causes 
-a db storage malfunction error when adding additional entries again
+a db storage malfunction error when adding additional entries again [DONE]
 ```
 Flow:
 prereq: app is installed
@@ -65,7 +69,7 @@ Intended behaviour:
 at any point in time, the flow should behave like steps 1 to step 2.
 ```
 
-2. The note input box does not bring up keyboard properly.
+2. The note input box does not bring up keyboard properly. [DONE]
 ```
 Flow:
 1. Tap on add transaction + button
@@ -75,10 +79,6 @@ Flow:
 4. The kayboard appears for a split second before disappearing
 ```
 
-## Medium Priority
-6. Tapping on widget while app is open in background also opens the app.
-Intended is to open the widget no matter what
-7. 
 ## Low Priority
 1. Exporting files when folder already has a file of the same name
 from an external source causes a enoent error instead of file duplicate error

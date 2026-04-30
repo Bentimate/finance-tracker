@@ -1,5 +1,6 @@
 package com.finance_tracker_rn
 
+import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -38,9 +39,10 @@ class FinanceWidget : AppWidgetProvider() {
             val intent = Intent(context, WidgetEntryActivity::class.java).apply {
                 // Use a separate task for the widget entry so it doesn't bring 
                 // the main app to the background if it's currently hidden.
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                // taskAffinity="com.finance_tracker_rn.widget" in the manifest 
+                // handles the isolation; NEW_TASK + MULTIPLE_TASK ensures it starts in its own task
+                // on both Pixel (Android 14+) and Samsung OneUI.
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
             }
 
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -51,9 +53,9 @@ class FinanceWidget : AppWidgetProvider() {
 
             val pendingIntent = PendingIntent.getActivity(
                 context,
-                appWidgetId,
+                0, // Use constant request code to avoid intent multiplication
                 intent,
-                flags,
+                flags
             )
 
             views.setOnClickPendingIntent(R.id.widget_add_btn, pendingIntent)

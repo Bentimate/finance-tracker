@@ -30,10 +30,10 @@
       <activity
           android:name=".WidgetEntryActivity"
           android:theme="@style/Theme.WidgetEntryDialog"
-          android:exported="false"
+          android:exported="true"
           android:windowSoftInputMode="stateVisible|adjustResize"
           android:excludeFromRecents="true"
-          android:taskAffinity=""
+          android:taskAffinity="com.finance_tracker_rn.widget"
           android:launchMode="standard" />
 
       <!-- Widget broadcast receiver -->
