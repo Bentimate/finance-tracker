@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: theme.colors.surface,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
   },
   icon: {
     fontSize: theme.typography.fontSizes.lg,

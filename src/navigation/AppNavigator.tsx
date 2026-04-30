@@ -2,8 +2,9 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Text} from 'react-native';
+import {Text, Platform} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import TransactionListScreen from '../screens/Transactions/TransactionListScreen';
@@ -154,6 +155,12 @@ function TabIcon({label, color, size}: {label: keyof RootTabParamList; color: st
 }
 
 export default function AppNavigator() {
+  const insets = useSafeAreaInsets();
+  // We want the bar to be taller, so we add some extra vertical padding
+  // while ensuring we respect the system's safe area (insets.bottom).
+  const verticalPadding = theme.spacing.md;
+  const totalHeight = (Platform.OS === 'ios' ? 50 : 60) + insets.bottom + verticalPadding;
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -161,7 +168,14 @@ export default function AppNavigator() {
           tabBarIcon: ({color, size}) => <TabIcon label={route.name} color={color} size={size} />,
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.textMuted,
-          tabBarStyle: styles.tabBar,
+          tabBarStyle: [
+            styles.tabBar,
+            {
+              height: totalHeight,
+              paddingBottom: insets.bottom + (verticalPadding / 2),
+              paddingTop: verticalPadding / 2,
+            },
+          ],
           headerShown: false,
         })}>
         <Tab.Screen

@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: theme.colors.primary,
   },
   list: {
-    paddingBottom: 80,
+    paddingBottom: theme.spacing.xl,
   },
   dayGroup: {
     marginTop: theme.spacing.lg,
@@ -37,6 +37,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.sm
   },
   transactionItem: {
     backgroundColor: theme.colors.surface,

@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, ActivityIndicator} from 'react-native';
 import {Appbar, IconButton} from 'react-native-paper';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {theme} from '../theme';
 
@@ -25,12 +25,16 @@ export const RefreshHeader: React.FC<RefreshHeaderProps> = ({
   return (
     <SafeAreaView style={{backgroundColor: theme.colors.primary}} edges={['top']}>
       <Appbar.Header
-        style={{backgroundColor: theme.colors.primary}}
+        style={{
+          backgroundColor: theme.colors.primary,
+          paddingHorizontal: theme.spacing.md,
+          paddingBottom: theme.spacing.md
+        }}
         elevated={false}
       >
         <Appbar.Content
           title={title}
-          titleStyle={{color: '#ffffff', fontWeight: '600', fontSize: 24}}
+          titleStyle={{color: '#ffffff', fontWeight: '700', fontSize: 24}}
         />
         <IconButton
           icon={() =>
