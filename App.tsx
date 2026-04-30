@@ -1,7 +1,7 @@
 import React from 'react';
 import {StatusBar} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {PaperProvider} from 'react-native-paper';
+import {Provider as PaperProvider, MD3LightTheme} from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import {theme} from './src/theme';
 
@@ -15,12 +15,13 @@ import {theme} from './src/theme';
 function App() {
   // Convert custom theme to react-native-paper theme
   const paperTheme = {
+    ...MD3LightTheme,                    // keep all defaults intact
     colors: {
-      primary: theme.colors.primary,
+      ...MD3LightTheme.colors,           // keep all MD3 color slots
+      primary: theme.colors.primary,     // then override only what you need
       background: theme.colors.background,
       surface: theme.colors.background,
       error: theme.colors.error,
-      text: theme.colors.text,
       onBackground: theme.colors.text,
       onSurface: theme.colors.text,
     },

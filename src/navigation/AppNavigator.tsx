@@ -164,6 +164,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
+        initialRouteName="Transactions"
         screenOptions={({route}) => ({
           tabBarIcon: ({color, size}) => <TabIcon label={route.name} color={color} size={size} />,
           tabBarActiveTintColor: theme.colors.primary,
@@ -183,8 +184,8 @@ export default function AppNavigator() {
           component={DashboardNavigator}
           options={{headerShown: false}}
         />
-        <Tab.Screen name="Transactions" component={TransactionNavigator} />
         <Tab.Screen name="Budgets" component={BudgetNavigator} />
+        <Tab.Screen name="Transactions" component={TransactionNavigator} />
         <Tab.Screen name="Categories" component={CategoryNavigator} />
         <Tab.Screen
           name="Settings"

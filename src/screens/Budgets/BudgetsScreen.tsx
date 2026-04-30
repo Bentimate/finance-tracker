@@ -5,7 +5,7 @@ import {styles} from './BudgetsScreen.styles';
 
 const BudgetsScreen: React.FC = () => {
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.content}>
         <Text style={styles.title}>Budgets</Text>
         <Text style={styles.subtitle}>
