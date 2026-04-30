@@ -1,6 +1,5 @@
 package com.finance_tracker_rn
 
-import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -12,9 +11,9 @@ import android.widget.RemoteViews
 /**
  * Home-screen widget provider.
  *
- * Tapping the "Add" button launches WidgetEntryActivity — a fully native,
- * dialog-style Activity that writes directly to the SQLite database.
- * The React Native bridge is not involved at any point.
+ * The entire widget surface is the tap target — tapping anywhere launches
+ * WidgetEntryActivity, a fully native dialog-style Activity that writes
+ * directly to the SQLite database. The React Native bridge is not involved.
  */
 class FinanceWidget : AppWidgetProvider() {
 
@@ -37,11 +36,6 @@ class FinanceWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_finance)
 
             val intent = Intent(context, WidgetEntryActivity::class.java).apply {
-                // Use a separate task for the widget entry so it doesn't bring 
-                // the main app to the background if it's currently hidden.
-                // taskAffinity="com.finance_tracker_rn.widget" in the manifest 
-                // handles the isolation; NEW_TASK + MULTIPLE_TASK ensures it starts in its own task
-                // on both Pixel (Android 14+) and Samsung OneUI.
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
             }
 
@@ -53,12 +47,13 @@ class FinanceWidget : AppWidgetProvider() {
 
             val pendingIntent = PendingIntent.getActivity(
                 context,
-                0, // Use constant request code to avoid intent multiplication
+                0,
                 intent,
-                flags
+                flags,
             )
 
-            views.setOnClickPendingIntent(R.id.widget_add_btn, pendingIntent)
+            // Attach the pending intent to the entire widget surface
+            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
