@@ -143,6 +143,18 @@ class TransactionRepository extends BaseRepository {
       id,
     ]);
   }
+
+  /**
+   * Returns the year of the earliest transaction in the database.
+   * Returns current year if no transactions exist.
+   */
+  async getEarliestYear(): Promise<number> {
+    const result = await this.db.execute(
+      'SELECT strftime("%Y", MIN(date)) as year FROM transactions WHERE deleted_at IS NULL'
+    );
+    const row = this.first<{year: string}>(result);
+    return row?.year ? parseInt(row.year, 10) : new Date().getFullYear();
+  }
 }
 
 export const transactionRepository = new TransactionRepository();

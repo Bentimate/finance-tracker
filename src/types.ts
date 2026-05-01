@@ -58,3 +58,9 @@ export interface WeeklyTrend {
   income: number;
   expense: number;
 }
+
+export interface DailyNetFlow {
+  /** 'YYYY-MM-DD' */
+  date: string;
+  netFlow: number;
+}

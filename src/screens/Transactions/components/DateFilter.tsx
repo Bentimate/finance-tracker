@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {View, TouchableOpacity} from 'react-native';
 import {Menu} from 'react-native-paper';
 import {Typography} from '../../../components/Typography';
@@ -8,6 +8,7 @@ import {styles} from '../styles/TransactionListScreen.styles';
 interface DateFilterProps {
   selectedMonth: number;
   selectedYear: number;
+  earliestYear: number;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
 }
@@ -18,16 +19,24 @@ const MONTH_LABELS = [
 ];
 
 const THIS_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({length: 6}, (_, i) => THIS_YEAR - i);
 
 export const DateFilter: React.FC<DateFilterProps> = ({
   selectedMonth,
   selectedYear,
+  earliestYear,
   onMonthChange,
   onYearChange,
 }) => {
   const [monthMenuVisible, setMonthMenuVisible] = useState(false);
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
+
+  const yearOptions = useMemo(() => {
+    const options = [];
+    for (let y = THIS_YEAR; y >= earliestYear; y--) {
+      options.push(y);
+    }
+    return options;
+  }, [earliestYear]);
 
   return (
     <View style={styles.monthSelectorRow}>
@@ -84,7 +93,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
             </Typography>
           </TouchableOpacity>
         }>
-        {YEAR_OPTIONS.map(y => (
+        {yearOptions.map(y => (
           <Menu.Item
             key={y}
             title={String(y)}

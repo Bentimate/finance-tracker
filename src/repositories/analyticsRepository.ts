@@ -1,4 +1,4 @@
-import {MonthlyTotals, CategorySpend, WeeklyTrend} from '../types';
+import {MonthlyTotals, CategorySpend, WeeklyTrend, DailyNetFlow} from '../types';
 import {BaseRepository} from './BaseRepository';
 
 class AnalyticsRepository extends BaseRepository {
@@ -26,6 +26,30 @@ class AnalyticsRepository extends BaseRepository {
       totalExpense,
       netCashFlow: totalIncome - totalExpense,
     };
+  }
+
+  /**
+   * Returns net cash flow grouped by day for a given month.
+   */
+  async getDailyNetFlow(year: number, month: number): Promise<DailyNetFlow[]> {
+    const result = await this.db.execute(
+      `SELECT
+         date(date) AS date,
+         COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS net_flow
+       FROM transactions
+       WHERE strftime('%Y', date) = ?
+         AND strftime('%m', date) = ?
+         AND deleted_at IS NULL
+       GROUP BY date(date)
+       ORDER BY date(date) ASC`,
+      [String(year), this.pad(month)],
+    );
+
+    const raw = this.rows<{date: string; net_flow: number}>(result);
+    return raw.map(r => ({
+      date: r.date,
+      netFlow: r.net_flow,
+    }));
   }
 
   /**
