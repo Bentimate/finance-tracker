@@ -10,6 +10,7 @@ import {Typography} from '../../components/Typography';
 import {styles} from './styles/CategoryListScreen.styles';
 import {CategoryStackParamList} from '../../navigation/types';
 import {CategoryListItem} from './components/CategoryListItem';
+import {PlusButton} from '../../components/PlusButton'
 
 type NavigationProp = NativeStackNavigationProp<CategoryStackParamList, 'CategoryList'>;
 
@@ -112,12 +113,8 @@ const CategoryListScreen: React.FC = () => {
           </View>
         }
       />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('CategoryForm', {})}
-        activeOpacity={0.8}>
-        <Typography style={styles.fabText}>+</Typography>
-      </TouchableOpacity>
+      <PlusButton onPress={() => navigation.navigate('CategoryForm', {})} />
+
     </SafeAreaView>
   );
 };

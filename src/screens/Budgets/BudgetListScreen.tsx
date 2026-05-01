@@ -10,6 +10,7 @@ import {Typography} from '../../components/Typography';
 import {styles} from './styles/BudgetListScreen.styles';
 import {BudgetStackParamList} from '../../navigation/types';
 import {BudgetItem} from './components/BudgetItem';
+import {PlusButton} from '../../components/PlusButton'
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetList'>;
 
@@ -69,13 +70,7 @@ const BudgetListScreen: React.FC = () => {
           </View>
         }
       />
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('BudgetForm', {categoryId: 0})}
-        activeOpacity={0.8}>
-        <Typography style={styles.fabText}>+</Typography>
-      </TouchableOpacity>
+      <PlusButton onPress={() => navigation.navigate('BudgetForm', {categoryId: 0})} />
     </SafeAreaView>
   );
 };

@@ -23,6 +23,7 @@ import {
   groupByDate,
   formatDateLabel,
 } from './helpers';
+import {PlusButton} from '../../components/PlusButton'
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionList'>;
 
@@ -44,6 +45,13 @@ const TransactionListScreen: React.FC = () => {
   const route = useRoute();
   const isMounted = React.useRef(true);
 
+  const fetchBounds = useCallback(async () => {
+    const year = await transactionRepository.getEarliestYear();
+    if (isMounted.current) {
+      setEarliestYear(year);
+    }
+  }, []);
+
   useEffect(() => {
     isMounted.current = true;
     const fetchBounds = async () => {
@@ -60,6 +68,8 @@ const TransactionListScreen: React.FC = () => {
     const today = new Date();
     setIsLoading(true);
     try {
+      await fetchBounds();
+
       if (viewMode === 'month') {
         const fetchMonth = async (y: number, m: number) => {
           const key = `${y}-${m}`;
@@ -200,12 +210,7 @@ const TransactionListScreen: React.FC = () => {
         onTransactionPress={handleTransactionPress}
       />
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('TransactionForm', {})}
-        activeOpacity={0.8}>
-        <Typography style={styles.fabText}>+</Typography>
-      </TouchableOpacity>
+      <PlusButton onPress={() => navigation.navigate('TransactionForm', {categoryId: 0})} />
     </SafeAreaView>
   );
 };
