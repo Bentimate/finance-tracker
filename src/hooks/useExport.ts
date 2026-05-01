@@ -1,7 +1,7 @@
 import {useState, useCallback} from 'react';
-import {getTransactionsForExport} from '../repositories/transactionRepository';
-import {getCategoriesForExport} from '../repositories/exportRepository';
-import {exportToCsv, ExportResult} from '../utils/exportCsv';
+import {transactionRepository} from '../repositories/transactionRepository';
+import {exportRepository} from '../repositories/exportRepository';
+import {csvExporter, ExportResult} from '../utils/exportCsv';
 
 export type ExportStatus =
   | {kind: 'idle'}
@@ -20,11 +20,11 @@ export function useExport() {
     setStatus({kind: 'loading'});
     try {
       const [transactions, categories] = await Promise.all([
-        getTransactionsForExport(year, month),
-        getCategoriesForExport(),
+        transactionRepository.getForExport(year, month),
+        exportRepository.getCategoriesForExport(),
       ]);
 
-      const result = await exportToCsv(transactions, categories, year, month);
+      const result = await csvExporter.export(transactions, categories, year, month);
       setStatus({kind: 'success', result});
     } catch (e: any) {
       setStatus({

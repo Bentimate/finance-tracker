@@ -5,12 +5,11 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {BudgetProgress} from '../../types';
-import {getAllBudgetProgress} from '../../repositories/budgetRepository';
+import {budgetRepository} from '../../repositories/budgetRepository';
 import {Typography} from '../../components/Typography';
-import {formatCurrency} from '../../utils/formatCurrency';
-import {theme} from '../../theme';
 import {styles} from './styles/BudgetListScreen.styles';
 import {BudgetStackParamList} from '../../navigation/types';
+import {BudgetItem} from './components/BudgetItem';
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetList'>;
 
@@ -21,7 +20,7 @@ const BudgetListScreen: React.FC = () => {
   const route = useRoute();
 
   const loadBudgets = useCallback(async () => {
-    const data = await getAllBudgetProgress();
+    const data = await budgetRepository.getAllProgress();
     setBudgets(data);
   }, []);
 
@@ -32,7 +31,6 @@ const BudgetListScreen: React.FC = () => {
     setIsLoading(false);
   }, [loadBudgets]);
 
-  // Pass refresh handler to navigation params
   useEffect(() => {
     const params = route.params as any;
     if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
@@ -51,70 +49,17 @@ const BudgetListScreen: React.FC = () => {
     }, [loadBudgets])
   );
 
-  const renderItem = ({item}: {item: BudgetProgress}) => {
-    const isOver = item.percentage > 100;
-    const progressColor = isOver
-      ? theme.colors.error
-      : item.percentage > 80
-        ? '#f59e0b' // Warning yellow
-        : theme.colors.primary;
-
-    return (
-      <TouchableOpacity
-        style={styles.budgetItem}
-        onPress={() => navigation.navigate('BudgetForm', {categoryId: item.category_id})}
-        activeOpacity={0.7}
-      >
-        <View style={styles.budgetTop}>
-          <View>
-            <View style={styles.categoryInfo}>
-              <View style={[styles.categoryDot, {backgroundColor: item.category_color}]} />
-              <Typography variant="body" weight="bold">{item.category_name}</Typography>
-            </View>
-            <Typography variant="caption" color="textMuted" style={{marginTop: 2}}>
-              {item.period.toUpperCase()}
-            </Typography>
-          </View>
-          <View style={{alignItems: 'flex-end'}}>
-            <Typography variant="body" weight="bold">
-              {formatCurrency(item.spent)}
-              <Typography variant="caption" color="textMuted"> / {formatCurrency(item.budget_amount)}</Typography>
-            </Typography>
-          </View>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min(item.percentage, 100)}%`,
-                backgroundColor: progressColor
-              }
-            ]}
-          />
-        </View>
-
-        <View style={styles.budgetFooter}>
-          <Typography variant="caption" color="textMuted">
-            {isOver
-              ? `${formatCurrency(Math.abs(item.remaining))} over budget`
-              : `${formatCurrency(item.remaining)} remaining`}
-          </Typography>
-          <Typography variant="caption" color={isOver ? 'error' : 'textMuted'}>
-            {Math.round(item.percentage)}%
-          </Typography>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <FlatList
         data={budgets}
         keyExtractor={(item) => item.category_id.toString()}
-        renderItem={renderItem}
+        renderItem={({item}) => (
+          <BudgetItem
+            item={item}
+            onPress={(id) => navigation.navigate('BudgetForm', {categoryId: id})}
+          />
+        )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyState}>

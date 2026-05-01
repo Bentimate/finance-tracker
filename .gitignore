@@ -84,3 +84,5 @@ yarn-error.log
 ./.artifacts
 ./.idea
 /markdowns
+.geminiignore
+

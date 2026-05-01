@@ -9,7 +9,7 @@
 import {AppRegistry} from 'react-native';
 import React from 'react';
 import App from './App';
-import {initDb} from './src/database/db';
+import {database} from './src/database/db';
 import { name as appName } from './app.json';
 
 // ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ function withDb(Component) {
     const [error, setError] = React.useState(null);
 
     React.useEffect(() => {
-      initDb()
+      database.init()
         .then(() => setReady(true))
         .catch((e) => {
           console.error('Database initialization failed:', e);

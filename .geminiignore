@@ -1,0 +1,8 @@
+./node_modules
+./markdowns
+./ios
+./__tests__
+.bundle
+.idea
+.vscode
+package-lock.json

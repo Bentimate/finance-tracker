@@ -5,12 +5,11 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {Category} from '../../types';
-import {getAllCategories, archiveCategory, categoryHasTransactions, hardDeleteCategory} from '../../repositories/categoryRepository';
+import {categoryRepository} from '../../repositories/categoryRepository';
 import {Typography} from '../../components/Typography';
-import {ListItem} from '../../components/ListItem';
-import {ColorDot} from '../../components/ColorDot';
 import {styles} from './styles/CategoryListScreen.styles';
 import {CategoryStackParamList} from '../../navigation/types';
+import {CategoryListItem} from './components/CategoryListItem';
 
 type NavigationProp = NativeStackNavigationProp<CategoryStackParamList, 'CategoryList'>;
 
@@ -21,9 +20,7 @@ const CategoryListScreen: React.FC = () => {
   const route = useRoute();
 
   const loadCategories = useCallback(async () => {
-    console.log('Fetching categories...');
-    const data = await getAllCategories(false); // Only active categories
-    console.log('Categories fetched:', JSON.stringify(data));
+    const data = await categoryRepository.getAll(false);
     setCategories(data);
   }, []);
 
@@ -34,7 +31,6 @@ const CategoryListScreen: React.FC = () => {
     setIsLoading(false);
   }, [loadCategories]);
 
-  // Pass refresh handler to navigation params
   useEffect(() => {
     const params = route.params as any;
     if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
@@ -58,7 +54,7 @@ const CategoryListScreen: React.FC = () => {
   };
 
   const handleDelete = async (category: Category) => {
-    const hasTxns = await categoryHasTransactions(category.id);
+    const hasTxns = await categoryRepository.hasTransactions(category.id);
 
     if (hasTxns) {
       Alert.alert(
@@ -70,7 +66,7 @@ const CategoryListScreen: React.FC = () => {
             text: 'Archive',
             style: 'destructive',
             onPress: async () => {
-              await archiveCategory(category.id);
+              await categoryRepository.archive(category.id);
               loadCategories();
             },
           },
@@ -86,7 +82,7 @@ const CategoryListScreen: React.FC = () => {
             text: 'Delete',
             style: 'destructive',
             onPress: async () => {
-              await hardDeleteCategory(category.id);
+              await categoryRepository.hardDelete(category.id);
               loadCategories();
             },
           },
@@ -95,25 +91,18 @@ const CategoryListScreen: React.FC = () => {
     }
   };
 
-  const renderItem = ({item}: {item: Category}) => (
-    <ListItem
-      title={item.name}
-      leftElement={<ColorDot color={item.color} size="lg" />}
-      onPress={() => handleEdit(item)}
-      rightElement={
-        <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-          <Typography color="error" variant="caption" weight="semibold">DELETE</Typography>
-        </TouchableOpacity>
-      }
-    />
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={[]}>
       <FlatList
         data={categories}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
+        renderItem={({item}) => (
+          <CategoryListItem
+            item={item}
+            onPress={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyState}>

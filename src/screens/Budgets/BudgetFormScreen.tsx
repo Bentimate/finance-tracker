@@ -3,8 +3,6 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  Modal,
-  FlatList,
   Alert,
   DeviceEventEmitter,
 } from 'react-native';
@@ -16,14 +14,11 @@ import {theme} from '../../theme';
 import {Typography} from '../../components/Typography';
 import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
+import {CategoryPickerModal} from '../../components/CategoryPickerModal';
 import {BudgetStackParamList} from '../../navigation/types';
 import {Category} from '../../types';
-import {getAllCategories} from '../../repositories/categoryRepository';
-import {
-  upsertBudget,
-  getBudgetByCategory,
-  deleteBudget,
-} from '../../repositories/budgetRepository';
+import {categoryRepository} from '../../repositories/categoryRepository';
+import {budgetRepository} from '../../repositories/budgetRepository';
 import {styles} from './styles/BudgetFormScreen.styles';
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetForm'>;
@@ -46,11 +41,11 @@ const BudgetFormScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const cats = await getAllCategories();
+      const cats = await categoryRepository.getAll();
       setCategories(cats);
 
       if (initialCategoryId && initialCategoryId > 0) {
-        const budget = await getBudgetByCategory(initialCategoryId);
+        const budget = await budgetRepository.getByCategory(initialCategoryId);
         if (budget) {
           setAmount(budget.budget_amount.toString());
           setPeriod(budget.period);
@@ -77,7 +72,7 @@ const BudgetFormScreen: React.FC = () => {
     }
 
     try {
-      await upsertBudget({
+      await budgetRepository.upsert({
         category_id: categoryId,
         budget_amount: numAmount,
         period,
@@ -100,7 +95,7 @@ const BudgetFormScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             if (categoryId) {
-              await deleteBudget(categoryId);
+              await budgetRepository.delete(categoryId);
               DeviceEventEmitter.emit('AppRefresh');
               navigation.goBack();
             }
@@ -192,45 +187,16 @@ const BudgetFormScreen: React.FC = () => {
         />
       </View>
 
-      <Modal
+      <CategoryPickerModal
         visible={isCategoryModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setCategoryModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Typography variant="h3">Select Category</Typography>
-              <TouchableOpacity onPress={() => setCategoryModalVisible(false)}>
-                <Typography color="primary">Done</Typography>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={categories}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.categoryList}
-              renderItem={({item}) => (
-                <TouchableOpacity
-                  style={[
-                    styles.categoryOption,
-                    categoryId === item.id && styles.categoryOptionSelected
-                  ]}
-                  onPress={() => {
-                    setCategoryId(item.id);
-                    setCategoryModalVisible(false);
-                  }}>
-                  <View style={[styles.categoryDot, {backgroundColor: item.color}]} />
-                  <Typography
-                    variant="body"
-                    weight={categoryId === item.id ? 'bold' : 'regular'}>
-                    {item.name}
-                  </Typography>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setCategoryModalVisible(false)}
+        categories={categories}
+        selectedCategoryId={categoryId}
+        onSelectCategory={(id) => {
+          setCategoryId(id);
+          setCategoryModalVisible(false);
+        }}
+      />
     </SafeAreaView>
   );
 };

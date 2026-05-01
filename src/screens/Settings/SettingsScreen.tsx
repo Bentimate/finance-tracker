@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,66 +10,8 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useExport} from '../../hooks/useExport';
 import {styles} from './SettingsScreen.styles';
-import {theme} from '../../theme';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April',
-  'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December',
-];
-
-function prevMonth(year: number, month: number) {
-  return month === 1 ? {year: year - 1, month: 12} : {year, month: month - 1};
-}
-
-function nextMonth(year: number, month: number) {
-  return month === 12 ? {year: year + 1, month: 1} : {year, month: month + 1};
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-interface MonthRowProps {
-  year: number;
-  month: number;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
-const MonthRow: React.FC<MonthRowProps> = ({year, month, onPrev, onNext}) => {
-  const now = new Date();
-  const isCurrentMonth =
-    year === now.getFullYear() && month === now.getMonth() + 1;
-
-  return (
-    <View style={styles.monthRow}>
-      <TouchableOpacity onPress={onPrev} hitSlop={12} style={styles.chevronBtn}>
-        <Text style={styles.chevron}>‹</Text>
-      </TouchableOpacity>
-      <Text style={styles.monthLabel}>
-        {MONTH_NAMES[month - 1]} {year}
-      </Text>
-      <TouchableOpacity
-        onPress={onNext}
-        hitSlop={12}
-        style={styles.chevronBtn}
-        disabled={isCurrentMonth}>
-        <Text style={[styles.chevron, isCurrentMonth && styles.chevronDisabled]}>
-          ›
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
+import {MonthRow} from './components/MonthRow';
+import {prevMonth, nextMonth} from './helpers';
 
 const SettingsScreen: React.FC = () => {
   const now = new Date();
@@ -79,8 +21,7 @@ const SettingsScreen: React.FC = () => {
   const {status, runExport, reset} = useExport();
   const isLoading = status.kind === 'loading';
 
-  // Show result alerts once per export attempt
-  React.useEffect(() => {
+  useEffect(() => {
     if (status.kind === 'success') {
       Alert.alert(
         'Export Complete',
@@ -93,8 +34,7 @@ const SettingsScreen: React.FC = () => {
         {text: 'OK', onPress: reset},
       ]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status.kind]);
+  }, [status.kind, year, month, reset]);
 
   const handleExport = () => {
     runExport(year, month);
@@ -122,7 +62,6 @@ const SettingsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
 
-        {/* ── Export section ── */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Data Export</Text>
           <View style={styles.card}>
@@ -164,7 +103,6 @@ const SettingsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* ── About section ── */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>About</Text>
           <View style={styles.card}>

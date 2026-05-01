@@ -13,7 +13,6 @@ import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import {useDashboardData} from '../../hooks/useDashboardData';
-// ...
 import MonthSelector from './components/MonthSelector';
 import CashFlowCard from './components/CashFlowCard';
 import TopSpendingCard from './components/TopSpendingCard';
@@ -21,22 +20,7 @@ import CategoryDonutCard from './components/CategoryDonutCard';
 import TrendBarCard from './components/TrendBarCard';
 import {styles} from './DashboardScreen.styles';
 import {theme} from '../../theme';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function prevMonth(year: number, month: number) {
-  return month === 1 ? {year: year - 1, month: 12} : {year, month: month - 1};
-}
-
-function nextMonth(year: number, month: number) {
-  return month === 12 ? {year: year + 1, month: 1} : {year, month: month + 1};
-}
-
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
+import {prevMonth, nextMonth} from './helpers';
 
 const DashboardScreen: React.FC = () => {
   const now = new Date();
@@ -50,17 +34,11 @@ const DashboardScreen: React.FC = () => {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    // Broadcast a global refresh event so other screens (like Transaction List, Budgets)
-    // will re-fetch data from the database if they are mounted.
     DeviceEventEmitter.emit('AppRefresh');
-
-    // Specifically refresh dashboard data
     await refresh();
-
     setIsRefreshing(false);
   }, [refresh]);
 
-  // Pass refresh handler to navigation params
   useEffect(() => {
     const params = route.params as any;
     if (params?.handleRefresh !== handleRefresh || params?.isRefreshing !== isRefreshing) {
@@ -68,7 +46,6 @@ const DashboardScreen: React.FC = () => {
     }
   }, [navigation, handleRefresh, isRefreshing, route.params]);
 
-  // Re-fetch when ANY part of the app triggers a global refresh
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener('AppRefresh', () => {
       refresh();
@@ -76,7 +53,6 @@ const DashboardScreen: React.FC = () => {
     return () => subscription.remove();
   }, [refresh]);
 
-  // Refresh when app returns from background to catch widget writes
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
@@ -86,7 +62,6 @@ const DashboardScreen: React.FC = () => {
     return () => subscription.remove();
   }, [refresh]);
 
-  // Re-fetch when the widget adds a transaction
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(
       'WidgetTransactionAdded',
@@ -97,7 +72,6 @@ const DashboardScreen: React.FC = () => {
     return () => subscription.remove();
   }, [refresh]);
 
-  // Re-fetch when navigating back from other tabs
   useFocusEffect(
     useCallback(() => {
       refresh();

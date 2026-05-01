@@ -1,10 +1,6 @@
 import {useState, useEffect, useCallback} from 'react';
 import {MonthlyTotals, CategorySpend, WeeklyTrend} from '../types';
-import {
-  getMonthlyTotals,
-  getCategorySpend,
-  getWeeklyTrend,
-} from '../repositories/analyticsRepository';
+import {analyticsRepository} from '../repositories/analyticsRepository';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,9 +45,9 @@ export function useDashboardData(
     setError(null);
     try {
       const [totals, categorySpend, weeklyTrend] = await Promise.all([
-        getMonthlyTotals(year, month),
-        getCategorySpend(year, month),
-        getWeeklyTrend(year, month),
+        analyticsRepository.getMonthlyTotals(year, month),
+        analyticsRepository.getCategorySpend(year, month),
+        analyticsRepository.getWeeklyTrend(year, month),
       ]);
       setData({totals, categorySpend, weeklyTrend});
     } catch (e: any) {
