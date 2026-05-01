@@ -9,7 +9,7 @@ export function formatCurrency(value: number): string {
   const abs = Math.abs(value);
   const [intPart, decPart] = abs.toFixed(2).split('.');
   const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return `S$${formatted}.${decPart}`;
+  return `$${formatted}.${decPart}`;
 }
 
 /**
@@ -23,5 +23,5 @@ export function formatCurrencyCompact(value: number): string {
   const isRound = abs % 1 === 0;
   const [intPart, decPart] = abs.toFixed(2).split('.');
   const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return isRound ? `S$${formatted}` : `S$${formatted}.${decPart}`;
+  return isRound ? `$${formatted}` : `$${formatted}.${decPart}`;
 }

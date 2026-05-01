@@ -5,6 +5,7 @@ import {DailyNetFlow} from '../../../types';
 import {getCalendarGrid, WEEKDAYS} from '../calendarHelpers';
 import {styles} from '../styles/CalendarView.styles';
 import {CalendarDayCell} from './CalendarDayCell';
+import {toDateStr} from '../helpers';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -57,7 +58,7 @@ const MonthGrid = React.memo(({
 
       <View style={styles.grid}>
         {grid.map((day, i) => {
-          const dateStr = day.date.toISOString().split('T')[0];
+          const dateStr = toDateStr(day.date);
           const flowData = dailyFlows?.find(f => f.date === dateStr);
           return (
             <CalendarDayCell

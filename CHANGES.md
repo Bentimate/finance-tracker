@@ -33,6 +33,7 @@ Implemented a custom, high-performance calendar view for the Transactions screen
     - **Month-Keyed Cache**: Implemented a caching layer for daily flow data to make month transitions instantaneous.
     - **Predictive Pre-fetching**: Added background pre-fetching for adjacent months to eliminate flicker and latency during swipes.
 6.  **Navigation Synchronization**: Fully synchronized horizontal swiping with the Year/Month dropdown filters, including safety checks for index-based scrolling.
+7.  **Local Timezone Synchronization**: Resolved "one-day off" date bugs by updating all database queries and helper functions to use the `'localtime'` modifier and native local date strings.
 
 ## UI Refactoring of Screens and Components
 

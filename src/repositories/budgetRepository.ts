@@ -56,7 +56,7 @@ class BudgetRepository extends BaseRepository {
        FROM   transactions
        WHERE  category_id = ?
          AND  type = 'expense'
-         AND  date(date) BETWEEN ? AND ?
+         AND  date(date, 'localtime') BETWEEN ? AND ?
          AND  deleted_at IS NULL`,
       [categoryId, startDate, endDate],
     );

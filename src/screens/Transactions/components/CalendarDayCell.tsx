@@ -43,7 +43,7 @@ const CalendarDayCellComponent: React.FC<CalendarDayCellProps> = ({
             adjustsFontSizeToFit
             color={netFlow > 0 ? 'success' : 'error'}
           >
-            {netFlow > 0 ? '+' : ''}{formatCurrency(netFlow)}
+            {formatCurrency(netFlow)}
           </Typography>
         </View>
       )}

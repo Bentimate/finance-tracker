@@ -19,7 +19,7 @@ class TransactionRepository extends BaseRepository {
       `SELECT t.*, c.name AS category_name, c.color AS category_color
        FROM   transactions t
        JOIN   categories   c ON c.id = t.category_id
-       WHERE  date(t.date) = ?
+       WHERE  date(t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date DESC`,
       [date],
@@ -37,7 +37,7 @@ class TransactionRepository extends BaseRepository {
       `SELECT t.*, c.name AS category_name, c.color AS category_color
        FROM   transactions t
        JOIN   categories   c ON c.id = t.category_id
-       WHERE  date(t.date) BETWEEN ? AND ?
+       WHERE  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date DESC`,
       [startDate, endDate],
@@ -53,8 +53,8 @@ class TransactionRepository extends BaseRepository {
       `SELECT t.*, c.name AS category_name, c.color AS category_color
        FROM   transactions t
        JOIN   categories   c ON c.id = t.category_id
-       WHERE  strftime('%Y', t.date) = ?
-         AND  strftime('%m', t.date) = ?
+       WHERE  strftime('%Y', t.date, 'localtime') = ?
+         AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date DESC`,
       [String(year), String(month).padStart(2, '0')],
@@ -85,8 +85,8 @@ class TransactionRepository extends BaseRepository {
       `SELECT t.*, c.name AS category_name
        FROM   transactions t
        JOIN   categories   c ON c.id = t.category_id
-       WHERE  strftime('%Y', t.date) = ?
-         AND  strftime('%m', t.date) = ?
+       WHERE  strftime('%Y', t.date, 'localtime') = ?
+         AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date ASC`,
       [String(year), String(month).padStart(2, '0')],

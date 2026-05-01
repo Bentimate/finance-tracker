@@ -11,8 +11,8 @@ class AnalyticsRepository extends BaseRepository {
          COALESCE(SUM(CASE WHEN type = 'income'  THEN amount ELSE 0 END), 0) AS total_income,
          COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense
        FROM transactions
-       WHERE strftime('%Y', date) = ?
-         AND strftime('%m', date) = ?
+       WHERE strftime('%Y', date, 'localtime') = ?
+         AND strftime('%m', date, 'localtime') = ?
          AND deleted_at IS NULL`,
       [String(year), this.pad(month)],
     );
@@ -34,14 +34,14 @@ class AnalyticsRepository extends BaseRepository {
   async getDailyNetFlow(year: number, month: number): Promise<DailyNetFlow[]> {
     const result = await this.db.execute(
       `SELECT
-         date(date) AS date,
+         date(date, 'localtime') AS date,
          COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS net_flow
        FROM transactions
-       WHERE strftime('%Y', date) = ?
-         AND strftime('%m', date) = ?
+       WHERE strftime('%Y', date, 'localtime') = ?
+         AND strftime('%m', date, 'localtime') = ?
          AND deleted_at IS NULL
-       GROUP BY date(date)
-       ORDER BY date(date) ASC`,
+       GROUP BY date(date, 'localtime')
+       ORDER BY date(date, 'localtime') ASC`,
       [String(year), this.pad(month)],
     );
 
@@ -65,8 +65,8 @@ class AnalyticsRepository extends BaseRepository {
        FROM   transactions t
        JOIN   categories   c ON c.id = t.category_id
        WHERE  t.type       = 'expense'
-         AND  strftime('%Y', t.date) = ?
-         AND  strftime('%m', t.date) = ?
+         AND  strftime('%Y', t.date, 'localtime') = ?
+         AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
        GROUP BY c.id
        ORDER BY total DESC`,
@@ -82,12 +82,12 @@ class AnalyticsRepository extends BaseRepository {
   async getWeeklyTrend(year: number, month: number): Promise<WeeklyTrend[]> {
     const result = await this.db.execute(
       `SELECT
-         strftime('%W', date)                                                    AS week_num,
+         strftime('%W', date, 'localtime')                                                    AS week_num,
          COALESCE(SUM(CASE WHEN type = 'income'  THEN amount ELSE 0 END), 0) AS income,
          COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS expense
        FROM transactions
-       WHERE strftime('%Y', date) = ?
-         AND strftime('%m', date) = ?
+       WHERE strftime('%Y', date, 'localtime') = ?
+         AND strftime('%m', date, 'localtime') = ?
          AND deleted_at IS NULL
        GROUP BY week_num
        ORDER BY week_num`,
