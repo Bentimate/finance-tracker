@@ -108,7 +108,7 @@ const SettingsScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.aboutRow}>
               <Text style={styles.aboutKey}>Version</Text>
-              <Text style={styles.aboutValue}>1.0.0</Text>
+              <Text style={styles.aboutValue}>1.1.0</Text>
             </View>
             <View style={[styles.aboutRow, styles.aboutRowLast]}>
               <Text style={styles.aboutKey}>Data storage</Text>
