@@ -1,6 +1,5 @@
 import React, {useRef, useEffect, useMemo, useCallback} from 'react';
-import {View, FlatList, Dimensions} from 'react-native';
-import {Typography} from '../../../components/Typography';
+import {View, FlatList, Dimensions, Text} from 'react-native';
 import {DailyNetFlow} from '../../../types';
 import {getCalendarGrid, WEEKDAYS} from '../calendarHelpers';
 import {styles} from '../styles/CalendarView.styles';
@@ -44,14 +43,23 @@ const MonthGrid = React.memo(({
 }) => {
   const grid = useMemo(() => getCalendarGrid(year, month), [year, month]);
 
+  // Convert array to O(1) lookup map
+  const flowMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (dailyFlows) {
+      dailyFlows.forEach(f => map.set(f.date, f.netFlow));
+    }
+    return map;
+  }, [dailyFlows]);
+
   return (
     <View style={styles.monthContainer}>
       <View style={styles.weekdayRow}>
         {WEEKDAYS.map(day => (
           <View key={day} style={styles.weekdayCell}>
-            <Typography variant="caption" color="textMuted" weight="bold">
+            <Text style={styles.weekdayText}>
               {day}
-            </Typography>
+            </Text>
           </View>
         ))}
       </View>
@@ -59,12 +67,12 @@ const MonthGrid = React.memo(({
       <View style={styles.grid}>
         {grid.map((day, i) => {
           const dateStr = toDateStr(day.date);
-          const flowData = dailyFlows?.find(f => f.date === dateStr);
+          const netFlow = flowMap.get(dateStr) ?? 0;
           return (
             <CalendarDayCell
               key={`${year}-${month}-${i}`}
               day={day}
-              netFlow={flowData?.netFlow ?? 0}
+              netFlow={netFlow}
               onPress={onDayPress}
             />
           );
@@ -94,6 +102,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   useEffect(() => {
     if (currentIndex >= 0 && currentIndex < monthIndices.length) {
       flatListRef.current?.scrollToIndex({index: currentIndex, animated: true});
+    } else {
+      console.warn(`CalendarView: currentIndex ${currentIndex} out of bounds [0, ${monthIndices.length - 1}]`);
     }
   }, [currentIndex, monthIndices.length]);
 

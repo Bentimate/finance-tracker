@@ -1,7 +1,5 @@
 import React from 'react';
-import {TouchableOpacity, View} from 'react-native';
-import {Typography} from '../../../components/Typography';
-import {theme} from '../../../theme';
+import {Pressable, View, Text} from 'react-native';
 import {formatCurrency} from '../../../utils/formatCurrency';
 import {CalendarDay} from '../calendarHelpers';
 import {styles} from '../styles/CalendarView.styles';
@@ -18,36 +16,38 @@ const CalendarDayCellComponent: React.FC<CalendarDayCellProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity
+    <Pressable
       style={[
         styles.dayCell,
         !day.isCurrentMonth && styles.dayCellInactive
       ]}
       onPress={() => onPress(day.date)}
     >
-      <Typography
+      <Text
         style={[
           styles.dayNumber,
           day.isToday && styles.todayIndicator,
-          !day.isCurrentMonth && {color: theme.colors.textMuted}
+          !day.isCurrentMonth && styles.dayNumberInactive
         ]}
       >
         {day.date.getDate()}
-      </Typography>
+      </Text>
 
       {netFlow !== 0 && (
         <View style={styles.flowContainer}>
-          <Typography
-            style={styles.flowText}
+          <Text
+            style={[
+              styles.flowText,
+              netFlow > 0 ? styles.flowSuccess : styles.flowError
+            ]}
             numberOfLines={1}
             adjustsFontSizeToFit
-            color={netFlow > 0 ? 'success' : 'error'}
           >
-            {formatCurrency(netFlow)}
-          </Typography>
+            {netFlow > 0 ? '+' : ''}{formatCurrency(netFlow)}
+          </Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

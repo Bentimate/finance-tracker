@@ -23,6 +23,12 @@ export const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
   },
+  weekdayText: {
+    fontSize: theme.typography.fontSizes.xs,
+    color: theme.colors.textMuted,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -43,6 +49,9 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.textSecondary,
   },
+  dayNumberInactive: {
+    color: theme.colors.textMuted,
+  },
   todayIndicator: {
     color: theme.colors.primary,
     fontWeight: 'bold',
@@ -54,8 +63,14 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   flowText: {
-    fontSize: 10, // Max size
+    fontSize: 10,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  flowSuccess: {
+    color: theme.colors.success,
+  },
+  flowError: {
+    color: theme.colors.error,
   },
 });
