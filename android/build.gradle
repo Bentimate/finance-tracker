@@ -16,6 +16,11 @@ buildscript {
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
     }
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+        }
+    }
 }
 
 apply plugin: "com.facebook.react.rootproject"
