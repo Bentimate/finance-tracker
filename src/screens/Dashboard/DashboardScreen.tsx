@@ -21,6 +21,9 @@ import TrendBarCard from './components/TrendBarCard';
 import {styles} from './DashboardScreen.styles';
 import {theme} from '../../theme';
 import {prevMonth, nextMonth} from './helpers';
+import {LoadingState} from '../../components/LoadingState';
+import {ErrorState} from '../../components/ErrorState';
+import {Screen} from '../../components/Screen';
 
 const DashboardScreen: React.FC = () => {
   const now = new Date();
@@ -96,28 +99,14 @@ const DashboardScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      <MonthSelector
-        year={year}
-        month={month}
-        onPrev={handlePrev}
-        onNext={handleNext}
-      />
+    <Screen
+      edges={[]}
+      header={
+        <MonthSelector year={year} month={month} onPrev={handlePrev} onNext={handleNext} />
+      }>
+      {loading && <LoadingState />}
 
-      {loading && (
-        <View style={styles.centeredFill}>
-          <ActivityIndicator color={theme.colors.primary} />
-        </View>
-      )}
-
-      {!loading && error && (
-        <View style={styles.centeredFill}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={refresh} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {!loading && error && <ErrorState message={error} onRetry={refresh} />}
 
       {!loading && !error && data && (
         <ScrollView
@@ -130,7 +119,7 @@ const DashboardScreen: React.FC = () => {
           <TrendBarCard weeklyTrend={data.weeklyTrend} />
         </ScrollView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 };
 

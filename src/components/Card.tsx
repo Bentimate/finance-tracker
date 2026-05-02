@@ -1,22 +1,14 @@
 import React from 'react';
-import {View, StyleSheet, ViewStyle} from 'react-native';
-import {theme} from '../theme';
+import {View, ViewProps} from 'react-native';
+import {styles} from './styles/Card.styles';
 
-interface CardProps {
-  children: React.ReactNode;
-  style?: ViewStyle;
-}
-
-export const Card: React.FC<CardProps> = ({children, style}) => {
-  return <View style={[styles.card, style]}>{children}</View>;
+/**
+ * A reusable card container component with consistent styling.
+ */
+export const Card: React.FC<ViewProps> = ({children, style, ...props}) => {
+  return (
+    <View style={[styles.card, style]} {...props}>
+      {children}
+    </View>
+  );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-});

@@ -14,6 +14,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {categoryRepository} from '../../repositories/categoryRepository';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
+import {Screen} from '../../components/Screen';
 import {styles} from './styles/CategoryFormScreen.styles';
 import {CategoryStackParamList} from '../../navigation/types';
 import {ColorPicker, PRESET_COLORS} from './components/ColorPicker';
@@ -67,35 +68,33 @@ const CategoryFormScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <Input
-            label="Category Name"
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              if (error) setError('');
-            }}
-            placeholder="e.g. Groceries"
-            error={error}
-            autoFocus={!isEdit}
-          />
+    <Screen
+      withKeyboardAvoidingView
+      scrollable
+      contentStyle={styles.content}
+      edges={[]}
+      footer={
+        <Button
+          title={isEdit ? 'Update Category' : 'Create Category'}
+          onPress={handleSave}
+          loading={loading}
+          style={{flex: 1}}
+        />
+      }>
+      <Input
+        label="Category Name"
+        value={name}
+        onChangeText={(text) => {
+          setName(text);
+          if (error) setError('');
+        }}
+        placeholder="e.g. Groceries"
+        error={error}
+        autoFocus={!isEdit}
+      />
 
-          <ColorPicker selectedColor={color} onColorSelect={setColor} />
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <Button
-            title={isEdit ? 'Update Category' : 'Create Category'}
-            onPress={handleSave}
-            loading={loading}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <ColorPicker selectedColor={color} onColorSelect={setColor} />
+    </Screen>
   );
 };
 

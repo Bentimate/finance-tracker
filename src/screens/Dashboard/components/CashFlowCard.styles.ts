@@ -2,13 +2,6 @@ import {StyleSheet} from 'react-native';
 import {theme} from '../../../theme';
 
 export const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-  },
   sectionLabel: {
     fontSize: theme.typography.fontSizes.xs,
     fontWeight: theme.typography.fontWeights.semibold as any,
@@ -22,7 +15,6 @@ export const styles = StyleSheet.create({
   netRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    // gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
   netAmount: {
@@ -43,13 +35,10 @@ export const styles = StyleSheet.create({
   },
 
   // Bar rows
-  bars: {
-    // gap: theme.spacing.sm,
-  },
+  bars: {},
   barRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    // gap: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
   },
   barLabel: {

@@ -1,8 +1,8 @@
 import {StyleSheet} from 'react-native';
-import {theme} from '../../../theme';
+import {theme} from '../../theme';
 
 export const styles = StyleSheet.create({
-  header: {
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -10,12 +10,7 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  list: {
+  categoryList: {
     padding: theme.spacing.md,
-    paddingBottom: theme.spacing.xl,
-  },
-  emptyState: {
-    padding: theme.spacing.xl,
-    alignItems: 'center',
   },
 });

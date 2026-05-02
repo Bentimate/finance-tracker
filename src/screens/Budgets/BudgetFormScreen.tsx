@@ -14,6 +14,7 @@ import {theme} from '../../theme';
 import {Typography} from '../../components/Typography';
 import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
+import {Screen} from '../../components/Screen';
 import {CategoryPickerModal} from '../../components/CategoryPickerModal';
 import {BudgetStackParamList} from '../../navigation/types';
 import {Category} from '../../types';
@@ -106,85 +107,90 @@ const BudgetFormScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.section}>
-          <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
-            CATEGORY
-          </Typography>
-          <TouchableOpacity
-            style={[styles.categorySelector, isEdit && {opacity: 0.6}]}
-            onPress={() => !isEdit && setCategoryModalVisible(true)}
-            disabled={isEdit}>
-            {selectedCategory ? (
-              <>
-                <View style={[styles.categoryDot, {backgroundColor: selectedCategory.color}]} />
-                <Typography variant="body">{selectedCategory.name}</Typography>
-              </>
-            ) : (
-              <Typography variant="body" color="textMuted">Select Category</Typography>
-            )}
-          </TouchableOpacity>
+    <Screen
+      withKeyboardAvoidingView
+      scrollable
+      contentStyle={styles.content}
+      edges={[]}
+      footer={
+        <>
           {isEdit && (
-            <Typography variant="caption" color="textMuted" style={{marginTop: 4}}>
-              Category cannot be changed for an existing budget.
+            <Button
+              title="Remove"
+              variant="outline"
+              onPress={handleDelete}
+              style={{flex: 1, borderColor: theme.colors.error}}
+              textStyle={{color: theme.colors.error}}
+            />
+          )}
+          <Button
+            title={isEdit ? 'Update Budget' : 'Set Budget'}
+            onPress={handleSave}
+            style={{flex: 2}}
+          />
+        </>
+      }>
+      <View style={styles.section}>
+        <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+          CATEGORY
+        </Typography>
+        <TouchableOpacity
+          style={[styles.categorySelector, isEdit && {opacity: 0.6}]}
+          onPress={() => !isEdit && setCategoryModalVisible(true)}
+          disabled={isEdit}>
+          {selectedCategory ? (
+            <>
+              <View style={[styles.categoryDot, {backgroundColor: selectedCategory.color}]} />
+              <Typography variant="body">{selectedCategory.name}</Typography>
+            </>
+          ) : (
+            <Typography variant="body" color="textMuted">
+              Select Category
             </Typography>
           )}
-        </View>
-
-        <Input
-          label="BUDGET AMOUNT (SGD)"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
-          autoFocus={!isEdit}
-        />
-
-        <View style={styles.section}>
-          <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
-            PERIOD
-          </Typography>
-          <View style={styles.periodContainer}>
-            <TouchableOpacity
-              style={[styles.periodButton, period === 'weekly' && styles.periodButtonActive]}
-              onPress={() => setPeriod('weekly')}>
-              <Typography
-                variant="label"
-                color={period === 'weekly' ? 'primary' : 'textSecondary'}
-                weight={period === 'weekly' ? 'bold' : 'medium'}>
-                WEEKLY
-              </Typography>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.periodButton, period === 'monthly' && styles.periodButtonActive]}
-              onPress={() => setPeriod('monthly')}>
-              <Typography
-                variant="label"
-                color={period === 'monthly' ? 'primary' : 'textSecondary'}
-                weight={period === 'monthly' ? 'bold' : 'medium'}>
-                MONTHLY
-              </Typography>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
+        </TouchableOpacity>
         {isEdit && (
-          <Button
-            title="Remove"
-            variant="outline"
-            onPress={handleDelete}
-            style={{flex: 1, borderColor: theme.colors.error}}
-            textStyle={{color: theme.colors.error}}
-          />
+          <Typography variant="caption" color="textMuted" style={{marginTop: 4}}>
+            Category cannot be changed for an existing budget.
+          </Typography>
         )}
-        <Button
-          title={isEdit ? 'Update Budget' : 'Set Budget'}
-          onPress={handleSave}
-          style={{flex: 2}}
-        />
+      </View>
+
+      <Input
+        label="BUDGET AMOUNT"
+        value={amount}
+        onChangeText={setAmount}
+        keyboardType="decimal-pad"
+        placeholder="0.00"
+        autoFocus={!isEdit}
+      />
+
+      <View style={styles.section}>
+        <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+          PERIOD
+        </Typography>
+        <View style={styles.periodContainer}>
+          <TouchableOpacity
+            style={[styles.periodButton, period === 'weekly' && styles.periodButtonActive]}
+            onPress={() => setPeriod('weekly')}>
+            <Typography
+              variant="label"
+              color={period === 'weekly' ? 'primary' : 'textSecondary'}
+              weight={period === 'weekly' ? 'bold' : 'medium'}>
+              WEEKLY
+            </Typography>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.periodButton, period === 'monthly' && styles.periodButtonActive]}
+            onPress={() => setPeriod('monthly')}>
+            <Typography
+              variant="label"
+              color={period === 'monthly' ? 'primary' : 'textSecondary'}
+              weight={period === 'monthly' ? 'bold' : 'medium'}>
+              MONTHLY
+            </Typography>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <CategoryPickerModal
@@ -197,7 +203,7 @@ const BudgetFormScreen: React.FC = () => {
           setCategoryModalVisible(false);
         }}
       />
-    </SafeAreaView>
+    </Screen>
   );
 };
 

@@ -5,6 +5,8 @@ import {Typography} from '../../../components/Typography';
 import {formatCurrency} from '../../../utils/formatCurrency';
 import {theme} from '../../../theme';
 import {styles} from '../styles/BudgetListScreen.styles';
+import {ColorDot} from '../../../components/ColorDot';
+import {ProgressBar} from '../../../components/ProgressBar';
 
 interface BudgetItemProps {
   item: BudgetProgress;
@@ -28,8 +30,8 @@ export const BudgetItem: React.FC<BudgetItemProps> = ({item, onPress}) => {
       <View style={styles.budgetTop}>
         <View>
           <View style={styles.categoryInfo}>
-            <View style={[styles.categoryDot, {backgroundColor: item.category_color}]} />
-            <Typography variant="body" weight="bold">{item.category_name}</Typography>
+            <ColorDot color={item.category_color} />
+            <Typography variant="body" weight="bold" style={{marginLeft: 5}}>{item.category_name}</Typography>
           </View>
           <Typography variant="caption" color="textMuted" style={{marginTop: 2}}>
             {item.period.toUpperCase()}
@@ -43,17 +45,11 @@ export const BudgetItem: React.FC<BudgetItemProps> = ({item, onPress}) => {
         </View>
       </View>
 
-      <View style={styles.progressContainer}>
-        <View
-          style={[
-            styles.progressBar,
-            {
-              width: `${Math.min(item.percentage, 100)}%`,
-              backgroundColor: progressColor
-            }
-          ]}
-        />
-      </View>
+      <ProgressBar
+        progress={item.percentage / 100}
+        color={progressColor}
+        style={styles.progressContainer}
+      />
 
       <View style={styles.budgetFooter}>
         <Typography variant="caption" color="textMuted">

@@ -3,6 +3,7 @@ import {View, Text} from 'react-native';
 import {CategorySpend} from '../../../types';
 import {formatCurrency} from '../../../utils/formatCurrency';
 import {styles} from './TopSpendingCard.styles';
+import {Card} from '../../../components/Card';
 
 interface Props {
   categorySpend: CategorySpend[];
@@ -15,7 +16,7 @@ const TopSpendingCard: React.FC<Props> = ({categorySpend, limit = 5}) => {
   const maxTotal = top[0]?.total ?? 1;
 
   return (
-    <View style={styles.card}>
+    <Card>
       <Text style={styles.sectionLabel}>Top Spending</Text>
 
       {top.length === 0 ? (
@@ -55,7 +56,7 @@ const TopSpendingCard: React.FC<Props> = ({categorySpend, limit = 5}) => {
           })}
         </View>
       )}
-    </View>
+    </Card>
   );
 };
 

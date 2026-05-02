@@ -4,6 +4,7 @@ import {BarChart} from 'react-native-gifted-charts';
 import {WeeklyTrend} from '../../../types';
 import {styles} from './TrendBarCard.styles';
 import {theme} from '../../../theme';
+import {Card} from '../../../components/Card';
 
 interface Props {
   weeklyTrend: WeeklyTrend[];
@@ -21,10 +22,10 @@ const TrendBarCard: React.FC<Props> = ({weeklyTrend}) => {
 
   if (weeklyTrend.length === 0) {
     return (
-      <View style={styles.card}>
+      <Card>
         <Text style={styles.sectionLabel}>Income vs Expenses</Text>
         <Text style={styles.empty}>No transactions this month</Text>
-      </View>
+      </Card>
     );
   }
 
@@ -57,7 +58,7 @@ const TrendBarCard: React.FC<Props> = ({weeklyTrend}) => {
   );
 
   return (
-    <View style={styles.card}>
+    <Card>
       <Text style={styles.sectionLabel}>Income vs Expenses</Text>
 
       <BarChart
@@ -98,7 +99,7 @@ const TrendBarCard: React.FC<Props> = ({weeklyTrend}) => {
           <Text style={styles.legendLabel}>Expenses</Text>
         </View>
       </View>
-    </View>
+    </Card>
   );
 };
 

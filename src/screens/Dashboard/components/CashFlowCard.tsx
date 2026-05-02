@@ -3,6 +3,7 @@ import {View, Text} from 'react-native';
 import {MonthlyTotals} from '../../../types';
 import {formatCurrency} from '../../../utils/formatCurrency';
 import {styles} from './CashFlowCard.styles';
+import {Card} from '../../../components/Card';
 
 interface Props {
   totals: MonthlyTotals;
@@ -43,7 +44,7 @@ const CashFlowCard: React.FC<Props> = ({totals}) => {
   const hasData = totalIncome > 0 || totalExpense > 0;
 
   return (
-    <View style={styles.card}>
+    <Card>
       <Text style={styles.sectionLabel}>Cash Flow</Text>
 
       {/* Net — headline number */}
@@ -74,7 +75,7 @@ const CashFlowCard: React.FC<Props> = ({totals}) => {
       ) : (
         <Text style={styles.empty}>No transactions this month</Text>
       )}
-    </View>
+    </Card>
   );
 };
 

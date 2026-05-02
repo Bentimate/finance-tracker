@@ -7,10 +7,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {BudgetProgress} from '../../types';
 import {budgetRepository} from '../../repositories/budgetRepository';
 import {Typography} from '../../components/Typography';
+import {Screen} from '../../components/Screen';
 import {styles} from './styles/BudgetListScreen.styles';
 import {BudgetStackParamList} from '../../navigation/types';
 import {BudgetItem} from './components/BudgetItem';
 import {PlusButton} from '../../components/PlusButton'
+import {EmptyState} from '../../components/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetList'>;
 
@@ -51,7 +53,7 @@ const BudgetListScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <Screen edges={[]}>
       <FlatList
         data={budgets}
         keyExtractor={(item) => item.category_id.toString()}
@@ -63,15 +65,11 @@ const BudgetListScreen: React.FC = () => {
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Typography variant="body" color="textMuted" align="center">
-              No budgets set up yet. Set a budget to track your spending by category.
-            </Typography>
-          </View>
+          <EmptyState message="No budgets set up yet. Set a budget to track your spending by category." />
         }
       />
       <PlusButton onPress={() => navigation.navigate('BudgetForm', {categoryId: 0})} />
-    </SafeAreaView>
+    </Screen>
   );
 };
 

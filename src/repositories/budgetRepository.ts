@@ -38,6 +38,7 @@ class BudgetRepository extends BaseRepository {
 
   /**
    * Computes the current-period spend for a category and returns budget progress.
+   * Period bounds are based on the current calendar week (Mon-Sun) or month.
    */
   async getProgress(categoryId: number): Promise<BudgetProgress | null> {
     const budget = await this.getByCategory(categoryId);
@@ -110,34 +111,6 @@ class BudgetRepository extends BaseRepository {
     await this.db.execute('DELETE FROM budgets WHERE category_id = ?', [
       categoryId,
     ]);
-  }
-
-  // --- Helpers ---
-
-  private currentWeekBounds(date: Date): { startDate: string, endDate: string } {
-    const d = new Date(date);
-    const day = d.getDay(); // 0 = Sunday
-    const diffToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(d);
-    monday.setDate(d.getDate() + diffToMonday);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    return {
-      startDate: monday.toISOString().slice(0, 10),
-      endDate: sunday.toISOString().slice(0, 10),
-    };
-  }
-
-  private currentMonthBounds(date: Date): { startDate: string, endDate: string } {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const first = new Date(year, month, 1);
-    const last = new Date(year, month + 1, 0);
-    return {
-      startDate: first.toISOString().slice(0, 10),
-      endDate: last.toISOString().slice(0, 10),
-    };
   }
 }
 

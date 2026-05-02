@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {View, Modal, TouchableOpacity, FlatList, ActivityIndicator} from 'react-native';
+import {View, TouchableOpacity, FlatList, ActivityIndicator} from 'react-native';
 import {Typography} from '../../../components/Typography';
 import {Transaction} from '../../../types';
 import {transactionRepository} from '../../../repositories/transactionRepository';
@@ -7,6 +7,7 @@ import {TransactionItem} from './TransactionItem';
 import {styles} from '../styles/DayTransactionsSheet.styles';
 import {toDateStr} from '../helpers';
 import {theme} from '../../../theme';
+import {BottomSheet} from '../../../components/BottomSheet';
 
 interface DayTransactionsSheetProps {
   visible: boolean;
@@ -46,58 +47,41 @@ export const DayTransactionsSheet: React.FC<DayTransactionsSheetProps> = ({
   if (!date) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity
-        style={styles.backdrop}
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        <TouchableOpacity
-          style={styles.sheet}
-          activeOpacity={1}
-          onPress={() => {}} // Prevent closing when tapping inside the sheet
-        >
-          <View style={styles.header}>
-            <Typography variant="h3">
-              {date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Typography>
-            <TouchableOpacity onPress={onClose}>
-              <Typography color="primary" weight="bold">Done</Typography>
-            </TouchableOpacity>
-          </View>
+    <BottomSheet visible={visible} onClose={onClose}>
+      <View style={styles.header}>
+        <Typography variant="h3">
+          {date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </Typography>
+        <TouchableOpacity onPress={onClose}>
+          <Typography color="primary" weight="bold">Done</Typography>
+        </TouchableOpacity>
+      </View>
 
-          {loading ? (
-            <View style={styles.emptyState}>
-              <ActivityIndicator color={theme.colors.primary} />
-            </View>
-          ) : (
-            <FlatList
-              data={transactions}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
-                <TransactionItem
-                  item={item}
-                  onPress={(id) => {
-                    onClose(); // Close sheet before navigating
-                    onTransactionPress(id);
-                  }}
-                />
-              )}
-              contentContainerStyle={styles.list}
-              ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  <Typography color="textMuted">No transactions for this day.</Typography>
-                </View>
-              }
+      {loading ? (
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={transactions}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({item}) => (
+            <TransactionItem
+              item={item}
+              onPress={(id) => {
+                onClose(); // Close sheet before navigating
+                onTransactionPress(id);
+              }}
             />
           )}
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Typography color="textMuted">No transactions for this day.</Typography>
+            </View>
+          }
+        />
+      )}
+    </BottomSheet>
   );
 };

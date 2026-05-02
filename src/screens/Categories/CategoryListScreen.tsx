@@ -7,10 +7,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Category} from '../../types';
 import {categoryRepository} from '../../repositories/categoryRepository';
 import {Typography} from '../../components/Typography';
+import {Screen} from '../../components/Screen';
 import {styles} from './styles/CategoryListScreen.styles';
 import {CategoryStackParamList} from '../../navigation/types';
 import {CategoryListItem} from './components/CategoryListItem';
 import {PlusButton} from '../../components/PlusButton'
+import {EmptyState} from '../../components/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<CategoryStackParamList, 'CategoryList'>;
 
@@ -93,29 +95,20 @@ const CategoryListScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <Screen edges={[]}>
       <FlatList
         data={categories}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({item}) => (
-          <CategoryListItem
-            item={item}
-            onPress={handleEdit}
-            onDelete={handleDelete}
-          />
+          <CategoryListItem item={item} onPress={handleEdit} onDelete={handleDelete} />
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Typography variant="body" color="textMuted" align="center">
-              No categories found. Tap the + button to create one.
-            </Typography>
-          </View>
+          <EmptyState message="No categories found. Tap the + button to create one." />
         }
       />
       <PlusButton onPress={() => navigation.navigate('CategoryForm', {})} />
-
-    </SafeAreaView>
+    </Screen>
   );
 };
 

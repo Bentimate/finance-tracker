@@ -27,7 +27,9 @@ export function getISOWeekBounds(date: Date): {start: string; end: string} {
 export function groupByDate(transactions: Transaction[]): TransactionSection[] {
   const groups: Record<string, Transaction[]> = {};
   transactions.forEach(tx => {
-    const date = tx.date.split('T')[0];
+    // tx.date is UTC ISO string from DB. Convert to local Date before getting YYYY-MM-DD
+    const localDate = new Date(tx.date);
+    const date = toDateStr(localDate);
     if (!groups[date]) groups[date] = [];
     groups[date].push(tx);
   });

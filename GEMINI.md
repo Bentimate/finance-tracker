@@ -11,16 +11,15 @@ Set budgets for your categories
 See your money in pie charts and bar graphs
 
 ### 4. Widget on your home screen
-For lazy people like me, you can add transactions on the go with the widget, without having to open the app at all
+you can add transactions on the go with the widget, without having to open the app at all
 
 ### 5. Export your data
 You can export your data into a CSV file stored on your phone
 
 ## General Instructions
 - Act as a senior Typescript developer who writes production-ready and clean code, following OOP paradigms.
-- When you generate new TypeScript code, follow the existing coding style.
 - Prefer OOP programming paradigms where appropriate.
 - Keep in mind the global theme.ts
 - Do not use magic values
-- separate styles from components
+- ALWAYS separate styles from components ie. create all relevant styles in a separate stylesheet and inject them into the component when needed.
 - break down big components into smaller individual components

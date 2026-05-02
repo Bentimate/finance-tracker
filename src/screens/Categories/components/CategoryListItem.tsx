@@ -19,7 +19,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
   return (
     <ListItem
       title={item.name}
-      leftElement={<ColorDot color={item.color} size="lg" />}
+      leftElement={<ColorDot color={item.color} />}
       onPress={() => onPress(item)}
       rightElement={
         <TouchableOpacity

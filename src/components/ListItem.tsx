@@ -9,6 +9,7 @@ interface ListItemProps {
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   onPress?: () => void;
+  selected?: boolean;
   style?: ViewStyle;
 }
 
@@ -18,18 +19,25 @@ export const ListItem: React.FC<ListItemProps> = ({
   leftElement,
   rightElement,
   onPress,
+  selected,
   style,
 }) => {
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        selected && styles.selected,
+        style
+      ]}
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={0.6}>
       <View style={styles.leftContent}>
         {leftElement && <View style={styles.leftElement}>{leftElement}</View>}
         <View style={styles.textContent}>
-          <Typography variant="body" weight="medium">
+          <Typography
+            variant="body"
+            weight={selected ? 'bold' : 'medium'}>
             {title}
           </Typography>
           {subtitle && (
@@ -49,11 +57,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
+    padding: theme.spacing.md,
     backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    ...theme.shadow,
+  },
+  selected: {
+    backgroundColor: theme.colors.border,
+    borderColor: theme.colors.primary + '30',
   },
   leftContent: {
     flexDirection: 'row',

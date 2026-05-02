@@ -12,6 +12,7 @@ import {useExport} from '../../hooks/useExport';
 import {styles} from './SettingsScreen.styles';
 import {MonthRow} from './components/MonthRow';
 import {prevMonth, nextMonth} from './helpers';
+import {Screen} from '../../components/Screen';
 
 const SettingsScreen: React.FC = () => {
   const now = new Date();
@@ -57,68 +58,50 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
+    <Screen edges={['bottom']} scrollable contentStyle={styles.scrollContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Data Export</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Export Monthly Data</Text>
+          <Text style={styles.cardBody}>
+            Exports all transactions and categories for the selected month as CSV files to your
+            Downloads folder.
+          </Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Data Export</Text>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Export Monthly Data</Text>
-            <Text style={styles.cardBody}>
-              Exports all transactions and categories for the selected month as
-              CSV files to your Downloads folder.
-            </Text>
+          <MonthRow year={year} month={month} onPrev={handlePrev} onNext={handleNext} />
 
-            <MonthRow
-              year={year}
-              month={month}
-              onPrev={handlePrev}
-              onNext={handleNext}
-            />
+          <TouchableOpacity
+            style={[styles.exportBtn, isLoading && styles.exportBtnDisabled]}
+            onPress={handleExport}
+            disabled={isLoading}
+            activeOpacity={0.75}>
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" size="small" style={styles.btnSpinner} />
+            ) : null}
+            <Text style={styles.exportBtnText}>{isLoading ? 'Exporting…' : 'Export to CSV'}</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.exportBtn, isLoading && styles.exportBtnDisabled]}
-              onPress={handleExport}
-              disabled={isLoading}
-              activeOpacity={0.75}>
-              {isLoading ? (
-                <ActivityIndicator
-                  color="#ffffff"
-                  size="small"
-                  style={styles.btnSpinner}
-                />
-              ) : null}
-              <Text style={styles.exportBtnText}>
-                {isLoading ? 'Exporting…' : 'Export to CSV'}
-              </Text>
-            </TouchableOpacity>
+          <Text style={styles.exportNote}>
+            Files are saved to <Text style={styles.exportNoteMono}>Downloads/</Text> on your device
+            and are not uploaded anywhere.
+          </Text>
+        </View>
+      </View>
 
-            <Text style={styles.exportNote}>
-              Files are saved to{' '}
-              <Text style={styles.exportNoteMono}>Downloads/</Text> on your
-              device and are not uploaded anywhere.
-            </Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>About</Text>
+        <View style={styles.card}>
+          <View style={styles.aboutRow}>
+            <Text style={styles.aboutKey}>Version</Text>
+            <Text style={styles.aboutValue}>1.1.0</Text>
+          </View>
+          <View style={[styles.aboutRow, styles.aboutRowLast]}>
+            <Text style={styles.aboutKey}>Data storage</Text>
+            <Text style={styles.aboutValue}>Local only</Text>
           </View>
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>About</Text>
-          <View style={styles.card}>
-            <View style={styles.aboutRow}>
-              <Text style={styles.aboutKey}>Version</Text>
-              <Text style={styles.aboutValue}>1.1.0</Text>
-            </View>
-            <View style={[styles.aboutRow, styles.aboutRowLast]}>
-              <Text style={styles.aboutKey}>Data storage</Text>
-              <Text style={styles.aboutValue}>Local only</Text>
-            </View>
-          </View>
-        </View>
-
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </Screen>
   );
 };
 

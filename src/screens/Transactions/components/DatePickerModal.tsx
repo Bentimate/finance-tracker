@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, TouchableOpacity, Modal} from 'react-native';
+import {View, TouchableOpacity} from 'react-native';
 import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
 import {Typography} from '../../../components/Typography';
+import {BottomSheet} from '../../../components/BottomSheet';
 import {styles} from '../styles/TransactionFormScreen.styles';
 
 interface DatePickerModalProps {
@@ -18,27 +19,19 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   onChange,
 }) => {
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent={true}
-      onRequestClose={onClose}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Typography variant="h3">Select Date</Typography>
-            <TouchableOpacity onPress={onClose}>
-              <Typography color="primary">Done</Typography>
-            </TouchableOpacity>
-          </View>
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="spinner"
-            onChange={onChange}
-          />
-        </View>
+    <BottomSheet visible={visible} onClose={onClose} maxHeight={400}>
+      <View style={styles.modalHeader}>
+        <Typography variant="h3">Select Date</Typography>
+        <TouchableOpacity onPress={onClose}>
+          <Typography color="primary">Done</Typography>
+        </TouchableOpacity>
       </View>
-    </Modal>
+      <DateTimePicker
+        value={date}
+        mode="date"
+        display="spinner"
+        onChange={onChange}
+      />
+    </BottomSheet>
   );
 };

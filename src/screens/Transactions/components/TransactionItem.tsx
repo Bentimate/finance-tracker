@@ -4,7 +4,8 @@ import {Transaction} from '../../../types';
 import {Typography} from '../../../components/Typography';
 import {formatCurrency} from '../../../utils/formatCurrency';
 import {theme} from '../../../theme';
-import {styles} from '../styles/TransactionListScreen.styles';
+import {ListItem} from '../../../components/ListItem';
+import {ColorDot} from '../../../components/ColorDot';
 
 interface TransactionItemProps {
   item: Transaction;
@@ -13,27 +14,12 @@ interface TransactionItemProps {
 
 export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress}) => {
   return (
-    <TouchableOpacity
-      style={styles.transactionItem}
+    <ListItem
       onPress={() => onPress(item.id)}
-      activeOpacity={0.6}>
-      <View
-        style={[
-          styles.categoryDot,
-          {backgroundColor: item.category_color || theme.colors.textMuted},
-        ]}
-      />
-      <View style={styles.txInfo}>
-        <Typography variant="body" weight="medium">
-          {item.category_name || 'Uncategorized'}
-        </Typography>
-        {item.note ? (
-          <Typography variant="caption" color="textSecondary" numberOfLines={1}>
-            {item.note}
-          </Typography>
-        ) : null}
-      </View>
-      <View style={styles.txAmount}>
+      title={item.category_name || 'Uncategorized'}
+      subtitle={item.note}
+      leftElement={<ColorDot color={item.category_color || theme.colors.textMuted} />}
+      rightElement={
         <Typography
           variant="body"
           weight="bold"
@@ -41,7 +27,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress})
           {item.type === 'income' ? '+' : '-'}
           {formatCurrency(item.amount)}
         </Typography>
-      </View>
-    </TouchableOpacity>
+      }
+    />
   );
 };

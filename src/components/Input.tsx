@@ -94,9 +94,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    marginBottom: theme.spacing.xs,
-    fontSize: 10,
-    letterSpacing: 1.5,
+    marginBottom: theme.spacing.sm,
   },
   inputContainer: {
     backgroundColor: theme.colors.surface,

@@ -8,6 +8,7 @@ import {Transaction, DailyNetFlow} from '../../types';
 import {transactionRepository} from '../../repositories/transactionRepository';
 import {analyticsRepository} from '../../repositories/analyticsRepository';
 import {Typography} from '../../components/Typography';
+import {Screen} from '../../components/Screen';
 import {styles} from './styles/TransactionListScreen.styles';
 import {TransactionStackParamList} from '../../navigation/types';
 
@@ -24,6 +25,7 @@ import {
   formatDateLabel,
 } from './helpers';
 import {PlusButton} from '../../components/PlusButton'
+import {EmptyState} from '../../components/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionList'>;
 
@@ -153,9 +155,9 @@ const TransactionListScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      <ViewModeTabs viewMode={viewMode} onViewModeChange={setViewMode} />
-
+    <Screen
+      edges={[]}
+      header={<ViewModeTabs viewMode={viewMode} onViewModeChange={setViewMode} />}>
       {viewMode === 'month' ? (
         <>
           <DateFilter
@@ -180,10 +182,8 @@ const TransactionListScreen: React.FC = () => {
       ) : (
         <SectionList
           sections={sections}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => (
-            <TransactionItem item={item} onPress={handleTransactionPress} />
-          )}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({item}) => <TransactionItem item={item} onPress={handleTransactionPress} />}
           renderSectionHeader={({section: {title}}) => (
             <View style={styles.dayHeader}>
               <Typography variant="label" color="textMuted">
@@ -193,13 +193,7 @@ const TransactionListScreen: React.FC = () => {
           )}
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Typography variant="body" color="textMuted" align="center">
-                No transactions for this period.
-              </Typography>
-            </View>
-          }
+          ListEmptyComponent={<EmptyState message="No transactions for this period." />}
         />
       )}
 
@@ -211,7 +205,7 @@ const TransactionListScreen: React.FC = () => {
       />
 
       <PlusButton onPress={() => navigation.navigate('TransactionForm', {categoryId: 0})} />
-    </SafeAreaView>
+    </Screen>
   );
 };
 

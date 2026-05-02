@@ -5,6 +5,7 @@ import {CategorySpend} from '../../../types';
 import {formatCurrency, formatCurrencyCompact} from '../../../utils/formatCurrency';
 import {styles} from './CategoryDonutCard.styles';
 import {theme} from '../../../theme';
+import {Card} from '../../../components/Card';
 
 interface Props {
   categorySpend: CategorySpend[];
@@ -18,10 +19,10 @@ const CategoryDonutCard: React.FC<Props> = ({categorySpend}) => {
 
   if (categorySpend.length === 0) {
     return (
-      <View style={styles.card}>
+      <Card>
         <Text style={styles.sectionLabel}>Spending by Category</Text>
         <Text style={styles.empty}>No expenses this month</Text>
-      </View>
+      </Card>
     );
   }
 
@@ -37,7 +38,7 @@ const CategoryDonutCard: React.FC<Props> = ({categorySpend}) => {
   const focused = focusedIndex !== null ? categorySpend[focusedIndex] : null;
 
   return (
-    <View style={styles.card}>
+    <Card>
       <Text style={styles.sectionLabel}>Spending by Category</Text>
 
       <View style={styles.chartRow}>
@@ -82,7 +83,7 @@ const CategoryDonutCard: React.FC<Props> = ({categorySpend}) => {
           })}
         </View>
       </View>
-    </View>
+    </Card>
   );
 };
 

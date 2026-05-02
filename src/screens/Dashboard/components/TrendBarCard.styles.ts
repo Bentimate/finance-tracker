@@ -2,13 +2,6 @@ import {StyleSheet} from 'react-native';
 import {theme} from '../../../theme';
 
 export const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-  },
   sectionLabel: {
     fontSize: theme.typography.fontSizes.xs,
     fontWeight: theme.typography.fontWeights.semibold as any,
@@ -28,13 +21,11 @@ export const styles = StyleSheet.create({
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    // gap: theme.spacing.lg,
     marginTop: theme.spacing.sm,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    // gap: theme.spacing.xs,
     marginHorizontal: theme.spacing.sm,
   },
   legendSwatch: {
