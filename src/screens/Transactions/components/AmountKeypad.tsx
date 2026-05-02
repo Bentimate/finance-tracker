@@ -1,9 +1,17 @@
 import React from 'react';
-import {View, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, TouchableOpacity} from 'react-native';
 import {Typography} from '../../../components/Typography';
+import {BottomSheet} from '../../../components/BottomSheet';
+import {styles} from '../styles/TransactionFormScreen.styles';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {theme} from '../../../theme';
 
 interface AmountKeypadProps {
+  visible: boolean;
+  value: string;
+  isExpense: boolean;
+  topOffset: number; // Y coordinate of the original input
+  onClose: () => void;
   onAppendDigit: (digit: string) => void;
   onAppendDecimal: () => void;
   onToggleSign: () => void;
@@ -13,6 +21,11 @@ interface AmountKeypadProps {
 }
 
 export const AmountKeypad: React.FC<AmountKeypadProps> = ({
+  visible,
+  value,
+  isExpense,
+  topOffset,
+  onClose,
   onAppendDigit,
   onAppendDecimal,
   onToggleSign,
@@ -22,101 +35,77 @@ export const AmountKeypad: React.FC<AmountKeypadProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
 
-  return (
-    <View style={[keypadStyles.container, {paddingBottom: insets.bottom}]}>
-      <View style={keypadStyles.grid}>
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit => (
-          <TouchableOpacity
-            key={digit}
-            style={keypadStyles.key}
-            activeOpacity={0.6}
-            onPress={() => onAppendDigit(digit)}>
-            <Typography variant="h3" style={keypadStyles.keyText}>{digit}</Typography>
-          </TouchableOpacity>
-        ))}
-
-        <TouchableOpacity style={keypadStyles.key} activeOpacity={0.6} onPress={onToggleSign}>
-          <Typography variant="h3" style={keypadStyles.keyText}>+/-</Typography>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={keypadStyles.key} activeOpacity={0.6} onPress={() => onAppendDigit('0')}>
-          <Typography variant="h3" style={keypadStyles.keyText}>0</Typography>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={keypadStyles.key} activeOpacity={0.6} onPress={onAppendDecimal}>
-          <Typography variant="h3" style={keypadStyles.keyText}>.</Typography>
-        </TouchableOpacity>
-      </View>
-
-      {/* Action row */}
-      <View style={keypadStyles.actionsRow}>
-        <TouchableOpacity style={keypadStyles.actionKey} activeOpacity={0.6} onPress={onClear}>
-          <Typography variant="label" style={keypadStyles.actionText}>Clear</Typography>
-        </TouchableOpacity>
-        <TouchableOpacity style={keypadStyles.actionKey} activeOpacity={0.6} onPress={onBackspace}>
-          <Typography variant="label" style={keypadStyles.actionText}>⌫</Typography>
-        </TouchableOpacity>
-        <TouchableOpacity style={[keypadStyles.actionKey, keypadStyles.doneKey]} activeOpacity={0.6} onPress={onDone}>
-          <Typography variant="label" style={keypadStyles.doneText}>Done</Typography>
-        </TouchableOpacity>
-      </View>
+  const renderReplica = () => (
+    <View
+      style={{
+        position: 'absolute',
+        top: topOffset,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        paddingVertical: 8,
+        zIndex: 1000,
+      }}
+      pointerEvents="none">
+      <Typography
+        variant="h1"
+        style={{
+          fontSize: 48,
+          lineHeight: 60,
+          fontWeight: '700',
+          color: isExpense ? `#f72f02` : '#0fed07',
+          textAlign: 'center',
+          includeFontPadding: false,
+        }}>
+        {value || '$0.00'}
+      </Typography>
     </View>
   );
-};
 
-const keypadStyles = StyleSheet.create({
-  container: {
-    backgroundColor: '#D1D5DB', // native numpad gray
-    paddingTop: 8,
-    paddingHorizontal: 4,
-    gap: 4,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  key: {
-    width: '32%', // 3 per row with gaps
-    height: 56,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.15,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  keyText: {
-    color: '#1C1C1E',
-    fontWeight: '400',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  actionKey: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#ADB5BD',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 2,
-  },
-  actionText: {
-    color: '#1C1C1E',
-    fontWeight: '500',
-  },
-  doneKey: {
-    backgroundColor: '#007AFF', // iOS-style confirm blue
-  },
-  doneText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
+  return (
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      topContent={renderReplica()}
+    >
+      <View style={[styles.keypadContainer, {paddingHorizontal: 16, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16)}]}>
+        <View style={styles.keypadGrid}>
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit => (
+            <TouchableOpacity
+              key={digit}
+              style={styles.keypadKey}
+              activeOpacity={0.6}
+              onPress={() => onAppendDigit(digit)}>
+              <Typography variant="h3" style={styles.keypadKeyText}>{digit}</Typography>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity style={styles.keypadKey} activeOpacity={0.6} onPress={onToggleSign}>
+            <Typography variant="h3" style={styles.keypadKeyText}>+/-</Typography>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.keypadKey} activeOpacity={0.6} onPress={() => onAppendDigit('0')}>
+            <Typography variant="h3" style={styles.keypadKeyText}>0</Typography>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.keypadKey} activeOpacity={0.6} onPress={onAppendDecimal}>
+            <Typography variant="h3" style={styles.keypadKeyText}>.</Typography>
+          </TouchableOpacity>
+        </View>
+
+        {/* Action row */}
+        <View style={styles.keypadActionsRow}>
+          <TouchableOpacity style={styles.keypadActionKey} activeOpacity={0.6} onPress={onClear}>
+            <Typography variant="label" style={styles.keypadActionText}>Clear</Typography>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.keypadActionKey} activeOpacity={0.6} onPress={onBackspace}>
+            <Typography variant="label" style={styles.keypadActionText}>⌫</Typography>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.keypadActionKey, {backgroundColor: theme.colors.primary}]} activeOpacity={0.6} onPress={onDone}>
+            <Typography variant="label" style={{color: theme.colors.surface}}>Done</Typography>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </BottomSheet>
+  );
+};

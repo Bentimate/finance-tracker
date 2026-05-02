@@ -33,6 +33,7 @@ import {CategoryPickerModal} from '../../components/CategoryPickerModal';
 import {AmountKeypad} from './components/AmountKeypad';
 import {DatePickerModal} from './components/DatePickerModal';
 import {formatDisplayAmount} from './helpers';
+import {Screen} from '../../components/Screen';
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionForm'>;
 type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
@@ -51,7 +52,10 @@ const TransactionFormScreen: React.FC = () => {
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [isAmountKeypadVisible, setAmountKeypadVisible] = useState(false);
+  const [amountLayout, setAmountLayout] = useState<{y: number; height: number} | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const amountContainerRef = React.useRef<View>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,9 +87,19 @@ const TransactionFormScreen: React.FC = () => {
   const isExpenseInput = amount.trim().startsWith('-');
   const displayAmount = formatDisplayAmount(amount);
 
+  const onAmountContainerLayout = () => {
+    // We use measureInWindow to get the absolute position relative to the screen.
+    // This is useful for placing a replica in a Modal which also covers the whole screen.
+    amountContainerRef.current?.measureInWindow((_x, y, _width, height) => {
+      // In some Android environments, measureInWindow includes the status bar,
+      // but absolute positioning in a Modal might be relative to the viewable area.
+      // If it's slightly too far up, we might need a small adjustment.
+      setAmountLayout({y, height});
+    });
+  };
+
   const closeAmountKeypad = () => {
     setAmountKeypadVisible(false);
-    Keyboard.dismiss();
   };
 
   const handleDateChange = (_event: DateTimePickerEvent, pickedDate?: Date) => {
@@ -245,9 +259,33 @@ const TransactionFormScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.amountContainer}>
+    <Screen
+      edges={[]}
+      overlays={
+        <AmountKeypad
+          visible={isAmountKeypadVisible}
+          value={displayAmount}
+          isExpense={isExpenseInput}
+          topOffset={amountLayout?.y + 6 ?? 0}
+          onClose={closeAmountKeypad}
+          onAppendDigit={appendDigit}
+          onAppendDecimal={appendDecimal}
+          onToggleSign={toggleSign}
+          onBackspace={backspace}
+          onClear={() => setAmount('')}
+          onDone={closeAmountKeypad}
+        />
+      }>
+      <ScrollView
+        style={styles.content}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{paddingBottom: isAmountKeypadVisible ? 300 : 0}} // Avoid overlapping with keypad
+      >
+        <View
+          ref={amountContainerRef}
+          style={styles.amountContainer}
+          onLayout={onAmountContainerLayout}
+        >
           <TextInput
             style={[
               styles.amountInput as TextStyle,
@@ -263,12 +301,11 @@ const TransactionFormScreen: React.FC = () => {
             placeholderTextColor={theme.colors.textMuted}
             onFocus={() => {
               Keyboard.dismiss();
+              setCategoryModalVisible(false);
+              setDatePickerVisible(false);
               setAmountKeypadVisible(true);
             }}
           />
-          <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
-            AMOUNT IN SGD
-          </Typography>
           <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
             press +/- to toggle between expense and income
           </Typography>
@@ -296,11 +333,12 @@ const TransactionFormScreen: React.FC = () => {
         </View>
 
         <Input
-          label="NOTE"
+          label="NOTES"
           value={note}
           onChangeText={setNote}
           placeholder="What was this for?"
           multiline
+          onFocus={closeAmountKeypad}
         />
 
         <View style={styles.section}>
@@ -344,17 +382,6 @@ const TransactionFormScreen: React.FC = () => {
         />
       </View>
 
-      <AmountKeypad
-        visible={isAmountKeypadVisible}
-        onClose={closeAmountKeypad}
-        onAppendDigit={appendDigit}
-        onAppendDecimal={appendDecimal}
-        onToggleSign={toggleSign}
-        onBackspace={backspace}
-        onClear={() => setAmount('')}
-        onDone={closeAmountKeypad}
-      />
-
       <CategoryPickerModal
         visible={isCategoryModalVisible}
         onClose={() => setCategoryModalVisible(false)}
@@ -372,7 +399,7 @@ const TransactionFormScreen: React.FC = () => {
         date={selectedDate}
         onChange={handleDateChange}
       />
-    </SafeAreaView>
+    </Screen>
   );
 };
 

@@ -20,6 +20,7 @@ interface BottomSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   maxHeight?: number;
+  topContent?: React.ReactNode; // New prop for content above the sheet/backdrop
 }
 
 const {height} = Dimensions.get('window');
@@ -32,6 +33,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   onClose,
   children,
   maxHeight = height * 0.7,
+  topContent,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(visible);
   const translateY = useSharedValue(height);
@@ -79,6 +81,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       />
 
       <View style={styles.container} pointerEvents="box-none">
+        {topContent}
         <TouchableOpacity
           style={{flex: 1}}
           onPress={onClose}

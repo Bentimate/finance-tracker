@@ -14,6 +14,7 @@ interface ScreenProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   header?: React.ReactNode;
+  overlays?: React.ReactNode; // New prop for non-blocking overlays like custom keypad
   scrollable?: boolean;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
@@ -26,6 +27,7 @@ export const Screen: React.FC<ScreenProps> = ({
   children,
   footer,
   header,
+  overlays,
   scrollable = false,
   style,
   contentStyle,
@@ -63,6 +65,7 @@ export const Screen: React.FC<ScreenProps> = ({
       ) : (
         content
       )}
+      {overlays}
     </SafeAreaView>
   );
 };
