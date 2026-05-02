@@ -78,11 +78,8 @@ yarn-error.log
 
 .vscode
 .aiexclude
-./markdowns
-./markdowns/*
 ./ios
 ./.artifacts
 ./.idea
-/markdowns
 .geminiignore
 

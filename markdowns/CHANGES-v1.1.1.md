@@ -29,3 +29,5 @@ Others:
     - **Monthly**: Strictly from the 1st to the last day of the month.
 - **Timezone Resolution**: Fixed "one-day off" bugs in transaction grouping and budget progress by standardizing local date string conversions across SQL queries and helper functions.
 - **Refined Safe Areas**: Standardized tab navigator safe area insets to prevent UI elements from overlapping with system navigation bars.
+
+
