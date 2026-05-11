@@ -2,7 +2,29 @@ export interface Category {
   id: number;
   name: string;
   color: string;
+  icon: string | null;
+  parent_id: number | null;
   is_archived: number;
+}
+
+/**
+ * A root category with its active children hydrated in memory.
+ * Read/display only — never passed to write methods.
+ */
+export interface ParentCategory extends Category {
+  children: Category[];
+}
+
+/**
+ * Virtual "Others" bucket — represents transactions assigned directly to a
+ * parent that has children. Has no DB record; discriminated by `type: 'others'`
+ * so TypeScript prevents it being passed to any write path.
+ */
+export interface VirtualOthersCategory {
+  type: 'others';
+  parentId: number;
+  parentName: string;
+  color: string;
 }
 
 export interface Transaction {
@@ -18,6 +40,8 @@ export interface Transaction {
   // Joined fields
   category_name?: string;
   category_color?: string;
+  // Joined fields for nested display — populated when category is a child
+  category_parent_name?: string;
 }
 
 export interface Budget {
