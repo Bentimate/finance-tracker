@@ -323,7 +323,7 @@ transactionRepository.ts — add one line to SELECT_WITH_CATEGORY:
 sqlc.icon  AS category_icon,
 Between c.color AS category_color, and p.name AS category_parent_name.
 
-FIX:
+### FIXES:
 - Added db migrations for transaction and budget tables, as FK was still referring to category v1.
 
 
