@@ -185,3 +185,12 @@ See `nested-categories-plan.md` for the full step-by-step breakdown.
 ### ⬜ Phase 4 — Export + Widget
 - CSV export to local storage (`transactions.csv`, `categories.csv`)
 - Android home-screen widget (`AppWidgetProvider`) — amount + category entry in ≤ 3 interactions
+
+
+# Instructions
+- Act as a senior Typescript developer who writes production-ready and clean code, following OOP paradigms.
+- Prefer OOP programming paradigms where appropriate.
+- Keep in mind the global theme.ts
+- Do not use magic values
+- ALWAYS separate styles from components ie. create all relevant styles in a separate stylesheet and inject them into the component when needed.
+- break down big components into smaller individual components

@@ -192,25 +192,10 @@ list/detail display.
 
 ---
 
-## Dependency Order
-
-```
-Step 1 (Migration)
-  └── Step 2 (Repository)
-        ├── Step 3 (Icon Picker)        ← no data deps, can be done in parallel
-        ├── Step 4 (Category Form)      ← needs Step 3
-        ├── Step 5 (Categories Screen)  ← needs Step 4
-        └── Step 6 (Transaction Form)   ← needs Step 5
-              └── Step 7 (Testing)
-```
-
-Steps 1 and 2 must be done first. Step 3 can be built in parallel with Steps 1–2
-since it has no data dependencies. Everything else flows sequentially from there.
-
 # Progress
-## Changes in steps
-The plan's dependency graph is correct, but I'd refine it slightly:
-1 → 2 → 3 → 4 → 5 → 6, with one reorder: do Step 3 (Icon Picker) after Step 2, not in parallel. Here's why — the icon picker is trivial to build once the Category type is finalised, and doing it in parallel risks type drift. More importantly:
+## Steps
+1 → 2 → 3 → 4 → 5 → 6, with one reorder: do Step 3 (Icon Picker) after Step 2. 
+More importantly:
 I'd split Step 2 into 2a and 2b:
 
 2a — Types only (Category interface, ParentCategory with children, the virtual Others shape). Lock these first — everything downstream depends on them.
@@ -249,3 +234,61 @@ Here's a summary of every meaningful decision made:
 
 - All five read queries now share a single `SELECT_WITH_CATEGORY` constant with a `LEFT JOIN categories p ON p.id = c.parent_id`. This adds `category_parent_name` to every result row — `NULL` for standalone categories, parent name for children.
 - No write methods changed.
+
+### 3. 
+Here's what was built and why each decision was made:
+`icons.ts` — 70 icons across 10 groups. `ALL_ICONS` is a pre-computed flat array derived from the groups, so the search filter iterates a single array rather than re-flattening on every keystroke. Adding or reordering icons only requires editing `ICON_GROUPS` — `ALL_ICONS` updates automatically.
+
+#### `IconPickerModal.tsx`
+
+- Uses `presentationStyle="pageSheet"` — the standard bottom-sheet modal pattern on Android, consistent with how `DatePickerModal` likely works in your project. Doesn't fight with the keyboard.
+- `SectionList` over `FlatList` — gives sticky-capable section headers for free. Headers are non-sticky (`stickySectionHeadersEnabled={false}`) to keep the layout dense.
+- Icons are pre-chunked into rows of 6 before being passed to `SectionList`. This means `renderItem` always receives a `string[]` row and lays it out with a simple `flexDirection: 'row'` — avoids the `numColumns` prop on `SectionList` which doesn't exist.
+- Search flattens to a single `Results` section — the section header mechanism stays identical, no conditional rendering paths.
+- Tap-to-deselect: tapping the already-selected icon calls `onSelect(null)` — so the form can offer a "no icon" state cleanly.
+- "Remove icon" shortcut row only renders when an icon is currently selected, keeping the UI clean when creating a new category.
+- Selected state uses `#6366f1` at 10% opacity (`18` hex) as the cell background — consistent with how the rest of the app uses the indigo accent.
+
+One thing to verify on your device: `presentationStyle="pageSheet"` behaves slightly differently across Android versions. If it renders full-screen rather than as a sheet, swap it for `animationType="slide"` without `presentationStyle` — the content is identical.
+
+### 4. 
+Here's a summary of every decision worth explaining:
+
+Parent picker as an inline bottom sheet, not a `Modal` — `ParentPickerModal` is rendered inside the `Screen` tree using `StyleSheet.absoluteFillObject` + `zIndex`. This avoids the Android `Modal` z-index fighting that can occur when one modal (the screen) tries to open another (the parent picker). The backdrop tap dismisses it cleanly.
+
+**First-child warning fires only on create, not edit** — if you're editing an existing child category there's no migration of transactions happening, so the warning would be misleading. The guard is `!isEdit && parentId !== null`.
+
+`isFirstChild` is checked asynchronously before `persistSave` — `handleSave` is async so it awaits the check, shows the `Alert` if needed, and only calls `persistSave` from the `Alert` callback. `persistSave` is extracted as its own `useCallback` so the alert's `onPress` captures a stable reference.
+
+**Reparenting disabled via UI, not just repo** — when `isEdit && hasChildren`, the parent selector renders as a non-interactive display row with a "Has subcategories" hint. The repo also guards against it, but surfacing it in the UI avoids a confusing error alert.
+
+**Archive moved into this screen** — previously archive was only triggered from `CategoryListScreen`. Moving it here means the user can archive from the edit form too, which is the natural place. The repo's cascade is called with one `archive(id)` call — the confirmation message conditionally mentions subcategories when `hasChildren` is true.
+
+`selectableParents` excludes self — filters out `categoryId` from the parent list on edit, preventing a category from being set as its own parent.'
+
+### 4.1.
+Here's what changed and why:
+
+**Removed from the stylesheet:** `colorSection`, `colorGrid`, `colorOption`, `colorOptionSelected`, `colorInner` — these style the color swatches inside `ColorPicker`, not the form screen itself. They were misplaced in the original and should live in `ColorPicker`'s own stylesheet.
+
+**Renamed for clarity:** `iconSelector` → `selectorRow` (used by both the icon and parent fields, so the name was too specific), `iconPreview`/`iconName` → `selectorRowInner` (same reason), `disabledSelector` → `selectorRowDisabled`, `footerButton` split into `footerButtonBase` (flex 1) and `footerButtonPrimary` (flex 2) to eliminate the one remaining inline `{flex: 2}`.
+
+**Merged into one `StyleSheet`**: `pickerStyles` was a second `StyleSheet.create` block at the bottom of the screen file. All its keys are now prefixed `picker` and live in the exported `styles` object — one import, one block, no duplication of `StyleSheet.hairlineWidth` calls.
+`content` padding restored: the original had `padding: theme.spacing.lg` which my version had dropped. Now both `padding` and `gap` are present.
+
+### 5.
+Key decisions to flag before writing:
+
+Expand/collapse state is a Set<number> of expanded parent IDs — starts fully collapsed
+The "Others" virtual row only renders when the parent has children AND has parent_id-direct transactions — but we can't know that cheaply without a query per parent. Instead I'll render it as the plan specifies: always show it when a parent has children, greyed out and non-interactive. This matches the spec exactly.
+Delete/archive logic on parent rows gains the cascade warning (using hasChildren), consistent with what the form already does
+Child rows get their own archive/delete action, same logic as current item rows
+The handleDelete currently lives in the screen and is passed down — I'll keep that pattern, splitting it into handleDeleteParent and handleDeleteChild since the confirmation messages differ
+
+Summary of decisions worth calling out:
+
+Flattened FlatList over nested ScrollView — the screen builds a typed ListRow[] array by iterating categories and inserting child/Others rows only when a parent is expanded. This gives FlatList a single flat list to virtualise, avoiding nested scroll containers entirely. The keyExtractor uses index since the same category id could technically appear at different positions (parent row vs child row).
+expandedIds as a Set<number> — starts empty (all collapsed). Toggle is a pure function that copies the set rather than mutating it, satisfying React's state immutability requirement. Starts collapsed rather than expanded because a dense finance list with many categories would be overwhelming if all expanded on load.
+handleDeleteParent checks category.children.length — since we already have the hydrated ParentCategory in hand, this is a free synchronous check. No extra repo call needed to decide whether to show the cascade warning. hasTransactions is still awaited async for the fallback archive-vs-delete decision on childless parents.
+OthersRow always renders when a parent has children — spec-compliant. It's greyed out (opacity: 0.6 on the row, opacity: 0.4 on the dot), no edit/archive controls, purely informational.
+ParentCategoryRow tap target — tapping the row body toggles expand/collapse only when hasChildren is true. For standalone parents onPress is undefined, so ListItem renders with disabled={true} (already handled by ListItem's existing logic). Edit and delete are separate touch targets in rightElement, so they don't conflict with the expand toggle.
