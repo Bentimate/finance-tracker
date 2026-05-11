@@ -19,6 +19,7 @@ import {Typography} from '../../components/Typography';
 import {CategoryStackParamList} from '../../navigation/types';
 import {ColorPicker, PRESET_COLORS} from './components/ColorPicker';
 import IconPickerModal from '../../components/IconPickerModal';
+import {BottomSheet} from '../../components/BottomSheet';
 import {theme} from '../../theme';
 import {styles} from './styles/CategoryFormScreen.styles';
 
@@ -52,8 +53,6 @@ const CategoryFormScreen: React.FC = () => {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    // Fetch all non-archived root categories to populate the parent dropdown.
-    // We filter to parent_id === null in JS rather than adding a new repo method.
     categoryRepository.getAll(false).then(all => {
       const roots = all.filter(c => c.parent_id === null);
       setRootCategories(roots);
@@ -71,7 +70,6 @@ const CategoryFormScreen: React.FC = () => {
       setParentId(category.parent_id);
     });
 
-    // Check if this category already has children — used to disable reparenting
     categoryRepository.hasChildren(categoryId).then(setHasChildren);
   }, [categoryId]);
 
@@ -102,9 +100,6 @@ const CategoryFormScreen: React.FC = () => {
       return;
     }
 
-    // First-child warning: if assigning a parent for the first time and that
-    // parent currently has no children, warn the user that existing transactions
-    // on the parent will appear under "Others".
     if (!isEdit && parentId !== null) {
       const isFirst = await categoryRepository.isFirstChild(parentId);
       if (isFirst) {
@@ -155,9 +150,6 @@ const CategoryFormScreen: React.FC = () => {
   // ---------------------------------------------------------------------------
 
   const selectedParent = rootCategories.find(c => c.id === parentId) ?? null;
-
-  // Exclude the category being edited from the parent list (can't be its own parent),
-  // and exclude categories that are already children (depth guard).
   const selectableParents = rootCategories.filter(c => c.id !== categoryId);
 
   // ---------------------------------------------------------------------------
@@ -203,9 +195,6 @@ const CategoryFormScreen: React.FC = () => {
         autoFocus={!isEdit}
       />
 
-      {/* Color */}
-      <ColorPicker selectedColor={color} onColorSelect={setColor} />
-
       {/* Icon */}
       <View style={styles.field}>
         <Typography variant="label" color="textSecondary" style={styles.fieldLabel}>
@@ -237,7 +226,6 @@ const CategoryFormScreen: React.FC = () => {
           PARENT CATEGORY (OPTIONAL)
         </Typography>
 
-        {/* Reparenting is disabled when the category already has children */}
         {isEdit && hasChildren ? (
           <View style={[styles.selectorRow, styles.selectorRowDisabled]}>
             <Typography variant="body" color="textMuted">
@@ -277,27 +265,30 @@ const CategoryFormScreen: React.FC = () => {
         onClose={() => setIconPickerVisible(false)}
       />
 
-      {/* Parent picker modal — inline bottom sheet style */}
-      {isParentPickerVisible && (
-        <ParentPickerModal
-          categories={selectableParents}
-          selectedId={parentId}
-          onSelect={id => {
-            setParentId(id);
-            setParentPickerVisible(false);
-          }}
-          onClose={() => setParentPickerVisible(false)}
-        />
-      )}
+      {/* Parent picker — uses BottomSheet so it animates consistently */}
+      <ParentPickerModal
+        visible={isParentPickerVisible}
+        categories={selectableParents}
+        selectedId={parentId}
+        onSelect={id => {
+          setParentId(id);
+          setParentPickerVisible(false);
+        }}
+        onClose={() => setParentPickerVisible(false)}
+      />
+
+      {/* Color */}
+      <ColorPicker selectedColor={color} onColorSelect={setColor} />
     </Screen>
   );
 };
 
 // ---------------------------------------------------------------------------
-// ParentPickerModal — lightweight inline modal for parent selection
+// ParentPickerModal — BottomSheet-based parent selector
 // ---------------------------------------------------------------------------
 
 interface ParentPickerProps {
+  visible: boolean;
   categories: Category[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
@@ -305,67 +296,66 @@ interface ParentPickerProps {
 }
 
 const ParentPickerModal: React.FC<ParentPickerProps> = ({
+  visible,
   categories,
   selectedId,
   onSelect,
   onClose,
 }) => {
   return (
-    <View style={styles.pickerOverlay}>
-      <TouchableOpacity style={styles.pickerBackdrop} onPress={onClose} activeOpacity={1} />
-      <View style={styles.pickerSheet}>
-        <View style={styles.pickerHeader}>
-          <Typography variant="h3">Parent Category</Typography>
-          <TouchableOpacity onPress={onClose} hitSlop={12}>
-            <MaterialIcon name="close" size={22} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+    <BottomSheet visible={visible} onClose={onClose}>
+      <View style={styles.pickerHeader}>
+        <Typography variant="h3">Parent Category</Typography>
+        <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
+          <MaterialIcon name="close" size={22} color={theme.colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
 
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+        {/* "None" option */}
+        <TouchableOpacity
+          style={styles.pickerRow}
+          onPress={() => onSelect(null)}
+          activeOpacity={0.7}>
+          <Typography
+            variant="body"
+            color={selectedId === null ? 'primary' : 'text'}>
+            None (top-level category)
+          </Typography>
+          {selectedId === null && (
+            <MaterialIcon name="check" size={18} color={theme.colors.primary} />
+          )}
+        </TouchableOpacity>
+
+        {categories.map(cat => (
           <TouchableOpacity
+            key={cat.id}
             style={styles.pickerRow}
-            onPress={() => onSelect(null)}
+            onPress={() => onSelect(cat.id)}
             activeOpacity={0.7}>
-            <Typography
-              variant="body"
-              color={selectedId === null ? 'primary' : 'text'}>
-              None (top-level category)
-            </Typography>
-            {selectedId === null && (
+            <View style={styles.pickerRowLeft}>
+              <View style={[styles.pickerDot, {backgroundColor: cat.color}]} />
+              {cat.icon && (
+                <MaterialIcon
+                  name={cat.icon}
+                  size={18}
+                  color={cat.color}
+                  style={styles.pickerIconGap}
+                />
+              )}
+              <Typography
+                variant="body"
+                color={selectedId === cat.id ? 'primary' : 'text'}>
+                {cat.name}
+              </Typography>
+            </View>
+            {selectedId === cat.id && (
               <MaterialIcon name="check" size={18} color={theme.colors.primary} />
             )}
           </TouchableOpacity>
-
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.id}
-              style={styles.pickerRow}
-              onPress={() => onSelect(cat.id)}
-              activeOpacity={0.7}>
-              <View style={styles.pickerRowLeft}>
-                <View style={[styles.pickerDot, {backgroundColor: cat.color}]} />
-                {cat.icon && (
-                  <MaterialIcon
-                    name={cat.icon}
-                    size={18}
-                    color={cat.color}
-                    style={styles.pickerIconGap}
-                  />
-                )}
-                <Typography
-                  variant="body"
-                  color={selectedId === cat.id ? 'primary' : 'text'}>
-                  {cat.name}
-                </Typography>
-              </View>
-              {selectedId === cat.id && (
-                <MaterialIcon name="check" size={18} color={theme.colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    </View>
+        ))}
+      </ScrollView>
+    </BottomSheet>
   );
 };
 

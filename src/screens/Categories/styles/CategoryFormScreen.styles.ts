@@ -39,6 +39,7 @@ export const styles = StyleSheet.create({
   // ---------------------------------------------------------------------------
   field: {
     gap: theme.spacing.xs,
+    paddingBottom: theme.spacing.md
   },
   fieldLabel: {
     marginBottom: theme.spacing.xs,
@@ -65,6 +66,35 @@ export const styles = StyleSheet.create({
   },
 
   // ---------------------------------------------------------------------------
+  // ColorPicker (color swatch grid)
+  // ---------------------------------------------------------------------------
+  colorSection: {
+    gap: theme.spacing.sm,
+  },
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  },
+  colorOption: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: theme.colors.text,
+  },
+  colorInner: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+
+  // ---------------------------------------------------------------------------
   // Color dot (used inside the parent selector row)
   // ---------------------------------------------------------------------------
   colorDot: {
@@ -74,24 +104,8 @@ export const styles = StyleSheet.create({
   },
 
   // ---------------------------------------------------------------------------
-  // ParentPickerModal (inline bottom sheet — lives in the same file)
+  // ParentPickerModal (rendered inside BottomSheet)
   // ---------------------------------------------------------------------------
-  pickerOverlay: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 100,
-    justifyContent: 'flex-end',
-  },
-  pickerBackdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  pickerSheet: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: theme.borderRadius.lg,
-    borderTopRightRadius: theme.borderRadius.lg,
-    maxHeight: '60%',
-    paddingBottom: theme.spacing.xl,
-  },
   pickerHeader: {
     flexDirection: 'row',
     alignItems: 'center',

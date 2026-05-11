@@ -231,7 +231,6 @@ const TransactionFormScreen: React.FC = () => {
     };
 
     setLoading(true);
-    console.log('saving with categoryId:', categoryId)
     try {
       if (transactionId) {
         await transactionRepository.update(transactionId, data as any);

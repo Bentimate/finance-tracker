@@ -292,3 +292,38 @@ expandedIds as a Set<number> — starts empty (all collapsed). Toggle is a pure 
 handleDeleteParent checks category.children.length — since we already have the hydrated ParentCategory in hand, this is a free synchronous check. No extra repo call needed to decide whether to show the cascade warning. hasTransactions is still awaited async for the fallback archive-vs-delete decision on childless parents.
 OthersRow always renders when a parent has children — spec-compliant. It's greyed out (opacity: 0.6 on the row, opacity: 0.4 on the dot), no edit/archive controls, purely informational.
 ParentCategoryRow tap target — tapping the row body toggles expand/collapse only when hasChildren is true. For standalone parents onPress is undefined, so ListItem renders with disabled={true} (already handled by ListItem's existing logic). Edit and delete are separate touch targets in rightElement, so they don't conflict with the expand toggle.
+
+### 6.
+Files Delivered
+
+CategoryPickerModal.tsx — Full replacement of the old stub.
+
+Step 1 shows all root categories; tapping a standalone confirms immediately, tapping one with children advances to step 2
+Step 2 shows children + "Others" row at the bottom, with a breadcrumb header ([icon] Food ›) and a back button
+"Others" saves the parent's id (per spec)
+Uses BottomSheet exactly as it exists in your codebase
+Selected row gets a subtle primary tint + checkmark; chevron only shown on rows that have children
+
+TransactionFormScreen.tsx — Minimal diff from original:
+
+categoryRepository.getAll() → categoryRepository.getAllNested(), state is now ParentCategory[]
+selectedCategory replaced with resolveSelectedDisplay() — returns { label, color, icon } covering all cases: standalone ("Transport"), child ("Food > Coffee"), Others ("Food")
+Category selector row renders icon via MaterialIcon when present, falls back to ColorDot — matches CategoryPickerModal row style
+
+TransactionItem.tsx — Two changes:
+
+Label: category_parent_name ? "Food > Coffee" : "Transport"
+Left element: MaterialIcon when category_icon is set, ColorDot otherwise
+
+
+Two Line-Level Changes Required
+types.ts — add to Transaction interface:
+tscategory_icon?: string | null;
+transactionRepository.ts — add one line to SELECT_WITH_CATEGORY:
+sqlc.icon  AS category_icon,
+Between c.color AS category_color, and p.name AS category_parent_name.
+
+FIX:
+- Added db migrations for transaction and budget tables, as FK was still referring to category v1.
+
+

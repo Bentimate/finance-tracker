@@ -211,8 +211,4 @@ export async function runMigrations(db: DB): Promise<void> {
       currentVersion = migration.version;
     }
   }
-  const result2 = await db.execute(
-    `SELECT type, name, sql FROM sqlite_master ORDER BY type, name`
-  );
-  console.log('Schema:', JSON.stringify(result2.rows));
 }
