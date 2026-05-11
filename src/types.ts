@@ -42,6 +42,7 @@ export interface Transaction {
   category_color?: string;
   // Joined fields for nested display — populated when category is a child
   category_parent_name?: string;
+  category_icon?: string | null;
 }
 
 export interface Budget {

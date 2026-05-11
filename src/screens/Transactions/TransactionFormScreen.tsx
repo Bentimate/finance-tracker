@@ -16,7 +16,6 @@ import {
 } from '@react-native-community/datetimepicker';
 import {useNavigation, useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {theme} from '../../theme';
@@ -24,7 +23,7 @@ import {Typography} from '../../components/Typography';
 import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
 import {TransactionStackParamList} from '../../navigation/types';
-import {Category} from '../../types';
+import {ParentCategory} from '../../types';
 import {categoryRepository} from '../../repositories/categoryRepository';
 import {transactionRepository} from '../../repositories/transactionRepository';
 import {styles} from './styles/TransactionFormScreen.styles';
@@ -38,6 +37,54 @@ import {Screen} from '../../components/Screen';
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionForm'>;
 type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Given the nested category tree and a selected category_id, returns a
+ * display label:
+ *   - Standalone parent selected directly → "Transport"
+ *   - Child selected → "Food"  (spec: just parent name, not "Food > Coffee")
+ *   - Parent selected via "Others" → "Food"
+ *
+ * Actually per spec the selector in the form shows just "Food" when Others is
+ * picked (parent id saved). For a real child we show "Parent > Child".
+ * For a standalone root we show just the root name.
+ */
+function resolveSelectedDisplay(
+  categories: ParentCategory[],
+  categoryId: number | null,
+): {
+  label: string;
+  color: string;
+  icon: string | null;
+} | null {
+  if (categoryId === null) return null;
+
+  for (const parent of categories) {
+    if (parent.id === categoryId) {
+      // Could be a standalone root selection, or "Others" (parent id saved for a parent-with-children)
+      return {label: parent.name, color: parent.color, icon: parent.icon};
+    }
+    for (const child of parent.children) {
+      if (child.id === categoryId) {
+        return {
+          label: `${parent.name} > ${child.name}`,
+          color: child.color,
+          icon: child.icon,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
+
 const TransactionFormScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
@@ -48,7 +95,7 @@ const TransactionFormScreen: React.FC = () => {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString());
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ParentCategory[]>([]);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [isAmountKeypadVisible, setAmountKeypadVisible] = useState(false);
@@ -62,9 +109,10 @@ const TransactionFormScreen: React.FC = () => {
       let isMounted = true;
 
       const loadData = async () => {
-        const cats = await categoryRepository.getAll();
+        // Use getAllNested so the two-step picker has the full tree
+        const nested = await categoryRepository.getAllNested();
         if (!isMounted) return;
-        setCategories(cats);
+        setCategories(nested);
 
         if (transactionId) {
           const tx = await transactionRepository.getById(transactionId);
@@ -78,22 +126,21 @@ const TransactionFormScreen: React.FC = () => {
       };
 
       loadData();
-      return () => { isMounted = false; };
-    }, [transactionId])
+      return () => {
+        isMounted = false;
+      };
+    }, [transactionId]),
   );
 
-  const selectedCategory = categories.find(c => c.id === categoryId);
+  // Resolve display info for the currently selected category
+  const selectedDisplay = resolveSelectedDisplay(categories, categoryId);
+
   const selectedDate = new Date(date);
   const isExpenseInput = amount.trim().startsWith('-');
   const displayAmount = formatDisplayAmount(amount);
 
   const onAmountContainerLayout = () => {
-    // We use measureInWindow to get the absolute position relative to the screen.
-    // This is useful for placing a replica in a Modal which also covers the whole screen.
     amountContainerRef.current?.measureInWindow((_x, y, _width, height) => {
-      // In some Android environments, measureInWindow includes the status bar,
-      // but absolute positioning in a Modal might be relative to the viewable area.
-      // If it's slightly too far up, we might need a small adjustment.
       setAmountLayout({y, height});
     });
   };
@@ -109,12 +156,9 @@ const TransactionFormScreen: React.FC = () => {
   };
 
   const appendDigit = (digit: string) => {
-    setAmount((currentAmount) => {
+    setAmount(currentAmount => {
       const trimmed = currentAmount.trim();
-      if (!trimmed) {
-        return digit;
-      }
-
+      if (!trimmed) return digit;
       const hasSign = trimmed.startsWith('-') || trimmed.startsWith('+');
       const sign = hasSign ? trimmed[0] : '';
       const numericPart = hasSign ? trimmed.slice(1) : trimmed;
@@ -124,55 +168,33 @@ const TransactionFormScreen: React.FC = () => {
   };
 
   const appendDecimal = () => {
-    setAmount((currentAmount) => {
+    setAmount(currentAmount => {
       const trimmed = currentAmount.trim();
       const hasSign = trimmed.startsWith('-') || trimmed.startsWith('+');
       const sign = hasSign ? trimmed[0] : '';
       const numericPart = hasSign ? trimmed.slice(1) : trimmed;
-
-      if (numericPart.includes('.')) {
-        return trimmed;
-      }
-
-      if (!numericPart) {
-        return `${sign}0.`;
-      }
-
+      if (numericPart.includes('.')) return trimmed;
+      if (!numericPart) return `${sign}0.`;
       return `${sign}${numericPart}.`;
     });
   };
 
   const toggleSign = () => {
-    setAmount((currentAmount) => {
+    setAmount(currentAmount => {
       const trimmed = currentAmount.trim();
-      if (!trimmed) {
-        return '-';
-      }
-
-      if (trimmed.startsWith('-')) {
-        return trimmed.slice(1);
-      }
-
-      if (trimmed.startsWith('+')) {
-        return `-${trimmed.slice(1)}`;
-      }
-
+      if (!trimmed) return '-';
+      if (trimmed.startsWith('-')) return trimmed.slice(1);
+      if (trimmed.startsWith('+')) return `-${trimmed.slice(1)}`;
       return `-${trimmed}`;
     });
   };
 
   const backspace = () => {
-    setAmount((currentAmount) => {
+    setAmount(currentAmount => {
       const trimmed = currentAmount.trim();
-      if (!trimmed) {
-        return '';
-      }
-
+      if (!trimmed) return '';
       const nextAmount = trimmed.slice(0, -1);
-      if (nextAmount === '-' || nextAmount === '+') {
-        return '';
-      }
-
+      if (nextAmount === '-' || nextAmount === '+') return '';
       return nextAmount;
     });
   };
@@ -181,7 +203,8 @@ const TransactionFormScreen: React.FC = () => {
     const trimmed = amount.trim();
     const hasNegativeSign = trimmed.startsWith('-');
     const hasPositiveSign = trimmed.startsWith('+');
-    const numericPart = (hasNegativeSign || hasPositiveSign) ? trimmed.slice(1) : trimmed;
+    const numericPart =
+      hasNegativeSign || hasPositiveSign ? trimmed.slice(1) : trimmed;
     const parsed = parseFloat(numericPart);
 
     if (isNaN(parsed) || parsed === 0) {
@@ -191,7 +214,7 @@ const TransactionFormScreen: React.FC = () => {
 
     const normalized = {
       amount: Math.abs(parsed),
-      type: hasNegativeSign ? 'expense' : 'income' as 'income' | 'expense'
+      type: (hasNegativeSign ? 'expense' : 'income') as 'income' | 'expense',
     };
 
     if (!categoryId) {
@@ -208,6 +231,7 @@ const TransactionFormScreen: React.FC = () => {
     };
 
     setLoading(true);
+    console.log('saving with categoryId:', categoryId)
     try {
       if (transactionId) {
         await transactionRepository.update(transactionId, data as any);
@@ -217,7 +241,8 @@ const TransactionFormScreen: React.FC = () => {
       DeviceEventEmitter.emit('AppRefresh');
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', 'Failed to save transaction.');
+        console.log('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      Alert.alert('Error', error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
@@ -254,7 +279,6 @@ const TransactionFormScreen: React.FC = () => {
       });
       return;
     }
-
     setDatePickerVisible(true);
   };
 
@@ -279,17 +303,19 @@ const TransactionFormScreen: React.FC = () => {
       <ScrollView
         style={styles.content}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{paddingBottom: isAmountKeypadVisible ? 300 : 0}} // Avoid overlapping with keypad
-      >
+        contentContainerStyle={{paddingBottom: isAmountKeypadVisible ? 300 : 0}}>
         <View
           ref={amountContainerRef}
           style={styles.amountContainer}
-          onLayout={onAmountContainerLayout}
-        >
+          onLayout={onAmountContainerLayout}>
           <TextInput
             style={[
               styles.amountInput as TextStyle,
-              {color: isExpenseInput ? theme.colors.error : theme.colors.success}
+              {
+                color: isExpenseInput
+                  ? theme.colors.error
+                  : theme.colors.success,
+              },
             ]}
             value={displayAmount}
             onChangeText={() => {}}
@@ -306,13 +332,19 @@ const TransactionFormScreen: React.FC = () => {
               setAmountKeypadVisible(true);
             }}
           />
-          <Typography variant="caption" color="textMuted" style={styles.amountLabel}>
+          <Typography
+            variant="caption"
+            color="textMuted"
+            style={styles.amountLabel}>
             press +/- to toggle between expense and income
           </Typography>
         </View>
 
         <View style={styles.section}>
-          <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+          <Typography
+            variant="label"
+            color="textSecondary"
+            style={{marginBottom: 8}}>
             CATEGORY
           </Typography>
           <TouchableOpacity
@@ -321,13 +353,29 @@ const TransactionFormScreen: React.FC = () => {
               closeAmountKeypad();
               setCategoryModalVisible(true);
             }}>
-            {selectedCategory ? (
+            {selectedDisplay ? (
               <>
-                <View style={[styles.categoryDot, {backgroundColor: selectedCategory.color}]} />
-                <Typography variant="body">{selectedCategory.name}</Typography>
+                {selectedDisplay.icon ? (
+                  <MaterialIcon
+                    name={selectedDisplay.icon}
+                    size={18}
+                    color={selectedDisplay.color}
+                    style={styles.categoryDot}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.categoryDot,
+                      {backgroundColor: selectedDisplay.color},
+                    ]}
+                  />
+                )}
+                <Typography variant="body">{selectedDisplay.label}</Typography>
               </>
             ) : (
-              <Typography variant="body" color="textMuted">Select Category</Typography>
+              <Typography variant="body" color="textMuted">
+                Select Category
+              </Typography>
             )}
           </TouchableOpacity>
         </View>
@@ -342,7 +390,10 @@ const TransactionFormScreen: React.FC = () => {
         />
 
         <View style={styles.section}>
-          <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+          <Typography
+            variant="label"
+            color="textSecondary"
+            style={{marginBottom: 8}}>
             DATE
           </Typography>
           <TouchableOpacity
@@ -358,7 +409,11 @@ const TransactionFormScreen: React.FC = () => {
               {selectedDate.toLocaleDateString()}
             </Typography>
             <View style={styles.dateHintContainer}>
-              <MaterialIcon name="calendar-month" size={24} color={theme.colors.textMuted} />
+              <MaterialIcon
+                name="calendar-month"
+                size={24}
+                color={theme.colors.textMuted}
+              />
             </View>
           </TouchableOpacity>
         </View>
@@ -387,7 +442,7 @@ const TransactionFormScreen: React.FC = () => {
         onClose={() => setCategoryModalVisible(false)}
         categories={categories}
         selectedCategoryId={categoryId}
-        onSelectCategory={(id) => {
+        onSelectCategory={id => {
           setCategoryId(id);
           setCategoryModalVisible(false);
         }}

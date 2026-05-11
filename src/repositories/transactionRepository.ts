@@ -24,6 +24,7 @@ const SELECT_WITH_CATEGORY = `
   SELECT t.*,
          c.name  AS category_name,
          c.color AS category_color,
+         c.icon  AS category_icon,
          p.name  AS category_parent_name
   FROM   transactions t
   JOIN   categories   c ON c.id = t.category_id

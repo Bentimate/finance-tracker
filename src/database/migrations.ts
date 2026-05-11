@@ -106,9 +106,46 @@ const MIGRATIONS: Migration[] = [
           SELECT id, name, color, NULL, NULL, is_archived
           FROM categories_v1
         `);
-
         // Step 4 — remove the temporary table
         db.execute('DROP TABLE categories_v1');
+
+        // --- Fix transactions table ---
+        db.execute('ALTER TABLE transactions RENAME TO transactions_v1');
+        db.execute(`
+          CREATE TABLE transactions (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            amount      REAL    NOT NULL CHECK (amount > 0),
+            type        TEXT    NOT NULL CHECK (type IN ('income', 'expense')),
+            date        TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+            category_id INTEGER NOT NULL REFERENCES categories (id),
+            note        TEXT,
+            created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+            updated_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+            deleted_at  TEXT
+          )
+        `);
+        db.execute(`
+          INSERT INTO transactions (id, amount, type, date, category_id, note, created_at, updated_at, deleted_at)
+          SELECT                    id, amount, type, date, category_id, note, created_at, updated_at, deleted_at
+          FROM transactions_v1
+        `);
+        db.execute('DROP TABLE transactions_v1');
+
+        // --- Fix budgets table ---
+        db.execute('ALTER TABLE budgets RENAME TO budgets_v1');
+        db.execute(`
+          CREATE TABLE budgets (
+            category_id   INTEGER PRIMARY KEY REFERENCES categories (id),
+            budget_amount REAL    NOT NULL CHECK (budget_amount > 0),
+            period        TEXT    NOT NULL CHECK (period IN ('weekly', 'monthly'))
+          )
+        `);
+        db.execute(`
+          INSERT INTO budgets (category_id, budget_amount, period)
+          SELECT                category_id, budget_amount, period
+          FROM budgets_v1
+        `);
+        db.execute('DROP TABLE budgets_v1');
       } finally {
         // Always restore FK enforcement, even if something above throws
         db.execute('PRAGMA foreign_keys = ON');
@@ -174,4 +211,8 @@ export async function runMigrations(db: DB): Promise<void> {
       currentVersion = migration.version;
     }
   }
+  const result2 = await db.execute(
+    `SELECT type, name, sql FROM sqlite_master ORDER BY type, name`
+  );
+  console.log('Schema:', JSON.stringify(result2.rows));
 }
