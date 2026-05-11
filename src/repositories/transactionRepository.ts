@@ -9,6 +9,27 @@ export interface CreateTransactionData {
   note?: string;
 }
 
+/**
+ * SELECT clause shared by all read queries.
+ *
+ * Joins the category row for display fields, then left-joins the parent row
+ * so that `category_parent_name` is populated for child categories and NULL
+ * for standalone (root) categories.
+ *
+ * Callers render the display name as:
+ *   - category_parent_name present → `${category_parent_name} > ${category_name}`
+ *   - category_parent_name absent  → `${category_name}`
+ */
+const SELECT_WITH_CATEGORY = `
+  SELECT t.*,
+         c.name  AS category_name,
+         c.color AS category_color,
+         p.name  AS category_parent_name
+  FROM   transactions t
+  JOIN   categories   c ON c.id = t.category_id
+  LEFT JOIN categories p ON p.id = c.parent_id
+`;
+
 class TransactionRepository extends BaseRepository {
   /**
    * Returns all active (non-deleted) transactions for a calendar day.
@@ -16,9 +37,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getByDay(date: string): Promise<Transaction[]> {
     const result = await this.db.execute(
-      `SELECT t.*, c.name AS category_name, c.color AS category_color
-       FROM   transactions t
-       JOIN   categories   c ON c.id = t.category_id
+      `${SELECT_WITH_CATEGORY}
        WHERE  date(t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date DESC`,
@@ -34,9 +53,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getByWeek(startDate: string, endDate: string): Promise<Transaction[]> {
     const result = await this.db.execute(
-      `SELECT t.*, c.name AS category_name, c.color AS category_color
-       FROM   transactions t
-       JOIN   categories   c ON c.id = t.category_id
+      `${SELECT_WITH_CATEGORY}
        WHERE  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
        ORDER BY t.date DESC`,
@@ -50,9 +67,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getByMonth(year: number, month: number): Promise<Transaction[]> {
     const result = await this.db.execute(
-      `SELECT t.*, c.name AS category_name, c.color AS category_color
-       FROM   transactions t
-       JOIN   categories   c ON c.id = t.category_id
+      `${SELECT_WITH_CATEGORY}
        WHERE  strftime('%Y', t.date, 'localtime') = ?
          AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
@@ -67,9 +82,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getById(id: number): Promise<Transaction | null> {
     const result = await this.db.execute(
-      `SELECT t.*, c.name AS category_name, c.color AS category_color
-       FROM   transactions t
-       JOIN   categories   c ON c.id = t.category_id
+      `${SELECT_WITH_CATEGORY}
        WHERE  t.id = ?
          AND  t.deleted_at IS NULL`,
       [id],
@@ -82,9 +95,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getForExport(year: number, month: number): Promise<Transaction[]> {
     const result = await this.db.execute(
-      `SELECT t.*, c.name AS category_name
-       FROM   transactions t
-       JOIN   categories   c ON c.id = t.category_id
+      `${SELECT_WITH_CATEGORY}
        WHERE  strftime('%Y', t.date, 'localtime') = ?
          AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
@@ -150,7 +161,7 @@ class TransactionRepository extends BaseRepository {
    */
   async getEarliestYear(): Promise<number> {
     const result = await this.db.execute(
-      'SELECT strftime("%Y", MIN(date)) as year FROM transactions WHERE deleted_at IS NULL'
+      'SELECT strftime("%Y", MIN(date)) as year FROM transactions WHERE deleted_at IS NULL',
     );
     const row = this.first<{year: string}>(result);
     return row?.year ? parseInt(row.year, 10) : new Date().getFullYear();

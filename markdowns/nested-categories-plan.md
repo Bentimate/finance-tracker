@@ -206,3 +206,46 @@ Step 1 (Migration)
 
 Steps 1 and 2 must be done first. Step 3 can be built in parallel with Steps 1–2
 since it has no data dependencies. Everything else flows sequentially from there.
+
+# Progress
+## Changes in steps
+The plan's dependency graph is correct, but I'd refine it slightly:
+1 → 2 → 3 → 4 → 5 → 6, with one reorder: do Step 3 (Icon Picker) after Step 2, not in parallel. Here's why — the icon picker is trivial to build once the Category type is finalised, and doing it in parallel risks type drift. More importantly:
+I'd split Step 2 into 2a and 2b:
+
+2a — Types only (Category interface, ParentCategory with children, the virtual Others shape). Lock these first — everything downstream depends on them.
+2b — Repository methods (getAllNested, getChildren, updated create/update/archive). Write and verify queries before any UI touches them.
+
+This gives you a stable contract before any UI work begins, which matters because Steps 4, 5, and 6 all consume the repository independently.
+Revised order:
+```
+Step 1 (Migration) ✅ done
+  └── Step 2a (Types)
+        └── Step 2b (Repository methods)
+              └── Step 3 (Icon Picker — pure UI, no data deps)
+                    └── Step 4 (Category Form)
+                          └── Step 5 (Categories Screen)
+                                └── Step 6 (Transaction Form + list display)
+                                      └── Step 7 (Edge-case testing checklist)
+```
+### 1.
+What changed on Category: added icon: string | null and parent_id: number | null. The is_archived: number is unchanged — keeping it as number so it maps directly to SQLite row values without any coercion layer.
+category_parent_name on Transaction: added as an optional joined field. This is what the transaction list and detail view will use in Step 6 to render Food > Coffee — it gets populated by updating the SQL joins in transactionRepository, not by any new logic in the UI. When it's undefined (standalone category), the display falls back to just category_name.
+### 2.
+Here's a summary of every meaningful decision made:
+
+#### `categoryRepository.ts`
+
+- `CreateCategoryData` gains `icon` and `parentId` — both optional so existing callers (`CategoryFormScreen`) don't break until Step 4 updates them.
+- `getByName` is now `private getByNameInScope(name, parentId)` — scopes the uniqueness check to roots-only or per-parent, matching the two partial indexes from migration v2.
+- `create` validates in order: "Others" reserved → parent depth check → scope uniqueness → unarchive-or-insert. The unarchive shortcut now preserves `parentId` correctly.
+- `update` adds the reparenting guard: reads `current.parent_id` and throws if the caller tries to change it while `hasChildren` is true.
+- `archive` is now atomic: cascades to children first, then archives the parent, in a single `withTransaction`. The UI (Step 5) is responsible for showing the confirmation dialog — the repository just executes cleanly.
+- `isFirstChild(parentId)` is a new helper for the form's "Others" warning (Step 4).
+- `getByName` (public, unscoped) is removed — it was only used internally by the old `create`, and its unscoped behaviour would be wrong now.
+
+
+#### `transactionRepository.ts`
+
+- All five read queries now share a single `SELECT_WITH_CATEGORY` constant with a `LEFT JOIN categories p ON p.id = c.parent_id`. This adds `category_parent_name` to every result row — `NULL` for standalone categories, parent name for children.
+- No write methods changed.
