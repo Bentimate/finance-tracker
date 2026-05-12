@@ -5,7 +5,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ParentCategory} from '../../../types';
 import {ListItem} from '../../../components/ListItem';
 import {ColorDot} from '../../../components/ColorDot';
-import {Typography} from '../../../components/Typography';
+import {Typography} from '../../../components/Typography'; // retained for child count badge
 import {theme} from '../../../theme';
 
 interface Props {
@@ -52,9 +52,7 @@ export const ParentCategoryRow: React.FC<Props> = ({
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         accessibilityRole="button"
         accessibilityLabel={`Edit ${category.name}`}>
-        <Typography color="primary" variant="caption" weight="semibold">
-          EDIT
-        </Typography>
+        <MaterialIcon name="pencil-outline" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
 
       {/* Delete / archive */}
@@ -63,9 +61,7 @@ export const ParentCategoryRow: React.FC<Props> = ({
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         accessibilityRole="button"
         accessibilityLabel={`Delete ${category.name}`}>
-        <Typography color="error" variant="caption" weight="semibold">
-          DELETE
-        </Typography>
+        <MaterialIcon name="trash-can-outline" size={20} color={theme.colors.error} />
       </TouchableOpacity>
 
       {/* Expand chevron — only shown when parent has children */}

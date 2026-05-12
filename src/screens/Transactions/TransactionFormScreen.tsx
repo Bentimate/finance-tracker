@@ -45,12 +45,8 @@ type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
  * Given the nested category tree and a selected category_id, returns a
  * display label:
  *   - Standalone parent selected directly → "Transport"
- *   - Child selected → "Food"  (spec: just parent name, not "Food > Coffee")
+ *   - Child selected → "Coffee"  (child name only)
  *   - Parent selected via "Others" → "Food"
- *
- * Actually per spec the selector in the form shows just "Food" when Others is
- * picked (parent id saved). For a real child we show "Parent > Child".
- * For a standalone root we show just the root name.
  */
 function resolveSelectedDisplay(
   categories: ParentCategory[],
@@ -70,7 +66,7 @@ function resolveSelectedDisplay(
     for (const child of parent.children) {
       if (child.id === categoryId) {
         return {
-          label: `${parent.name} > ${child.name}`,
+          label: child.name,
           color: child.color,
           icon: child.icon,
         };
@@ -240,8 +236,7 @@ const TransactionFormScreen: React.FC = () => {
       DeviceEventEmitter.emit('AppRefresh');
       navigation.goBack();
     } catch (error) {
-        console.log('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-      Alert.alert('Error', error instanceof Error ? error.message : String(error));
+      Alert.alert('Error', 'Failed to save transaction.');
     } finally {
       setLoading(false);
     }
@@ -359,7 +354,7 @@ const TransactionFormScreen: React.FC = () => {
                     name={selectedDisplay.icon}
                     size={18}
                     color={selectedDisplay.color}
-                    style={styles.categoryDot}
+                    style={styles.categoryIcon}
                   />
                 ) : (
                   <View

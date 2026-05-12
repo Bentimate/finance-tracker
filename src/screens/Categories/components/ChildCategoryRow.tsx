@@ -5,7 +5,6 @@ import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Category} from '../../../types';
 import {ListItem} from '../../../components/ListItem';
 import {ColorDot} from '../../../components/ColorDot';
-import {Typography} from '../../../components/Typography';
 import {theme} from '../../../theme';
 
 interface Props {
@@ -22,7 +21,7 @@ export const ChildCategoryRow: React.FC<Props> = ({category, onEdit, onDelete}) 
       {category.icon ? (
         <MaterialIcon name={category.icon} size={18} color={category.color} />
       ) : (
-        <ColorDot color={category.color} size={sm} />
+        <ColorDot color={category.color} size="sm" />
       )}
     </View>
   );
@@ -34,9 +33,7 @@ export const ChildCategoryRow: React.FC<Props> = ({category, onEdit, onDelete}) 
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         accessibilityRole="button"
         accessibilityLabel={`Edit ${category.name}`}>
-        <Typography color="primary" variant="caption" weight="semibold">
-          EDIT
-        </Typography>
+        <MaterialIcon name="pencil-outline" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -44,9 +41,7 @@ export const ChildCategoryRow: React.FC<Props> = ({category, onEdit, onDelete}) 
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         accessibilityRole="button"
         accessibilityLabel={`Delete ${category.name}`}>
-        <Typography color="error" variant="caption" weight="semibold">
-          DELETE
-        </Typography>
+        <MaterialIcon name="trash-can-outline" size={20} color={theme.colors.error} />
       </TouchableOpacity>
     </View>
   );

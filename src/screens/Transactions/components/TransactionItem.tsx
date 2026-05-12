@@ -1,5 +1,5 @@
 import React from 'react';
-import {View} from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Transaction} from '../../../types';
 import {Typography} from '../../../components/Typography';
@@ -13,36 +13,103 @@ interface TransactionItemProps {
   onPress: (id: number) => void;
 }
 
-export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress}) => {
-  // Build display label: "Food > Coffee" for children, "Transport" for standalone
-  const displayLabel = item.category_parent_name
-    ? `${item.category_parent_name} > ${item.category_name}`
-    : (item.category_name || 'Uncategorized');
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
+interface ParentPillProps {
+  name: string;
+  color: string;
+}
+
+const ParentPill: React.FC<ParentPillProps> = ({name, color}) => (
+  <View style={styles.pill}>
+    <View style={[styles.pillDot, {backgroundColor: color}]} />
+    <Typography variant="xs" color="textMuted" style={styles.pillText}>
+      {name}
+    </Typography>
+  </View>
+);
+
+interface RightColumnProps {
+  item: Transaction;
+}
+
+const RightColumn: React.FC<RightColumnProps> = ({item}) => (
+  <View style={styles.rightColumn}>
+    {item.category_parent_name && (
+      <ParentPill
+        name={item.category_parent_name}
+        color={item.category_color || theme.colors.textMuted}
+      />
+    )}
+    <Typography
+      variant="body"
+      weight="bold"
+      color={item.type === 'income' ? 'success' : 'text'}
+      style={styles.amount}>
+      {item.type === 'income' ? '+' : '-'}
+      {formatCurrency(item.amount)}
+    </Typography>
+  </View>
+);
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress}) => {
   const color = item.category_color || theme.colors.textMuted;
 
-  // Left element: icon if available, color dot otherwise
   const leftElement = item.category_icon ? (
     <MaterialIcon name={item.category_icon} size={20} color={color} />
   ) : (
     <ColorDot color={color} />
   );
 
+  // Primary label is always the child (or standalone root) name
+  const title = item.category_name || 'Uncategorized';
+
   return (
     <ListItem
       onPress={() => onPress(item.id)}
-      title={displayLabel}
-      subtitle={item.note}
+      title={title}
+      subtitle={item.note ?? undefined}
       leftElement={leftElement}
-      rightElement={
-        <Typography
-          variant="body"
-          weight="bold"
-          color={item.type === 'income' ? 'success' : 'text'}>
-          {item.type === 'income' ? '+' : '-'}
-          {formatCurrency(item.amount)}
-        </Typography>
-      }
+      rightElement={<RightColumn item={item} />}
     />
   );
 };
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  rightColumn: {
+    alignItems: 'flex-end',
+    gap: theme.spacing.xs,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    gap: 4,
+  },
+  pillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  pillText: {
+    lineHeight: 14,
+  },
+  amount: {
+    textAlign: 'right',
+  },
+});

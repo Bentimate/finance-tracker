@@ -160,6 +160,15 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
+  categoryDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: theme.spacing.md,
+  },
+  categoryIcon: {
+    marginRight: theme.spacing.md,
+  },
   dateSelector: {
     flexDirection: 'row',
     alignItems: 'center',
