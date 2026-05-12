@@ -52,7 +52,6 @@ const CashFlowCard: React.FC<Props> = ({totals}) => {
         <Text style={[styles.netAmount, isPositive ? styles.positiveText : styles.negativeText]}>
           {isPositive ? '+' : '−'}{formatCurrency(Math.abs(netCashFlow))}
         </Text>
-        <Text style={styles.netCaption}>net this month</Text>
       </View>
 
       {hasData ? (

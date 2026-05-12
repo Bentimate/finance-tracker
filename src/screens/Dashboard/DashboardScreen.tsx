@@ -2,38 +2,76 @@ import React, {useState, useCallback, useEffect} from 'react';
 import {
   View,
   ScrollView,
-  Text,
   ActivityIndicator,
-  TouchableOpacity,
   DeviceEventEmitter,
   AppState,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import {useDashboardData} from '../../hooks/useDashboardData';
-import MonthSelector from './components/MonthSelector';
+import {
+  DashboardDateFilter,
+  DateSelection,
+} from './components/DashboardDateFilter';
+import {
+  monthRange,
+  customRange,
+  DateRange,
+} from '../../repositories/analyticsRepository';
+import {analyticsRepository} from '../../repositories/analyticsRepository';
 import CashFlowCard from './components/CashFlowCard';
 import TopSpendingCard from './components/TopSpendingCard';
 import CategoryDonutCard from './components/CategoryDonutCard';
 import TrendBarCard from './components/TrendBarCard';
 import {styles} from './DashboardScreen.styles';
-import {theme} from '../../theme';
-import {prevMonth, nextMonth} from './helpers';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {Screen} from '../../components/Screen';
 
-const DashboardScreen: React.FC = () => {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-  const {data, loading, error, refresh} = useDashboardData(year, month);
+const NOW = new Date();
+const CURRENT_YEAR = NOW.getFullYear();
+const CURRENT_MONTH = NOW.getMonth() + 1;
+
+function selectionToRange(selection: DateSelection): DateRange {
+  if (selection.mode === 'single') {
+    return monthRange(selection.year, selection.month);
+  }
+  return customRange(
+    selection.startYear,
+    selection.startMonth,
+    selection.endYear,
+    selection.endMonth,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
+
+const DashboardScreen: React.FC = () => {
+  const [selection, setSelection] = useState<DateSelection>({
+    mode: 'single',
+    year: CURRENT_YEAR,
+    month: CURRENT_MONTH,
+  });
+  const [earliestYear, setEarliestYear] = useState(CURRENT_YEAR);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
+
+  const range = selectionToRange(selection);
+  const {data, loading, error, refresh} = useDashboardData(range);
+
+  // Fetch the earliest year once on mount — same pattern as TransactionListScreen
+  useEffect(() => {
+    analyticsRepository.getEarliestYear().then(setEarliestYear);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -50,29 +88,20 @@ const DashboardScreen: React.FC = () => {
   }, [navigation, handleRefresh, isRefreshing, route.params]);
 
   useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener('AppRefresh', () => {
-      refresh();
-    });
-    return () => subscription.remove();
+    const sub = DeviceEventEmitter.addListener('AppRefresh', () => refresh());
+    return () => sub.remove();
   }, [refresh]);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active') {
-        refresh();
-      }
+    const sub = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') refresh();
     });
-    return () => subscription.remove();
+    return () => sub.remove();
   }, [refresh]);
 
   useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener(
-      'WidgetTransactionAdded',
-      () => {
-        refresh();
-      },
-    );
-    return () => subscription.remove();
+    const sub = DeviceEventEmitter.addListener('WidgetTransactionAdded', () => refresh());
+    return () => sub.remove();
   }, [refresh]);
 
   useFocusEffect(
@@ -81,28 +110,15 @@ const DashboardScreen: React.FC = () => {
     }, [refresh]),
   );
 
-  const handlePrev = () => {
-    const p = prevMonth(year, month);
-    setYear(p.year);
-    setMonth(p.month);
-  };
-
-  const handleNext = () => {
-    const isCurrentMonth =
-      year === now.getFullYear() && month === now.getMonth() + 1;
-    if (isCurrentMonth) {
-      return;
-    }
-    const n = nextMonth(year, month);
-    setYear(n.year);
-    setMonth(n.month);
-  };
-
   return (
     <Screen
       edges={[]}
       header={
-        <MonthSelector year={year} month={month} onPrev={handlePrev} onNext={handleNext} />
+        <DashboardDateFilter
+          selection={selection}
+          earliestYear={earliestYear}
+          onChange={setSelection}
+        />
       }>
       {loading && <LoadingState />}
 
@@ -115,8 +131,12 @@ const DashboardScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}>
           <CashFlowCard totals={data.totals} />
           <TopSpendingCard categorySpend={data.categorySpend} />
-          <CategoryDonutCard categorySpend={data.categorySpend} />
-          <TrendBarCard weeklyTrend={data.weeklyTrend} />
+          <CategoryDonutCard
+            donutSpend={data.donutSpend}
+            donutParents={data.donutParents}
+            range={range}
+          />
+          {/* <TrendBarCard weeklyTrend={data.weeklyTrend} /> */}
         </ScrollView>
       )}
     </Screen>

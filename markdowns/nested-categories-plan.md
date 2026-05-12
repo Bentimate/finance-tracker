@@ -326,4 +326,44 @@ Between c.color AS category_color, and p.name AS category_parent_name.
 ### FIXES:
 - Added db migrations for transaction and budget tables, as FK was still referring to category v1.
 
+## 7. UI Changes
+### Category list item
+All three files updated. Summary of changes:
 
+- All three files — EDIT / DELETE text labels replaced with pencil-outline and trash-can-outline MaterialIcon icons, sized at 20 and coloured via theme.colors.primary / theme.colors.error
+- CategoryListItem — added the MaterialIcon import and theme import (previously missing); removed the unused Typography import
+- ChildCategoryRow — removed the unused Typography import; also fixed a pre-existing bug where size={sm} on the ColorDot was referencing an undefined variable — changed to size={10}
+- ParentCategoryRow — removed the unused Typography import
+
+### Transation list item
+- Changed the look of transaction list item 
+### Transaction form category field
+- from Parent > Child to just Child
+
+## 8. Update pie chart by categories
+> New dropdown to choose top level category
+> Donut now shows breakdown of spending by category
+
+Five files changed. Here's a summary of what each does:
+
+- analyticsRepository — three new methods: getParentCategorySpend (rolls child transactions up into their parent for the default view), getChildCategorySpend (returns per-child slices + othersTotal for direct-on-parent transactions), and getDonutParentOptions (only returns parents with non-archived children that have spend this month — these populate the dropdown).
+- useDashboardData — adds donutSpend and donutParents to the parallel fetch. categorySpend is untouched so TopSpendingCard is unaffected.
+- DashboardScreen — one line change, passing the four new props to CategoryDonutCard.
+- CategoryDonutCard — the pill uses measure() on a ref to get the button's exact screen coordinates, then positions the dropdown Modal at pageY + height + 4 below it. This is why it floats above everything without pushing content. Selecting a parent triggers getChildCategorySpend, shows a spinner while loading, then swaps the chart data. Month changes reset the selection automatically via useEffect.
+
+### UI changes:
+- Removed: pillRef, dropdownAnchor, openDropdown, the Modal/TouchableWithoutFeedback block, and all the dropdown* styles. Also removed the Dimensions and Modal imports.
+- Added: Menu from react-native-paper wraps the pill directly as its anchor prop — no manual positioning needed. Paper handles placement, elevation, and the fade animation automatically.
+- Icons: Menu.Item uses the leadingIcon prop which accepts a render function — renders MaterialIcon when the category has an icon, falls back to a menuDot color circle otherwise.
+- Styles: menuContentStyle and menuItemStyle are exported as plain objects (not inside StyleSheet.create) because paper's Menu props expect ViewStyle/TextStyle directly, not registered style IDs.
+- analyticsRepository.ts — ParentCategoryOption gains icon: string | null, and the getDonutParentOptions SELECT now includes p.icon.
+- CategoryDonutCard.tsx — leadingIcon renders MaterialIcon when p.icon is set, returns null otherwise. Icon size bumped to 18 to match the rest of the app.
+
+## 9. Include month range for dashboard
+Five files. Here's a summary of every decision:
+
+- analyticsRepository.ts — all queries now take a DateRange instead of year/month. Uses date(t.date, 'localtime') BETWEEN ? AND ? which works cleanly across month boundaries. getDailyNetFlow keeps year/month params since the calendar view calls it directly per-month. Two exported helper functions monthRange and customRange build DateRange objects so no string formatting leaks into the screen layer. getEarliestYear moved here from transactionRepository since the dashboard now needs it too.
+- useDashboardData.ts — accepts DateRange directly. The useCallback dependency array uses range.startDate and range.endDate strings so React correctly detects range changes without needing a deep-equal on the object.
+- DashboardDateFilter.tsx — replaces MonthSelector. Has a Month / Range toggle pill at the top. Single mode shows one MonthYearPicker. Range mode shows two side by side with FROM / TO labels and an arrow separator. MonthYearPicker disables months that would violate the range bounds — e.g. in range mode, the end picker disables months before the start. Switching modes carries the current selection forward sensibly.
+- DashboardScreen.tsx — year/month state replaced with a single DateSelection object. selectionToRange() converts it to a DateRange before passing to the hook. MonthSelector import removed, DashboardDateFilter used as the header prop instead. earliestYear fetched on mount via analyticsRepository.getEarliestYear().
+- CategoryDonutCard.tsx — year/month props replaced with range: DateRange. The drill-down reset useEffect now depends on range.startDate and range.endDate.

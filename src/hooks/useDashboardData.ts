@@ -1,6 +1,10 @@
 import {useState, useEffect, useCallback} from 'react';
 import {MonthlyTotals, CategorySpend, WeeklyTrend} from '../types';
-import {analyticsRepository} from '../repositories/analyticsRepository';
+import {
+  analyticsRepository,
+  ParentCategoryOption,
+  DateRange,
+} from '../repositories/analyticsRepository';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -9,6 +13,8 @@ import {analyticsRepository} from '../repositories/analyticsRepository';
 export interface DashboardData {
   totals: MonthlyTotals;
   categorySpend: CategorySpend[];
+  donutSpend: CategorySpend[];
+  donutParents: ParentCategoryOption[];
   weeklyTrend: WeeklyTrend[];
 }
 
@@ -24,41 +30,43 @@ export interface UseDashboardDataResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetches all three data sets for the dashboard in a single parallel call.
- * Re-fetches automatically when year/month changes.
+ * Fetches all dashboard data sets for the given date range in a single
+ * parallel call. Re-fetches automatically when the range changes.
  *
  * Callers should also call refresh() via useFocusEffect so the dashboard
  * reflects new transactions added from other tabs.
  */
-export function useDashboardData(
-  year: number,
-  month: number,
-): UseDashboardDataResult {
+export function useDashboardData(range: DateRange): UseDashboardDataResult {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) {
-      setLoading(true);
-    }
-    setError(null);
-    try {
-      const [totals, categorySpend, weeklyTrend] = await Promise.all([
-        analyticsRepository.getMonthlyTotals(year, month),
-        analyticsRepository.getCategorySpend(year, month),
-        analyticsRepository.getWeeklyTrend(year, month),
-      ]);
-      setData({totals, categorySpend, weeklyTrend});
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  }, [year, month]);
+  const load = useCallback(
+    async (showLoadingSpinner = true) => {
+      if (showLoadingSpinner) setLoading(true);
+      setError(null);
+      try {
+        const [totals, categorySpend, donutSpend, donutParents, weeklyTrend] =
+          await Promise.all([
+            analyticsRepository.getMonthlyTotals(range),
+            analyticsRepository.getCategorySpend(range),
+            analyticsRepository.getParentCategorySpend(range),
+            analyticsRepository.getDonutParentOptions(range),
+            analyticsRepository.getWeeklyTrend(range),
+          ]);
+        setData({totals, categorySpend, donutSpend, donutParents, weeklyTrend});
+      } catch (e: any) {
+        setError(e?.message ?? 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    // Depend on the date strings so a new range triggers a re-fetch
+    [range.startDate, range.endDate],
+  );
 
   useEffect(() => {
-    load(true); // Show spinner on initial mount or month change
+    load(true);
   }, [load]);
 
   const refresh = useCallback(() => load(false), [load]);
