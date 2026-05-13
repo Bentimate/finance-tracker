@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.ImageView
 import android.widget.TextView
 
 class WidgetCategoryPickerAdapter(
@@ -20,7 +19,6 @@ class WidgetCategoryPickerAdapter(
         val title: String,
         val colorHex: String,
         val iconName: String?,
-        val showChevron: Boolean,
         val isOthers: Boolean,
     )
 
@@ -36,19 +34,14 @@ class WidgetCategoryPickerAdapter(
         val view = convertView ?: inflater.inflate(R.layout.item_widget_category_picker, parent, false)
         val row = getItem(position)
 
-        val icon = view.findViewById<ImageView>(R.id.category_icon)
+        val dot = view.findViewById<View>(R.id.category_dot)
         val label = view.findViewById<TextView>(R.id.category_name)
-        val chevron = view.findViewById<ImageView>(R.id.category_chevron)
-        val check = view.findViewById<ImageView>(R.id.category_check)
-
-        val iconRes = WidgetCategoryIconMapper.resolve(row.iconName)
-        icon.setImageResource(iconRes)
-        icon.setColorFilter(parseColorOrDefault(row.colorHex))
+        val check = view.findViewById<View>(R.id.category_check)
+        dot.background?.mutate()?.setTint(parseColorOrDefault(row.colorHex))
 
         label.text = row.title
         label.alpha = if (row.isOthers) 0.75f else 1f
 
-        chevron.visibility = if (row.showChevron) View.VISIBLE else View.GONE
         check.visibility = if (selectedId == row.id) View.VISIBLE else View.GONE
 
         return view

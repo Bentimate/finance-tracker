@@ -8,11 +8,11 @@
   anyway, so 0 is the correct choice for a pure-action widget.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="148dp"
+    android:minWidth="74dp"
     android:minHeight="74dp"
     android:minResizeWidth="74dp"
     android:minResizeHeight="74dp"
-    android:targetCellWidth="2"
+    android:targetCellWidth="1"
     android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_finance"

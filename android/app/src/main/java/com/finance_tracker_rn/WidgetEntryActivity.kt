@@ -42,6 +42,7 @@ class WidgetEntryActivity : AppCompatActivity() {
     private var db: SQLiteDatabase? = null
 
     private lateinit var amountInput: EditText
+    private lateinit var noteInput: EditText
     private lateinit var categoryBtn: Button
     private lateinit var saveBtn: Button
     private lateinit var amountError: TextView
@@ -79,6 +80,7 @@ class WidgetEntryActivity : AppCompatActivity() {
 
     private fun bindViews() {
         amountInput = findViewById(R.id.amount_input)
+        noteInput = findViewById(R.id.note_input)
         categoryBtn = findViewById(R.id.category_btn)
         saveBtn = findViewById(R.id.save_btn)
         amountError = findViewById(R.id.amount_error)
@@ -235,7 +237,6 @@ class WidgetEntryActivity : AppCompatActivity() {
                 title = parent.name,
                 colorHex = parent.color,
                 iconName = parent.icon,
-                showChevron = parent.children.isNotEmpty(),
                 isOthers = false,
             )
         }
@@ -273,7 +274,6 @@ class WidgetEntryActivity : AppCompatActivity() {
                 title = child.name,
                 colorHex = child.color,
                 iconName = child.icon,
-                showChevron = false,
                 isOthers = false,
             )
         }
@@ -282,7 +282,6 @@ class WidgetEntryActivity : AppCompatActivity() {
             title = "Others",
             colorHex = parent.color,
             iconName = parent.icon,
-            showChevron = false,
             isOthers = true,
         )
         val rows = childRows + othersRow
@@ -460,10 +459,15 @@ class WidgetEntryActivity : AppCompatActivity() {
         if (!valid) return
 
         val normalizedAmount = normalized ?: return
-        insertTransaction(normalizedAmount.amount, normalizedAmount.type, selectedCategoryId!!)
+        insertTransaction(
+            amount = normalizedAmount.amount,
+            type = normalizedAmount.type,
+            categoryId = selectedCategoryId!!,
+            note = noteInput.text?.toString()?.trim().orEmpty(),
+        )
     }
 
-    private fun insertTransaction(amount: Double, type: String, categoryId: Long) {
+    private fun insertTransaction(amount: Double, type: String, categoryId: Long, note: String) {
         val database = db ?: run {
             Toast.makeText(this, "Database unavailable.", Toast.LENGTH_SHORT).show()
             return
@@ -483,6 +487,11 @@ class WidgetEntryActivity : AppCompatActivity() {
                 put("date", now)
                 put("created_at", now)
                 put("updated_at", now)
+                if (note.isNotBlank()) {
+                    put("note", note)
+                } else {
+                    putNull("note")
+                }
             }
 
             database.insertOrThrow("transactions", null, values)

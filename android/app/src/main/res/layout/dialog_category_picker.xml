@@ -27,11 +27,14 @@
     <Button
         android:id="@+id/btn_cancel"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:minHeight="40dp"
         android:layout_gravity="end"
         android:text="Cancel"
         android:textColor="#6366f1"
         android:background="?attr/selectableItemBackground"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
         style="?attr/borderlessButtonStyle"
         android:layout_marginTop="8dp" />
 

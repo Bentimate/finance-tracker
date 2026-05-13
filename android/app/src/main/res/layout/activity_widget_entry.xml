@@ -62,7 +62,7 @@
         <EditText
             android:id="@+id/amount_input"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:inputType="none"
             android:hint="0.00"
             android:textColorHint="#9ca3af"
@@ -106,13 +106,15 @@
             <Button
                 android:id="@+id/key_1"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="1"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -121,13 +123,15 @@
             <Button
                 android:id="@+id/key_2"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="2"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -136,13 +140,15 @@
             <Button
                 android:id="@+id/key_3"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="3"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
         </LinearLayout>
 
         <LinearLayout
@@ -154,13 +160,15 @@
             <Button
                 android:id="@+id/key_4"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="4"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -169,13 +177,15 @@
             <Button
                 android:id="@+id/key_5"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="5"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -184,13 +194,15 @@
             <Button
                 android:id="@+id/key_6"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="6"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
         </LinearLayout>
 
         <LinearLayout
@@ -202,13 +214,15 @@
             <Button
                 android:id="@+id/key_7"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="7"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -217,13 +231,15 @@
             <Button
                 android:id="@+id/key_8"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="8"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -232,13 +248,15 @@
             <Button
                 android:id="@+id/key_9"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="9"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
         </LinearLayout>
 
         <LinearLayout
@@ -249,13 +267,15 @@
             <Button
                 android:id="@+id/key_sign"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="+/-"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -264,13 +284,15 @@
             <Button
                 android:id="@+id/key_0"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="0"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -279,13 +301,15 @@
             <Button
                 android:id="@+id/key_decimal"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
                 android:text="."
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
         </LinearLayout>
 
         <LinearLayout
@@ -297,12 +321,14 @@
             <Button
                 android:id="@+id/key_clear"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="AC"
                 android:textAllCaps="false"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
 
             <Space
                 android:layout_width="6dp"
@@ -311,12 +337,14 @@
             <Button
                 android:id="@+id/key_backspace"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="&#x232b;"
                 android:textAllCaps="false"
                 android:textColor="#111827"
-                android:background="@drawable/input_background" />
+                android:background="@drawable/input_background"
+                android:elevation="0dp"
+                android:stateListAnimator="@null" />
         </LinearLayout>
     </LinearLayout>
 
@@ -335,16 +363,47 @@
     <Button
         android:id="@+id/category_btn"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="46dp"
         android:text="Select a category"
+        android:textAllCaps="false"
         android:textColor="#6b7280"
         android:textSize="14sp"
         android:gravity="start|center_vertical"
         android:paddingStart="14dp"
         android:paddingEnd="14dp"
         android:background="@drawable/category_btn_bg"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
         android:layout_marginBottom="4dp"
         style="?attr/borderlessButtonStyle" />
+
+    <!-- Note field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NOTE"
+        android:textColor="#9ca3af"
+        android:textSize="10sp"
+        android:letterSpacing="0.08"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/note_input"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:background="@drawable/input_background"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:hint="Add a note (optional)"
+        android:textColor="#111827"
+        android:textColorHint="#9ca3af"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:inputType="textCapSentences"
+        android:importantForAutofill="yes"
+        android:layout_marginBottom="4dp" />
 
     <!-- Category error -->
     <TextView
@@ -360,12 +419,14 @@
     <Button
         android:id="@+id/save_btn"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="42dp"
         android:text="Save"
         android:textColor="#ffffff"
         android:textSize="14sp"
         android:textStyle="bold"
         android:background="@drawable/dialog_button_bg"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
         android:layout_marginTop="14dp"
         style="?attr/borderlessButtonStyle" />
 
