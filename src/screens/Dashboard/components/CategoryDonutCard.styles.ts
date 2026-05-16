@@ -1,6 +1,29 @@
 import {StyleSheet} from 'react-native';
 import {theme} from '../../../theme';
 
+// ---------------------------------------------------------------------------
+// Donut chart colour palette
+//
+// A fixed set of visually distinct colours used to colour slices in the donut
+// chart.  Colours are assigned by slice index (modulo palette length) so that
+// every slice always gets a unique colour regardless of the category's own
+// stored colour.  The virtual "Others" bucket uses a separate muted constant
+// defined in the component.
+// ---------------------------------------------------------------------------
+
+export const DONUT_PALETTE: readonly string[] = [
+  '#6366f1', // indigo   — matches app primary
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#f43f5e', // rose
+  '#0ea5e9', // sky
+  '#8b5cf6', // violet
+  '#14b8a6', // teal
+  '#f97316', // orange
+  '#ec4899', // pink
+  '#84cc16', // lime
+] as const;
+
 export const styles = StyleSheet.create({
   // Header
   headerRow: {

@@ -16,12 +16,34 @@ import {
   analyticsRepository,
 } from '../../../repositories/analyticsRepository';
 import {formatCurrencyCompact} from '../../../utils/formatCurrency';
-import {styles, menuItemStyle, menuContentStyle} from './CategoryDonutCard.styles';
+import {
+  styles,
+  menuItemStyle,
+  menuContentStyle,
+  DONUT_PALETTE,
+} from './CategoryDonutCard.styles';
 import {theme} from '../../../theme';
 import {Card} from '../../../components/Card';
 
+// The "Others" virtual bucket always renders in a fixed muted colour so it
+// is visually distinct from real categories without consuming a palette slot.
 const OTHERS_COLOR = '#94a3b8';
-const FALLBACK_COLOR = theme.colors.textMuted;
+
+/**
+ * Returns the display colour for a given slice.
+ *
+ * Real categories (id >= 0) are assigned a colour from DONUT_PALETTE by their
+ * position in the rendered list, guaranteeing each slice is visually distinct
+ * regardless of the category's own stored colour.
+ *
+ * The virtual "Others" bucket (id === -1) always gets OTHERS_COLOR.
+ */
+function resolveSliceColor(cat: CategorySpend, index: number): string {
+  if (cat.id === -1) {
+    return OTHERS_COLOR;
+  }
+  return DONUT_PALETTE[index % DONUT_PALETTE.length];
+}
 
 interface Props {
   donutSpend: CategorySpend[];
@@ -84,9 +106,13 @@ const CategoryDonutCard: React.FC<Props> = ({
   const focused = focusedIndex !== null ? activeSpend[focusedIndex] : null;
   const isEmpty = activeSpend.length === 0 && !drillLoading;
 
+  // Derive palette-assigned colours once per render so pieData and the legend
+  // always reference the same colour for a given index.
+  const sliceColors = activeSpend.map(resolveSliceColor);
+
   const pieData = activeSpend.map((cat, i) => ({
     value: cat.total,
-    color: cat.color ?? FALLBACK_COLOR,
+    color: sliceColors[i],
     focused: focusedIndex === i,
     onPress: () => setFocusedIndex(prev => (prev === i ? null : i)),
   }));
@@ -206,10 +232,7 @@ const CategoryDonutCard: React.FC<Props> = ({
                   key={cat.id}
                   style={[styles.legendRow, isFocused && styles.legendRowFocused]}>
                   <View
-                    style={[
-                      styles.legendDot,
-                      {backgroundColor: cat.color ?? FALLBACK_COLOR},
-                    ]}
+                    style={[styles.legendDot, {backgroundColor: sliceColors[i]}]}
                   />
                   <Text style={styles.legendName} numberOfLines={1}>
                     {cat.name}
