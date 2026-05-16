@@ -12,7 +12,7 @@ interface ViewModeTabsProps {
 
 const TABS: {key: ViewMode; label: string}[] = [
   {key: 'today', label: 'Today'},
-  {key: 'week', label: 'Week'},
+  {key: 'week', label: 'Past 7 Days'},
   {key: 'month', label: 'Month'},
 ];
 

@@ -142,12 +142,12 @@ const DashboardScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           <CashFlowCard totals={data.totals} />
-          <TopSpendingCard categorySpend={data.categorySpend} />
           <CategoryDonutCard
             donutSpend={data.donutSpend}
             donutParents={data.donutParents}
             range={range}
           />
+          <TopSpendingCard categorySpend={data.categorySpend} />
           {/* <TrendBarCard weeklyTrend={data.weeklyTrend} /> */}
         </ScrollView>
       )}

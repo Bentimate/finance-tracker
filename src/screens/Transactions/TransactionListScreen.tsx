@@ -20,7 +20,6 @@ import {DayTransactionsSheet} from './components/DayTransactionsSheet';
 import {
   TransactionSection,
   toDateStr,
-  getISOWeekBounds,
   groupByDate,
   formatDateLabel,
 } from './helpers';
@@ -97,8 +96,9 @@ const TransactionListScreen: React.FC = () => {
         if (viewMode === 'today') {
           data = await transactionRepository.getByDay(toDateStr(today));
         } else if (viewMode === 'week') {
-          const {start, end} = getISOWeekBounds(today);
-          data = await transactionRepository.getByWeek(start, end);
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - 6);
+          data = await transactionRepository.getByWeek(toDateStr(weekStart), toDateStr(today));
         }
         setSections(groupByDate(data));
       }
