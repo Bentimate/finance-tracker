@@ -1,9 +1,23 @@
-import {QueryResult} from '@op-engineering/op-sqlite';
+import {DB, QueryResult} from '@op-engineering/op-sqlite';
 import {database} from '../database/db';
 
+const STALE_HANDLE_PATTERNS = [
+  'database not initialised',
+  'database is closed',
+  'closed database',
+  'bad file descriptor',
+  'cannot operate on a closed database',
+  'null database',
+  'has been closed',
+  'no such table: sqlite_master',
+];
+
 export abstract class BaseRepository {
-  protected get db() {
-    return database.instance;
+  protected get db(): Pick<DB, 'execute'> {
+    return {
+      execute: (statement: string, params?: unknown[]) =>
+        this.runQuery(statement, params),
+    };
   }
 
   protected rows<T>(result: QueryResult): T[] {
@@ -52,15 +66,39 @@ export abstract class BaseRepository {
     };
   }
 
+  protected async runQuery(statement: string, params: unknown[] = []): Promise<QueryResult> {
+    try {
+      await database.ensureReady();
+      return await database.instance.execute(statement, params);
+    } catch (error) {
+      if (!this.isStaleHandleError(error)) {
+        throw error;
+      }
+
+      console.log('QUERY_RETRY_ON_STALE_HANDLE');
+      await database.ensureReady();
+      return database.instance.execute(statement, params);
+    }
+  }
+
   protected async withTransaction<T>(callback: () => Promise<T>): Promise<T> {
-    await this.db.execute('BEGIN IMMEDIATE TRANSACTION');
+    await this.runQuery('BEGIN IMMEDIATE TRANSACTION');
     try {
       const result = await callback();
-      await this.db.execute('COMMIT');
+      await this.runQuery('COMMIT');
       return result;
     } catch (e) {
-      await this.db.execute('ROLLBACK');
+      try {
+        await this.runQuery('ROLLBACK');
+      } catch (_rollbackError) {
+        // Preserve original error; rollback best effort for stale/invalid handles.
+      }
       throw e;
     }
+  }
+
+  private isStaleHandleError(error: unknown): boolean {
+    const message = (error as {message?: string})?.message?.toLowerCase() ?? '';
+    return STALE_HANDLE_PATTERNS.some(pattern => message.includes(pattern));
   }
 }

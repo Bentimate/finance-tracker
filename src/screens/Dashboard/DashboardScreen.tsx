@@ -20,6 +20,7 @@ import {
   DateRange,
 } from '../../repositories/analyticsRepository';
 import {analyticsRepository} from '../../repositories/analyticsRepository';
+import {database} from '../../database/db';
 import CashFlowCard from './components/CashFlowCard';
 import TopSpendingCard from './components/TopSpendingCard';
 import CategoryDonutCard from './components/CategoryDonutCard';
@@ -94,7 +95,18 @@ const DashboardScreen: React.FC = () => {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active') refresh();
+      if (nextAppState !== 'active') {
+        return;
+      }
+
+      void (async () => {
+        try {
+          await database.ensureReady();
+          await refresh();
+        } catch (e) {
+          console.error('Dashboard resume refresh failed', e);
+        }
+      })();
     });
     return () => sub.remove();
   }, [refresh]);
