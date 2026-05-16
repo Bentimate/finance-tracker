@@ -24,6 +24,7 @@ export interface ChildCategorySpendResult {
 export interface DateRange {
   startDate: string;
   endDate: string;
+  label?: string; // Optional label for display (e.g. "Oct 25 - Nov 24")
 }
 
 // ---------------------------------------------------------------------------
@@ -31,13 +32,49 @@ export interface DateRange {
 // ---------------------------------------------------------------------------
 
 /**
- * Builds a DateRange for a single calendar month.
+ * Builds a DateRange for a single calendar month or pay cycle.
  */
-export function monthRange(year: number, month: number): DateRange {
-  const start = `${String(year)}-${String(month).padStart(2, '0')}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const end = `${String(year)}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-  return {startDate: start, endDate: end};
+export function monthRange(year: number, month: number, payCycleDay: number | null = null): DateRange {
+  if (payCycleDay === null) {
+    const start = `${String(year)}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const end = `${String(year)}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    return {startDate: start, endDate: end};
+  }
+
+  // Helper to get clamped date string
+  const getClampedDateStr = (y: number, m: number, d: number) => {
+    const lastDayOfMonth = new Date(y, m, 0).getDate();
+    const day = Math.min(d, lastDayOfMonth);
+    return `${String(y)}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  };
+
+  const start = getClampedDateStr(year, month, payCycleDay);
+
+  // End is day before next month's payday
+  const nextMonthDate = new Date(year, month, 1);
+  const nextY = nextMonthDate.getFullYear();
+  const nextM = nextMonthDate.getMonth() + 1;
+
+  const nextPayday = new Date(nextY, nextM - 1, payCycleDay);
+  // Clamped next payday
+  const lastDayOfNextMonth = new Date(nextY, nextM, 0).getDate();
+  const clampedNextPayday = Math.min(payCycleDay, lastDayOfNextMonth);
+
+  const endDateObj = new Date(nextY, nextM - 1, clampedNextPayday - 1);
+  const end = `${String(endDateObj.getFullYear())}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
+
+  // Format label
+  const formatDateLabel = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-');
+    return `${parseInt(m, 10)}/${parseInt(d, 10)}`;
+  };
+
+  return {
+    startDate: start,
+    endDate: end,
+    label: `${formatDateLabel(start)} - ${formatDateLabel(end)}`,
+  };
 }
 
 /**

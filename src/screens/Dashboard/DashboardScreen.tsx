@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useMemo} from 'react';
 import {
   View,
   ScrollView,
@@ -29,6 +29,7 @@ import {styles} from './DashboardScreen.styles';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {Screen} from '../../components/Screen';
+import {useUserPrefs} from '../../context/UserPrefContext';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -38,9 +39,9 @@ const NOW = new Date();
 const CURRENT_YEAR = NOW.getFullYear();
 const CURRENT_MONTH = NOW.getMonth() + 1;
 
-function selectionToRange(selection: DateSelection): DateRange {
+function selectionToRange(selection: DateSelection, payCycleDay: number | null): DateRange {
   if (selection.mode === 'single') {
-    return monthRange(selection.year, selection.month);
+    return monthRange(selection.year, selection.month, payCycleDay);
   }
   return customRange(
     selection.startYear,
@@ -55,18 +56,57 @@ function selectionToRange(selection: DateSelection): DateRange {
 // ---------------------------------------------------------------------------
 
 const DashboardScreen: React.FC = () => {
-  const [selection, setSelection] = useState<DateSelection>({
-    mode: 'single',
-    year: CURRENT_YEAR,
-    month: CURRENT_MONTH,
-  });
+  const {settings} = useUserPrefs();
+
+  // Initialize state based on current date and pay cycle
+  const initialSelection = useMemo((): DateSelection => {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1;
+    const day = now.getDate();
+
+    if (settings.pay_cycle_day !== null) {
+      // If today is before this month's payday, we are actually in the cycle
+      // that started last month. To show "current" data, we default to the
+      // previous month's index so monthRange(year, month, payCycleDay)
+      // returns the correct bounds.
+      const lastDayThisMonth = new Date(year, month, 0).getDate();
+      const clampedPayday = Math.min(settings.pay_cycle_day, lastDayThisMonth);
+
+      if (day < clampedPayday) {
+        const prev = new Date(year, month - 2, 1);
+        year = prev.getFullYear();
+        month = prev.getMonth() + 1;
+      }
+    }
+
+    return {
+      mode: 'single',
+      year,
+      month,
+    };
+  }, [settings.pay_cycle_day]);
+
+  const [selection, setSelection] = useState<DateSelection>(initialSelection);
+
+  // Update selection if settings change (e.g. user sets payday for first time)
+  useEffect(() => {
+    setSelection(prev => {
+      // If we are currently in single mode, re-evaluate the month/year based on initial logic
+      if (prev.mode === 'single') {
+        return initialSelection;
+      }
+      return prev;
+    });
+  }, [initialSelection]);
+
   const [earliestYear, setEarliestYear] = useState(CURRENT_YEAR);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
 
-  const range = selectionToRange(selection);
+  const range = selectionToRange(selection, settings.pay_cycle_day);
   const {data, loading, error, refresh} = useDashboardData(range);
 
   // Fetch the earliest year once on mount — same pattern as TransactionListScreen

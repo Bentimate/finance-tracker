@@ -5,22 +5,31 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  ScrollView,
+  TextInput,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {useExport} from '../../hooks/useExport';
 import {styles} from './SettingsScreen.styles';
 import {MonthRow} from './components/MonthRow';
 import {prevMonth, nextMonth} from './helpers';
 import {Screen} from '../../components/Screen';
+import {useUserPrefs} from '../../context/UserPrefContext';
 
 const SettingsScreen: React.FC = () => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
 
+  const {settings, updateSettings} = useUserPrefs();
+  const [payDayInput, setPayDayInput] = useState(
+    settings.pay_cycle_day ? settings.pay_cycle_day.toString() : '',
+  );
+
   const {status, runExport, reset} = useExport();
   const isLoading = status.kind === 'loading';
+
+  useEffect(() => {
+    setPayDayInput(settings.pay_cycle_day ? settings.pay_cycle_day.toString() : '');
+  }, [settings.pay_cycle_day]);
 
   useEffect(() => {
     if (status.kind === 'success') {
@@ -57,8 +66,71 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
+  const handlePayDayChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    if (cleaned === '') {
+      setPayDayInput('');
+      return;
+    }
+    const val = parseInt(cleaned, 10);
+    if (val >= 1 && val <= 31) {
+      setPayDayInput(cleaned);
+    }
+  };
+
+  const savePayDay = () => {
+    const val = payDayInput === '' ? null : parseInt(payDayInput, 10);
+    updateSettings({pay_cycle_day: val});
+  };
+
+  const resetPayDay = () => {
+    updateSettings({pay_cycle_day: null});
+  };
+
   return (
     <Screen edges={['bottom']} scrollable contentStyle={styles.scrollContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Pay Cycle Settings</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Start Day of Month</Text>
+          <Text style={styles.cardBody}>
+            Define which day of the month your pay cycle starts. If set, dashboard and budgets will
+            sync with this cycle.
+          </Text>
+
+          <View style={styles.payCycleRow}>
+            <TextInput
+              style={styles.payCycleInput}
+              value={payDayInput}
+              onChangeText={handlePayDayChange}
+              onBlur={savePayDay}
+              placeholder="1-31"
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+            <Text style={styles.payCycleLabel}>
+              {settings.pay_cycle_day
+                ? `Starts on the ${settings.pay_cycle_day}${
+                    [1, 21, 31].includes(settings.pay_cycle_day)
+                      ? 'st'
+                      : [2, 22].includes(settings.pay_cycle_day)
+                      ? 'nd'
+                      : [3, 23].includes(settings.pay_cycle_day)
+                      ? 'rd'
+                      : 'th'
+                  } of each month`
+                : 'Using standard calendar months (1st of month)'}
+            </Text>
+          </View>
+
+          {settings.pay_cycle_day !== null && (
+            <TouchableOpacity style={styles.resetBtn} onPress={resetPayDay}>
+              <Text style={styles.resetBtnText}>Reset to Calendar Month</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Data Export</Text>
         <View style={styles.card}>

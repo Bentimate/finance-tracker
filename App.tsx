@@ -4,6 +4,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Provider as PaperProvider, MD3LightTheme} from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import {theme} from './src/theme';
+import {UserPrefProvider} from './src/context/UserPrefContext';
 
 /**
  * App.tsx
@@ -29,10 +30,12 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={paperTheme}>
-        <StatusBar barStyle="dark-content" />
-        <AppNavigator />
-      </PaperProvider>
+      <UserPrefProvider>
+        <PaperProvider theme={paperTheme}>
+          <StatusBar barStyle="dark-content" />
+          <AppNavigator />
+        </PaperProvider>
+      </UserPrefProvider>
     </SafeAreaProvider>
   );
 }

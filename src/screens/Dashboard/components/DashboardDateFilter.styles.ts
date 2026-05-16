@@ -72,4 +72,12 @@ export const styles = StyleSheet.create({
   menuItemTextDisabled: {
     color: theme.colors.textMuted,
   },
+  singlePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rangeLabel: {
+    fontWeight: theme.typography.fontWeights.medium as any,
+  },
 });

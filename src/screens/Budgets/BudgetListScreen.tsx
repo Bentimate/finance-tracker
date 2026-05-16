@@ -13,19 +13,21 @@ import {BudgetStackParamList} from '../../navigation/types';
 import {BudgetItem} from './components/BudgetItem';
 import {PlusButton} from '../../components/PlusButton'
 import {EmptyState} from '../../components/EmptyState';
+import {useUserPrefs} from '../../context/UserPrefContext';
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetList'>;
 
 const BudgetListScreen: React.FC = () => {
+  const {settings} = useUserPrefs();
   const [budgets, setBudgets] = useState<BudgetProgress[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
 
   const loadBudgets = useCallback(async () => {
-    const data = await budgetRepository.getAllProgress();
+    const data = await budgetRepository.getAllProgress(settings.pay_cycle_day);
     setBudgets(data);
-  }, []);
+  }, [settings.pay_cycle_day]);
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);

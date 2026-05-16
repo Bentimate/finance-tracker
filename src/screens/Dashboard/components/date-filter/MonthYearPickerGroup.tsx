@@ -3,6 +3,8 @@ import {TouchableOpacity, View} from 'react-native';
 import {Menu} from 'react-native-paper';
 import {Typography} from '../../../../components/Typography';
 import {styles} from '../DashboardDateFilter.styles';
+import {useUserPrefs} from '../../../../context/UserPrefContext';
+import {monthRange} from '../../../../repositories/analyticsRepository';
 
 const MONTH_LABELS_FULL = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -36,6 +38,7 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
 }) => {
   const [monthMenuVisible, setMonthMenuVisible] = useState(false);
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
+  const {settings} = useUserPrefs();
 
   const yearOptions = useMemo(() => {
     const options: number[] = [];
@@ -56,6 +59,14 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
     return false;
   };
 
+  const getMonthTitle = (mValue: number) => {
+    if (settings.pay_cycle_day === null) {
+      return MONTH_LABELS_FULL[mValue - 1];
+    }
+    const range = monthRange(year, mValue, settings.pay_cycle_day);
+    return range.label ?? MONTH_LABELS_FULL[mValue - 1];
+  };
+
   return (
     <View style={styles.pickerGroup}>
       {label && (
@@ -70,7 +81,7 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
           contentStyle={styles.menuContent}
           anchor={
             <TouchableOpacity style={styles.dropdownButton} onPress={() => setMonthMenuVisible(true)} activeOpacity={0.7}>
-              <Typography variant="body" weight="medium">{MONTH_LABELS_FULL[month - 1]}</Typography>
+              <Typography variant="body" weight="medium">{getMonthTitle(month)}</Typography>
               <Typography variant="caption" color="textMuted">{'  v'}</Typography>
             </TouchableOpacity>
           }>
@@ -80,7 +91,7 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
             return (
               <Menu.Item
                 key={monthLabel}
-                title={monthLabel}
+                title={getMonthTitle(monthValue)}
                 disabled={disabled}
                 onPress={() => {
                   onMonthChange(monthValue);

@@ -176,6 +176,28 @@ const MIGRATIONS: Migration[] = [
       );
     },
   },
+
+  {
+    version: 3,
+    up(db: DB) {
+      db.execute(`
+        CREATE TABLE IF NOT EXISTS user_preferences (
+          key   TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
+
+      // Initialise with default settings
+      const defaultSettings = JSON.stringify({
+        pay_cycle_day: null,
+      });
+
+      db.execute(
+        'INSERT OR IGNORE INTO user_preferences (key, value) VALUES (?, ?)',
+        ['global_settings', defaultSettings],
+      );
+    },
+  },
 ];
 
 /**

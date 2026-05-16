@@ -89,3 +89,7 @@ export interface DailyNetFlow {
   date: string;
   netFlow: number;
 }
+
+export interface UserSettings {
+  pay_cycle_day: number | null;
+}

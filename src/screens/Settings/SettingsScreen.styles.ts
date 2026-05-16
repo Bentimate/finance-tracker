@@ -102,6 +102,39 @@ export const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
 
+  // Pay Cycle
+  payCycleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  payCycleInput: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.text,
+    minWidth: 80,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  payCycleLabel: {
+    flex: 1,
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  resetBtn: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+  },
+  resetBtnText: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeights.medium as any,
+  },
+
   // About rows
   aboutRow: {
     flexDirection: 'row',

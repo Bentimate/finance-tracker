@@ -6,6 +6,9 @@ import {ModeToggle} from './date-filter/ModeToggle';
 import {MonthYearPickerGroup} from './date-filter/MonthYearPickerGroup';
 import {useDashboardDateFilterViewModel} from '../viewmodel/useDashboardDateFilterViewModel';
 import {DateSelection} from './date-filter/types';
+import {useUserPrefs} from '../../../context/UserPrefContext';
+import {monthRange} from '../../../repositories/analyticsRepository';
+
 export type {DateSelection} from './date-filter/types';
 
 interface Props {
@@ -16,21 +19,28 @@ interface Props {
 
 export const DashboardDateFilter: React.FC<Props> = ({selection, earliestYear, onChange}) => {
   const vm = useDashboardDateFilterViewModel({selection, onChange});
+  const {settings} = useUserPrefs();
+
+  const rangeLabel = settings.pay_cycle_day !== null && selection.mode === 'single'
+    ? monthRange(selection.year, selection.month, settings.pay_cycle_day).label
+    : null;
 
   return (
     <View style={styles.container}>
       <ModeToggle selectedMode={selection.mode} onToggle={vm.handleModeToggle} />
 
       {selection.mode === 'single' ? (
-        <MonthYearPickerGroup
-          month={selection.month}
-          year={selection.year}
-          earliestYear={earliestYear}
-          maxYear={vm.currentYear}
-          maxMonth={vm.currentMonth}
-          onMonthChange={month => vm.handleSingleChange('month', month)}
-          onYearChange={year => vm.handleSingleChange('year', year)}
-        />
+        <View style={styles.singlePickerContainer}>
+          <MonthYearPickerGroup
+            month={selection.month}
+            year={selection.year}
+            earliestYear={earliestYear}
+            maxYear={vm.currentYear}
+            maxMonth={vm.currentMonth}
+            onMonthChange={month => vm.handleSingleChange('month', month)}
+            onYearChange={year => vm.handleSingleChange('year', year)}
+          />
+        </View>
       ) : (
         <View style={styles.rangeRow}>
           <MonthYearPickerGroup
