@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import {theme} from '../theme';
 import {Typography} from './Typography';
+import {styles} from './styles/Button.styles';
 
 interface ButtonProps {
   title: string;
@@ -71,7 +71,7 @@ export const Button: React.FC<ButtonProps> = ({
             variant="label"
             color={getTextColor()}
             weight="semibold"
-            style={[styles.text, textStyle, !!icon && {marginLeft: theme.spacing.sm}]}>
+            style={[styles.text, textStyle, !!icon && styles.iconSpacing]}>
             {title}
           </Typography>
         </View>
@@ -79,40 +79,3 @@ export const Button: React.FC<ButtonProps> = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: theme.borderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 44,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    letterSpacing: 0.5,
-  },
-  primary: {
-    backgroundColor: theme.colors.primary,
-  },
-  secondary: {
-    backgroundColor: theme.colors.textSecondary,
-  },
-  danger: {
-    backgroundColor: theme.colors.error,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});

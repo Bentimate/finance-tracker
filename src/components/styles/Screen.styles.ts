@@ -10,6 +10,9 @@ export const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  keyboardContainer: {
+    flex: 1,
+  },
   footer: {
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,

@@ -33,6 +33,9 @@ export const styles = StyleSheet.create({
   archiveButton: {
     borderColor: theme.colors.error,
   },
+  archiveButtonText: {
+    color: theme.colors.error,
+  },
 
   // ---------------------------------------------------------------------------
   // Form fields (icon selector + parent selector share the same row shape)

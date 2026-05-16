@@ -59,7 +59,7 @@ export const Screen: React.FC<ScreenProps> = ({
       {withKeyboardAvoidingView ? (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{flex: 1}}>
+          style={styles.keyboardContainer}>
           {content}
         </KeyboardAvoidingView>
       ) : (
