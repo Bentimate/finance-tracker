@@ -4,6 +4,7 @@ import {theme} from '../../../theme';
 interface TransactionFormStyles {
   container: ViewStyle;
   content: ViewStyle;
+  contentWithKeypad: ViewStyle;
   typeContainer: ViewStyle;
   typeButton: ViewStyle;
   typeButtonActive: ViewStyle;
@@ -11,6 +12,11 @@ interface TransactionFormStyles {
   amountInput: TextStyle;
   amountLabel: TextStyle;
   keypadContainer: ViewStyle;
+  keypadContent: ViewStyle;
+  keypadDoneKeyActive: ViewStyle;
+  keypadDoneTextActive: TextStyle;
+  replicaContainer: ViewStyle;
+  replicaAmount: TextStyle;
   keypadGrid: ViewStyle;
   keypadKey: ViewStyle;
   keypadKeyText: TextStyle;
@@ -23,13 +29,18 @@ interface TransactionFormStyles {
   amountKeypadBackdropPressable: ViewStyle;
   amountKeypadSheet: ViewStyle;
   section: ViewStyle;
+  fieldLabel: TextStyle;
   categorySelector: ViewStyle;
+  categoryIcon: TextStyle;
   dateSelector: ViewStyle;
   dateValue: TextStyle;
   dateHintContainer: ViewStyle;
   dateChevron: TextStyle;
   categoryDot: ViewStyle;
   footer: ViewStyle;
+  deleteButton: ViewStyle;
+  deleteButtonText: TextStyle;
+  saveButton: ViewStyle;
   modalContainer: ViewStyle;
   modalContent: ViewStyle;
   modalHeader: ViewStyle;
@@ -45,6 +56,9 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
   },
   content: {
     padding: theme.spacing.lg,
+  },
+  contentWithKeypad: {
+    paddingBottom: 300,
   },
   typeContainer: {
     flexDirection: 'row',
@@ -80,6 +94,31 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
     width: '100%',
     marginTop: theme.spacing.lg,
     gap: theme.spacing.sm,
+  },
+  keypadContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+  },
+  keypadDoneKeyActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  keypadDoneTextActive: {
+    color: theme.colors.surface,
+  },
+  replicaContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    zIndex: 1000,
+  },
+  replicaAmount: {
+    fontSize: 48,
+    lineHeight: 60,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   keypadGrid: {
     flexDirection: 'row',
@@ -151,6 +190,9 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
   section: {
     marginBottom: theme.spacing.lg,
   },
+  fieldLabel: {
+    marginBottom: theme.spacing.sm,
+  },
   categorySelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,12 +201,6 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: theme.spacing.md,
   },
   categoryIcon: {
     marginRight: theme.spacing.md,
@@ -204,6 +240,16 @@ export const styles = StyleSheet.create<TransactionFormStyles>({
     borderTopColor: theme.colors.border,
     flexDirection: 'row',
     gap: theme.spacing.md,
+  },
+  deleteButton: {
+    flex: 1,
+    borderColor: theme.colors.error,
+  },
+  deleteButtonText: {
+    color: theme.colors.error,
+  },
+  saveButton: {
+    flex: 2,
   },
   modalContainer: {
     flex: 1,

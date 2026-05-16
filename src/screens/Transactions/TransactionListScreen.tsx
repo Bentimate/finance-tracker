@@ -204,7 +204,7 @@ const TransactionListScreen: React.FC = () => {
         onTransactionPress={handleTransactionPress}
       />
 
-      <PlusButton onPress={() => navigation.navigate('TransactionForm', {categoryId: 0})} />
+      <PlusButton onPress={() => navigation.navigate('TransactionForm', {})} />
     </Screen>
   );
 };

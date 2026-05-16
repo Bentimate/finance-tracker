@@ -8,7 +8,6 @@ import {
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-import {theme} from '../../theme';
 import {Typography} from '../../components/Typography';
 import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
@@ -135,23 +134,23 @@ const BudgetFormScreen: React.FC = () => {
               title="Remove"
               variant="outline"
               onPress={handleDelete}
-              style={{flex: 1, borderColor: theme.colors.error}}
-              textStyle={{color: theme.colors.error}}
+              style={styles.footerDeleteButton}
+              textStyle={styles.footerDeleteText}
             />
           )}
           <Button
             title={isEdit ? 'Update Budget' : 'Set Budget'}
             onPress={handleSave}
-            style={{flex: 2}}
+            style={styles.footerPrimaryButton}
           />
         </>
       }>
       <View style={styles.section}>
-        <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+        <Typography variant="label" color="textSecondary" style={styles.sectionLabel}>
           CATEGORY
         </Typography>
         <TouchableOpacity
-          style={[styles.categorySelector, isEdit && {opacity: 0.6}]}
+          style={[styles.categorySelector, isEdit && styles.categorySelectorDisabled]}
           onPress={() => !isEdit && setCategoryModalVisible(true)}
           disabled={isEdit}>
           {selectedCategory ? (
@@ -177,7 +176,7 @@ const BudgetFormScreen: React.FC = () => {
           )}
         </TouchableOpacity>
         {isEdit && (
-          <Typography variant="caption" color="textMuted" style={{marginTop: 4}}>
+          <Typography variant="caption" color="textMuted" style={styles.editHint}>
             Category cannot be changed for an existing budget.
           </Typography>
         )}
@@ -193,7 +192,7 @@ const BudgetFormScreen: React.FC = () => {
       />
 
       <View style={styles.section}>
-        <Typography variant="label" color="textSecondary" style={{marginBottom: 8}}>
+        <Typography variant="label" color="textSecondary" style={styles.sectionLabel}>
           PERIOD
         </Typography>
         <View style={styles.periodContainer}>

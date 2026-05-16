@@ -1,12 +1,13 @@
 import React from 'react';
-import {View, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, TouchableOpacity} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {ParentCategory} from '../../../types';
 import {ListItem} from '../../../components/ListItem';
 import {ColorDot} from '../../../components/ColorDot';
-import {Typography} from '../../../components/Typography'; // retained for child count badge
+import {Typography} from '../../../components/Typography';
 import {theme} from '../../../theme';
+import {styles} from '../styles/ParentCategoryRow.styles';
 
 interface Props {
   category: ParentCategory;
@@ -37,7 +38,6 @@ export const ParentCategoryRow: React.FC<Props> = ({
 
   const rightElement = (
     <View style={styles.rightElement}>
-      {/* Child count badge */}
       {hasChildren && (
         <View style={styles.badge}>
           <Typography variant="caption" color="textMuted">
@@ -46,7 +46,6 @@ export const ParentCategoryRow: React.FC<Props> = ({
         </View>
       )}
 
-      {/* Edit */}
       <TouchableOpacity
         onPress={onEdit}
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
@@ -55,7 +54,6 @@ export const ParentCategoryRow: React.FC<Props> = ({
         <MaterialIcon name="pencil-outline" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
 
-      {/* Delete / archive */}
       <TouchableOpacity
         onPress={onDelete}
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
@@ -64,7 +62,6 @@ export const ParentCategoryRow: React.FC<Props> = ({
         <MaterialIcon name="trash-can-outline" size={20} color={theme.colors.error} />
       </TouchableOpacity>
 
-      {/* Expand chevron — only shown when parent has children */}
       {hasChildren && (
         <MaterialIcon
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -84,24 +81,3 @@ export const ParentCategoryRow: React.FC<Props> = ({
     />
   );
 };
-
-const styles = StyleSheet.create({
-  leftElement: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rightElement: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  badge: {
-    backgroundColor: theme.colors.border,
-    borderRadius: theme.borderRadius.sm,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    minWidth: 20,
-    alignItems: 'center',
-  },
-});

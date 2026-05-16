@@ -36,6 +36,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  categoryName: {
+    marginLeft: 5,
+  },
+  periodLabel: {
+    marginTop: 2,
+  },
+  amountBlock: {
+    alignItems: 'flex-end',
+  },
   progressContainer: {
     marginBottom: theme.spacing.sm,
   },

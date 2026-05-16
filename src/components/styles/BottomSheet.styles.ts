@@ -2,10 +2,17 @@ import {StyleSheet, Dimensions} from 'react-native';
 import {theme} from '../../theme';
 
 export const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
   container: {
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'transparent',
+  },
+  backdropPressable: {
+    flex: 1,
   },
   sheet: {
     backgroundColor: theme.colors.background,

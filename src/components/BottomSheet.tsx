@@ -4,7 +4,6 @@ import {
   View,
   TouchableOpacity,
   Dimensions,
-  StyleSheet,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -72,18 +71,14 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       animationType="none"
     >
       <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          {backgroundColor: 'rgba(0,0,0,0.5)'},
-          backdropStyle,
-        ]}
+        style={[styles.backdrop, backdropStyle]}
         pointerEvents="none"
       />
 
       <View style={styles.container} pointerEvents="box-none">
         {topContent}
         <TouchableOpacity
-          style={{flex: 1}}
+          style={styles.backdropPressable}
           onPress={onClose}
           activeOpacity={1}
           accessibilityLabel="Close Modal"

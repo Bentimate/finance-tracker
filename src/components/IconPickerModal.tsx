@@ -2,12 +2,9 @@ import React, {useState, useMemo, useCallback} from 'react';
 import {
   Modal,
   View,
-  FlatList,
   TouchableOpacity,
   TextInput,
-  StyleSheet,
   SectionList,
-  Pressable,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -15,30 +12,17 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {theme} from '../theme';
 import {Typography} from './Typography';
 import {ICON_GROUPS, ALL_ICONS, IconGroup} from '../icons';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import {styles} from './styles/IconPickerModal.styles';
 
 interface Props {
   visible: boolean;
   selectedIcon: string | null;
-  /** Called with the chosen icon name, or null if the user clears the selection. */
   onSelect: (icon: string | null) => void;
   onClose: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 const ICON_SIZE = 26;
-const CELL_SIZE = 52; // touchable area per icon cell
 const NUM_COLUMNS = 6;
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 interface IconCellProps {
   name: string;
@@ -62,10 +46,6 @@ const IconCell: React.FC<IconCellProps> = ({name, isSelected, onPress}) => (
   </TouchableOpacity>
 );
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 const IconPickerModal: React.FC<Props> = ({
   visible,
   selectedIcon,
@@ -76,7 +56,6 @@ const IconPickerModal: React.FC<Props> = ({
 
   const handleSelect = useCallback(
     (name: string) => {
-      // Tapping the already-selected icon deselects (clears) it
       onSelect(selectedIcon === name ? null : name);
       onClose();
     },
@@ -88,8 +67,6 @@ const IconPickerModal: React.FC<Props> = ({
     onClose();
   }, [onClose]);
 
-  // When the user is searching, flatten to a single section of filtered results.
-  // Otherwise, show the full grouped list.
   const trimmedQuery = query.trim().toLowerCase();
 
   const sections = useMemo(() => {
@@ -127,8 +104,6 @@ const IconPickerModal: React.FC<Props> = ({
     [selectedIcon, handleSelect],
   );
 
-  // SectionList expects items per section; we chunk each section's icons into
-  // rows of NUM_COLUMNS so renderItem receives a pre-grouped array.
   const chunkedSections = useMemo(
     () =>
       sections.map(section => ({
@@ -145,7 +120,6 @@ const IconPickerModal: React.FC<Props> = ({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {/* Header */}
         <View style={styles.header}>
           <Typography variant="h3">Choose Icon</Typography>
           <TouchableOpacity onPress={handleClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
@@ -153,7 +127,6 @@ const IconPickerModal: React.FC<Props> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Search */}
         <View style={styles.searchContainer}>
           <MaterialIcon
             name="magnify"
@@ -165,7 +138,7 @@ const IconPickerModal: React.FC<Props> = ({
             style={styles.searchInput}
             value={query}
             onChangeText={setQuery}
-            placeholder="Search icons…"
+            placeholder="Search icons..."
             placeholderTextColor={theme.colors.textMuted}
             autoCorrect={false}
             autoCapitalize="none"
@@ -173,7 +146,6 @@ const IconPickerModal: React.FC<Props> = ({
           />
         </View>
 
-        {/* Clear selection shortcut — only shown when an icon is selected */}
         {selectedIcon && (
           <TouchableOpacity
             style={styles.clearRow}
@@ -183,13 +155,12 @@ const IconPickerModal: React.FC<Props> = ({
             }}
             activeOpacity={0.7}>
             <MaterialIcon name="close-circle-outline" size={16} color={theme.colors.textMuted} />
-            <Typography variant="caption" color="textMuted" style={{marginLeft: 4}}>
+            <Typography variant="caption" color="textMuted" style={styles.clearRowText}>
               Remove icon
             </Typography>
           </TouchableOpacity>
         )}
 
-        {/* Empty search state */}
         {trimmedQuery !== '' && chunkedSections[0]?.data.length === 0 && (
           <View style={styles.emptyState}>
             <Typography variant="body" color="textMuted">
@@ -198,7 +169,6 @@ const IconPickerModal: React.FC<Props> = ({
           </View>
         )}
 
-        {/* Icon grid */}
         <SectionList
           sections={chunkedSections}
           keyExtractor={(_item, index) => String(index)}
@@ -214,10 +184,6 @@ const IconPickerModal: React.FC<Props> = ({
   );
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -225,79 +191,5 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   }
   return chunks;
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.border,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    margin: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.border,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  searchIcon: {
-    marginRight: theme.spacing.xs,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.text,
-  },
-  clearRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.xs,
-  },
-  sectionHeader: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xs,
-  },
-  listContent: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingBottom: theme.spacing.xl,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.xs,
-  },
-  iconCell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
-    margin: 2,
-  },
-  iconCellSelected: {
-    backgroundColor: `${theme.colors.primary}18`, // indigo at ~10% opacity
-  },
-  emptyState: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xl,
-  },
-});
 
 export default IconPickerModal;

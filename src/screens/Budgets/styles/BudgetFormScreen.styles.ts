@@ -43,6 +43,25 @@ export const styles = StyleSheet.create({
   periodButtonActive: {
     backgroundColor: theme.colors.surface,
   },
+  footerDeleteButton: {
+    flex: 1,
+    borderColor: theme.colors.error,
+  },
+  footerDeleteText: {
+    color: theme.colors.error,
+  },
+  footerPrimaryButton: {
+    flex: 2,
+  },
+  sectionLabel: {
+    marginBottom: theme.spacing.sm,
+  },
+  categorySelectorDisabled: {
+    opacity: 0.6,
+  },
+  editHint: {
+    marginTop: theme.spacing.xs,
+  },
   footer: {
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,

@@ -31,13 +31,13 @@ export const BudgetItem: React.FC<BudgetItemProps> = ({item, onPress}) => {
         <View>
           <View style={styles.categoryInfo}>
             <ColorDot color={item.category_color} />
-            <Typography variant="body" weight="bold" style={{marginLeft: 5}}>{item.category_name}</Typography>
+            <Typography variant="body" weight="bold" style={styles.categoryName}>{item.category_name}</Typography>
           </View>
-          <Typography variant="caption" color="textMuted" style={{marginTop: 2}}>
+          <Typography variant="caption" color="textMuted" style={styles.periodLabel}>
             {item.period.toUpperCase()}
           </Typography>
         </View>
-        <View style={{alignItems: 'flex-end'}}>
+        <View style={styles.amountBlock}>
           <Typography variant="body" weight="bold">
             {formatCurrency(item.spent)}
             <Typography variant="caption" color="textMuted"> / {formatCurrency(item.budget_amount)}</Typography>

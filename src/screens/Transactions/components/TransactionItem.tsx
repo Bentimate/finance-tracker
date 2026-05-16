@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Transaction} from '../../../types';
 import {Typography} from '../../../components/Typography';
@@ -7,15 +7,12 @@ import {formatCurrency} from '../../../utils/formatCurrency';
 import {theme} from '../../../theme';
 import {ListItem} from '../../../components/ListItem';
 import {ColorDot} from '../../../components/ColorDot';
+import {styles} from '../styles/TransactionItem.styles';
 
 interface TransactionItemProps {
   item: Transaction;
   onPress: (id: number) => void;
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 interface ParentPillProps {
   name: string;
@@ -25,7 +22,7 @@ interface ParentPillProps {
 const ParentPill: React.FC<ParentPillProps> = ({name, color}) => (
   <View style={styles.pill}>
     <View style={[styles.pillDot, {backgroundColor: color}]} />
-    <Typography variant="xs" color="textMuted" style={styles.pillText}>
+    <Typography variant="caption" color="textMuted" style={styles.pillText}>
       {name}
     </Typography>
   </View>
@@ -54,10 +51,6 @@ const RightColumn: React.FC<RightColumnProps> = ({item}) => (
   </View>
 );
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress}) => {
   const color = item.category_color || theme.colors.textMuted;
 
@@ -67,7 +60,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress})
     <ColorDot color={color} />
   );
 
-  // Primary label is always the child (or standalone root) name
   const title = item.category_name || 'Uncategorized';
 
   return (
@@ -80,36 +72,3 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({item, onPress})
     />
   );
 };
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = StyleSheet.create({
-  rightColumn: {
-    alignItems: 'flex-end',
-    gap: theme.spacing.xs,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.border,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    gap: 4,
-  },
-  pillDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  pillText: {
-    lineHeight: 14,
-  },
-  amount: {
-    textAlign: 'right',
-  },
-});

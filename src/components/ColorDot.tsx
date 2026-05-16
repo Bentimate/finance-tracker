@@ -1,6 +1,6 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
-import {theme} from '../theme';
+import {View} from 'react-native';
+import {styles} from './styles/ColorDot.styles';
 
 interface ColorDotProps {
   color: string;
@@ -24,10 +24,3 @@ export const ColorDot: React.FC<ColorDotProps> = ({color, size = 'md'}) => {
     />
   );
 };
-
-const styles = StyleSheet.create({
-  dot: {
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-});
