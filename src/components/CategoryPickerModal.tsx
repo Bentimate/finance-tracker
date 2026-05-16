@@ -56,7 +56,7 @@ export const CategoryPickerModal: React.FC<Props> = ({
 
   const handleParentPress = useCallback(
     (parent: ParentCategory) => {
-      if (parent.children.length === 0) {
+      if ((parent.children ?? []).length === 0) {
         // Standalone — confirm immediately, no step 2
         onSelectCategory(parent.id);
         handleClose();
@@ -158,7 +158,7 @@ export const CategoryPickerModal: React.FC<Props> = ({
             ))
           : pendingParent && (
               <>
-                {pendingParent.children.map(child => (
+                {(pendingParent.children ?? []).map(child => (
                   <ChildRow
                     key={child.id}
                     child={child}
@@ -218,7 +218,7 @@ const ParentRow: React.FC<ParentRowProps> = ({parent, isSelected, onPress}) => (
       {isSelected && (
         <MaterialIcon name="check" size={18} color={theme.colors.primary} />
       )}
-      {parent.children.length > 0 && (
+      {(parent.children ?? []).length > 0 && (
         <MaterialIcon
           name="chevron-right"
           size={18}

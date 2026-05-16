@@ -2,13 +2,11 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   TouchableOpacity,
-  ScrollView,
   Alert,
   DeviceEventEmitter,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {theme} from '../../theme';
 import {Typography} from '../../components/Typography';
@@ -17,7 +15,7 @@ import {Input} from '../../components/Input';
 import {Screen} from '../../components/Screen';
 import {CategoryPickerModal} from '../../components/CategoryPickerModal';
 import {BudgetStackParamList} from '../../navigation/types';
-import {Category} from '../../types';
+import {Category, ParentCategory} from '../../types';
 import {categoryRepository} from '../../repositories/categoryRepository';
 import {budgetRepository} from '../../repositories/budgetRepository';
 import {styles} from './styles/BudgetFormScreen.styles';
@@ -36,13 +34,13 @@ const BudgetFormScreen: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('monthly');
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ParentCategory[]>([]);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const cats = await categoryRepository.getAll();
+      const cats = await categoryRepository.getAllNested();
       setCategories(cats);
 
       if (initialCategoryId && initialCategoryId > 0) {
@@ -58,7 +56,25 @@ const BudgetFormScreen: React.FC = () => {
     fetchData();
   }, [initialCategoryId]);
 
-  const selectedCategory = categories.find(c => c.id === categoryId);
+  const findSelectedCategory = (): {parent: ParentCategory; child?: Category} | null => {
+    if (!categoryId) {
+      return null;
+    }
+
+    for (const parent of categories) {
+      if (parent.id === categoryId) {
+        return {parent};
+      }
+      const child = parent.children.find(c => c.id === categoryId);
+      if (child) {
+        return {parent, child};
+      }
+    }
+
+    return null;
+  };
+
+  const selectedCategory = findSelectedCategory();
 
   const handleSave = async () => {
     const numAmount = parseFloat(amount);
@@ -140,8 +156,19 @@ const BudgetFormScreen: React.FC = () => {
           disabled={isEdit}>
           {selectedCategory ? (
             <>
-              <View style={[styles.categoryDot, {backgroundColor: selectedCategory.color}]} />
-              <Typography variant="body">{selectedCategory.name}</Typography>
+              <View
+                style={[
+                  styles.categoryDot,
+                  {
+                    backgroundColor: selectedCategory.child?.color ?? selectedCategory.parent.color,
+                  },
+                ]}
+              />
+              <Typography variant="body">
+                {selectedCategory.child
+                  ? `${selectedCategory.parent.name} > ${selectedCategory.child.name}`
+                  : selectedCategory.parent.name}
+              </Typography>
             </>
           ) : (
             <Typography variant="body" color="textMuted">
