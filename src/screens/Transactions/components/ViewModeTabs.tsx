@@ -3,7 +3,8 @@ import {View, TouchableOpacity} from 'react-native';
 import {Typography} from '../../../components/Typography';
 import {styles} from '../styles/TransactionListScreen.styles';
 
-export type ViewMode = 'today' | 'week' | 'month';
+// export type ViewMode = 'today' | 'week' | 'month';
+export type ViewMode = 'week' | 'month';
 
 interface ViewModeTabsProps {
   viewMode: ViewMode;
@@ -11,7 +12,7 @@ interface ViewModeTabsProps {
 }
 
 const TABS: {key: ViewMode; label: string}[] = [
-  {key: 'today', label: 'Today'},
+//   {key: 'today', label: 'Today'},
   {key: 'week', label: 'Past 7 Days'},
   {key: 'month', label: 'Month'},
 ];

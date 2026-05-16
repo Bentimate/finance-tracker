@@ -94,7 +94,7 @@ const TransactionListScreen: React.FC = () => {
       } else {
         let data: Transaction[] = [];
         if (viewMode === 'today') {
-          data = await transactionRepository.getByDay(toDateStr(today));
+//           data = await transactionRepository.getByDay(toDateStr(today));
         } else if (viewMode === 'week') {
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() - 6);
