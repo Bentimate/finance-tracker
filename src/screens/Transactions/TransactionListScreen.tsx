@@ -1,8 +1,7 @@
 import React, {useState, useCallback, useEffect} from 'react';
-import {View, TouchableOpacity, SectionList, DeviceEventEmitter} from 'react-native';
+import {View, SectionList, DeviceEventEmitter} from 'react-native';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {Transaction, DailyNetFlow} from '../../types';
 import {transactionRepository} from '../../repositories/transactionRepository';
@@ -26,6 +25,7 @@ import {
 } from './helpers';
 import {PlusButton} from '../../components/PlusButton'
 import {EmptyState} from '../../components/EmptyState';
+import {useRefreshCoordinator} from '../../hooks/useRefreshCoordinator';
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionList'>;
 
@@ -46,6 +46,11 @@ const TransactionListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const isMounted = React.useRef(true);
+  const cacheRef = React.useRef<Record<string, DailyNetFlow[]>>({});
+
+  useEffect(() => {
+    cacheRef.current = dailyFlowsCache;
+  }, [dailyFlowsCache]);
 
   const fetchBounds = useCallback(async () => {
     const year = await transactionRepository.getEarliestYear();
@@ -56,28 +61,24 @@ const TransactionListScreen: React.FC = () => {
 
   useEffect(() => {
     isMounted.current = true;
-    const fetchBounds = async () => {
-      const year = await transactionRepository.getEarliestYear();
-      if (isMounted.current) {
-        setEarliestYear(year);
-      }
-    };
-    fetchBounds();
     return () => { isMounted.current = false; };
   }, []);
 
   const loadTransactions = useCallback(async () => {
     const today = new Date();
-    setIsLoading(true);
     try {
       await fetchBounds();
 
       if (viewMode === 'month') {
         const fetchMonth = async (y: number, m: number) => {
           const key = `${y}-${m}`;
-          if (dailyFlowsCache[key]) return dailyFlowsCache[key];
+          if (cacheRef.current[key]) return cacheRef.current[key];
           const flows = await analyticsRepository.getDailyNetFlow(y, m);
-          setDailyFlowsCache(prev => ({...prev, [key]: flows}));
+          setDailyFlowsCache(prev => {
+            const next = {...prev, [key]: flows};
+            cacheRef.current = next;
+            return next;
+          });
           return flows;
         };
 
@@ -104,27 +105,33 @@ const TransactionListScreen: React.FC = () => {
       }
     } catch (e) {
       console.error('Failed to load transactions', e);
-    } finally {
-      setIsLoading(false);
     }
-  }, [viewMode, selectedMonth, selectedYear, dailyFlowsCache]);
+  }, [viewMode, selectedMonth, selectedYear, fetchBounds]);
+
+  const {requestRefresh} = useRefreshCoordinator(loadTransactions, {
+    onBeforeStart: () => setIsLoading(true),
+    onComplete: () => setIsLoading(false),
+    onError: (e, source) => console.error('Transaction refresh failed', source, e),
+  });
 
   const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
-    setDailyFlowsCache({}); // Clear cache on manual refresh
+    const clearedCache: Record<string, DailyNetFlow[]> = {};
+    cacheRef.current = clearedCache;
+    setDailyFlowsCache(clearedCache);
     DeviceEventEmitter.emit('AppRefresh');
-    await loadTransactions();
-    setIsLoading(false);
-  }, [loadTransactions]);
+    await requestRefresh('manual');
+  }, [requestRefresh]);
 
   useEffect(() => {
     const onAppRefresh = () => {
-      setDailyFlowsCache({}); // Clear cache on global refresh
-      loadTransactions();
+      const clearedCache: Record<string, DailyNetFlow[]> = {};
+      cacheRef.current = clearedCache;
+      setDailyFlowsCache(clearedCache);
+      void requestRefresh('global_event');
     };
     const sub = DeviceEventEmitter.addListener('AppRefresh', onAppRefresh);
     return () => sub.remove();
-  }, [loadTransactions]);
+  }, [requestRefresh]);
 
   useEffect(() => {
     if (!isMounted.current) return;
@@ -135,15 +142,12 @@ const TransactionListScreen: React.FC = () => {
   }, [navigation, handleRefresh, isLoading, route.params]);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('AppRefresh', loadTransactions);
-    return () => sub.remove();
-  }, [loadTransactions]);
+    void requestRefresh('focus');
+  }, [viewMode, selectedMonth, selectedYear, requestRefresh]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadTransactions();
-    }, [loadTransactions]),
-  );
+  useFocusEffect(useCallback(() => {
+    void requestRefresh('focus');
+  }, [requestRefresh]));
 
   const handleTransactionPress = (id: number) => {
     navigation.navigate('TransactionForm', {transactionId: id});

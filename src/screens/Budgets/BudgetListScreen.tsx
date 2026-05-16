@@ -1,18 +1,17 @@
 import React, {useState, useCallback, useEffect} from 'react';
-import {View, FlatList, TouchableOpacity, DeviceEventEmitter} from 'react-native';
+import {FlatList, DeviceEventEmitter} from 'react-native';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {BudgetProgress} from '../../types';
 import {budgetRepository} from '../../repositories/budgetRepository';
-import {Typography} from '../../components/Typography';
 import {Screen} from '../../components/Screen';
 import {styles} from './styles/BudgetListScreen.styles';
 import {BudgetStackParamList} from '../../navigation/types';
 import {BudgetItem} from './components/BudgetItem';
 import {PlusButton} from '../../components/PlusButton'
 import {EmptyState} from '../../components/EmptyState';
+import {useRefreshCoordinator} from '../../hooks/useRefreshCoordinator';
 
 type NavigationProp = NativeStackNavigationProp<BudgetStackParamList, 'BudgetList'>;
 
@@ -26,13 +25,16 @@ const BudgetListScreen: React.FC = () => {
     const data = await budgetRepository.getAllProgress();
     setBudgets(data);
   }, []);
+  const {requestRefresh} = useRefreshCoordinator(loadBudgets, {
+    onBeforeStart: () => setIsLoading(true),
+    onComplete: () => setIsLoading(false),
+    onError: (e, source) => console.error('Budget refresh failed', source, e),
+  });
 
   const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
     DeviceEventEmitter.emit('AppRefresh');
-    await loadBudgets();
-    setIsLoading(false);
-  }, [loadBudgets]);
+    await requestRefresh('manual');
+  }, [requestRefresh]);
 
   useEffect(() => {
     const params = route.params as any;
@@ -42,14 +44,16 @@ const BudgetListScreen: React.FC = () => {
   }, [navigation, handleRefresh, isLoading, route.params]);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('AppRefresh', loadBudgets);
+    const sub = DeviceEventEmitter.addListener('AppRefresh', () => {
+      void requestRefresh('global_event');
+    });
     return () => sub.remove();
-  }, [loadBudgets]);
+  }, [requestRefresh]);
 
   useFocusEffect(
     useCallback(() => {
-      loadBudgets();
-    }, [loadBudgets])
+      void requestRefresh('focus');
+    }, [requestRefresh])
   );
 
   return (
