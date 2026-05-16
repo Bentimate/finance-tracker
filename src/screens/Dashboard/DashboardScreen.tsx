@@ -1,6 +1,8 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {
+  View,
   ScrollView,
+  ActivityIndicator,
   DeviceEventEmitter,
   AppState,
 } from 'react-native';
@@ -19,10 +21,10 @@ import {
 } from '../../repositories/analyticsRepository';
 import {analyticsRepository} from '../../repositories/analyticsRepository';
 import {database} from '../../database/db';
-import {useRefreshCoordinator} from '../../hooks/useRefreshCoordinator';
 import CashFlowCard from './components/CashFlowCard';
 import TopSpendingCard from './components/TopSpendingCard';
 import CategoryDonutCard from './components/CategoryDonutCard';
+import TrendBarCard from './components/TrendBarCard';
 import {styles} from './DashboardScreen.styles';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
@@ -66,11 +68,6 @@ const DashboardScreen: React.FC = () => {
 
   const range = selectionToRange(selection);
   const {data, loading, error, refresh} = useDashboardData(range);
-  const {requestRefresh} = useRefreshCoordinator(refresh, {
-    onBeforeStart: () => setIsRefreshing(true),
-    onComplete: () => setIsRefreshing(false),
-    onError: (e, source) => console.error('Dashboard refresh failed', source, e),
-  });
 
   // Fetch the earliest year once on mount — same pattern as TransactionListScreen
   useEffect(() => {
@@ -78,9 +75,11 @@ const DashboardScreen: React.FC = () => {
   }, []);
 
   const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
     DeviceEventEmitter.emit('AppRefresh');
-    await requestRefresh('manual');
-  }, [requestRefresh]);
+    await refresh();
+    setIsRefreshing(false);
+  }, [refresh]);
 
   useEffect(() => {
     const params = route.params as any;
@@ -90,11 +89,9 @@ const DashboardScreen: React.FC = () => {
   }, [navigation, handleRefresh, isRefreshing, route.params]);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('AppRefresh', () => {
-      void requestRefresh('global_event');
-    });
+    const sub = DeviceEventEmitter.addListener('AppRefresh', () => refresh());
     return () => sub.remove();
-  }, [requestRefresh]);
+  }, [refresh]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextAppState => {
@@ -105,26 +102,24 @@ const DashboardScreen: React.FC = () => {
       void (async () => {
         try {
           await database.ensureReady();
-          await requestRefresh('resume');
+          await refresh();
         } catch (e) {
           console.error('Dashboard resume refresh failed', e);
         }
       })();
     });
     return () => sub.remove();
-  }, [requestRefresh]);
+  }, [refresh]);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('WidgetTransactionAdded', () => {
-      void requestRefresh('widget_event');
-    });
+    const sub = DeviceEventEmitter.addListener('WidgetTransactionAdded', () => refresh());
     return () => sub.remove();
-  }, [requestRefresh]);
+  }, [refresh]);
 
   useFocusEffect(
     useCallback(() => {
-      void requestRefresh('focus');
-    }, [requestRefresh]),
+      refresh();
+    }, [refresh]),
   );
 
   return (
@@ -139,14 +134,7 @@ const DashboardScreen: React.FC = () => {
       }>
       {loading && <LoadingState />}
 
-      {!loading && error && (
-        <ErrorState
-          message={error}
-          onRetry={() => {
-            void requestRefresh('manual');
-          }}
-        />
-      )}
+      {!loading && error && <ErrorState message={error} onRetry={refresh} />}
 
       {!loading && !error && data && (
         <ScrollView
