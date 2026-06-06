@@ -18,6 +18,10 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  fabLeft: {
+    left: theme.spacing.lg,
+    right: undefined,
+  },
   fabText: {
     color: theme.colors.surface,
     fontSize: 35,

@@ -8,13 +8,14 @@ import {styles} from '../../styles/TransactionFormScreen.styles';
 interface Props {
   date: Date;
   onPress: () => void;
+  label?: string;
 }
 
-export const DateSection: React.FC<Props> = ({date, onPress}) => {
+export const DateSection: React.FC<Props> = ({date, onPress, label = 'DATE'}) => {
   return (
     <View style={styles.section}>
       <Typography variant="label" color="textSecondary" style={styles.fieldLabel}>
-        DATE
+        {label}
       </Typography>
       <TouchableOpacity
         style={styles.dateSelector}

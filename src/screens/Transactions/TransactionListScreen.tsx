@@ -1,8 +1,7 @@
 import React, {useState, useCallback, useEffect} from 'react';
-import {View, TouchableOpacity, SectionList, DeviceEventEmitter} from 'react-native';
+import {View, SectionList, DeviceEventEmitter} from 'react-native';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {Transaction, DailyNetFlow} from '../../types';
 import {transactionRepository} from '../../repositories/transactionRepository';
@@ -17,6 +16,7 @@ import {ViewModeTabs, ViewMode} from './components/ViewModeTabs';
 import {DateFilter} from './components/DateFilter';
 import {CalendarView} from './components/CalendarView';
 import {DayTransactionsSheet} from './components/DayTransactionsSheet';
+import {RecurringTransactionsSheet} from './components/RecurringTransactionsSheet';
 import {
   TransactionSection,
   toDateStr,
@@ -24,6 +24,7 @@ import {
   formatDateLabel,
 } from './helpers';
 import {PlusButton} from '../../components/PlusButton'
+import {styles as plusButtonStyles} from '../../components/styles/PlusButton.styles';
 import {EmptyState} from '../../components/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionList'>;
@@ -31,7 +32,7 @@ type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'Tran
 const TransactionListScreen: React.FC = () => {
   const now = new Date();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('today');
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [sections, setSections] = useState<TransactionSection[]>([]);
   const [dailyFlowsCache, setDailyFlowsCache] = useState<Record<string, DailyNetFlow[]>>({});
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -41,6 +42,7 @@ const TransactionListScreen: React.FC = () => {
 
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isSheetVisible, setSheetVisible] = useState(false);
+  const [isRecurringSheetVisible, setRecurringSheetVisible] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
@@ -93,9 +95,7 @@ const TransactionListScreen: React.FC = () => {
         fetchMonth(nextYear, nextMonth);
       } else {
         let data: Transaction[] = [];
-        if (viewMode === 'today') {
-//           data = await transactionRepository.getByDay(toDateStr(today));
-        } else if (viewMode === 'week') {
+        if (viewMode === 'week') {
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() - 6);
           data = await transactionRepository.getByWeek(toDateStr(weekStart), toDateStr(today));
@@ -204,6 +204,24 @@ const TransactionListScreen: React.FC = () => {
         onTransactionPress={handleTransactionPress}
       />
 
+      <RecurringTransactionsSheet
+        visible={isRecurringSheetVisible}
+        onClose={() => setRecurringSheetVisible(false)}
+        onAdd={() => {
+          setRecurringSheetVisible(false);
+          navigation.navigate('RecurringTransactionForm', {});
+        }}
+        onEdit={(id) => {
+          setRecurringSheetVisible(false);
+          navigation.navigate('RecurringTransactionForm', {recurringTransactionId: id});
+        }}
+      />
+
+      <PlusButton
+        style={plusButtonStyles.fabLeft}
+        label="R"
+        onPress={() => setRecurringSheetVisible(true)}
+      />
       <PlusButton onPress={() => navigation.navigate('TransactionForm', {})} />
     </Screen>
   );

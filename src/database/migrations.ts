@@ -198,6 +198,44 @@ const MIGRATIONS: Migration[] = [
       );
     },
   },
+
+  {
+    version: 4,
+    up(db: DB) {
+      db.execute(`
+        CREATE TABLE IF NOT EXISTS recurring_transactions (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount          REAL    NOT NULL CHECK (amount > 0),
+          type            TEXT    NOT NULL CHECK (type IN ('income', 'expense')),
+          category_id     INTEGER NOT NULL REFERENCES categories (id),
+          note            TEXT,
+          frequency       TEXT    NOT NULL CHECK (frequency IN ('daily', 'weekly', 'monthly', 'yearly')),
+          interval_value  INTEGER,
+          next_occurrence TEXT    NOT NULL,
+          is_active       INTEGER NOT NULL DEFAULT 1,
+          created_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          deleted_at      TEXT
+        )
+      `);
+
+      db.execute('ALTER TABLE transactions ADD COLUMN recurring_transaction_id INTEGER REFERENCES recurring_transactions (id)');
+      db.execute('ALTER TABLE transactions ADD COLUMN recurring_occurrence_date TEXT');
+
+      db.execute(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_txn_recurring_occurrence
+          ON transactions (recurring_transaction_id, recurring_occurrence_date)
+          WHERE recurring_transaction_id IS NOT NULL
+      `);
+
+      db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recurring_next_occurrence ON recurring_transactions (next_occurrence)',
+      );
+      db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recurring_category ON recurring_transactions (category_id)',
+      );
+    },
+  },
 ];
 
 /**

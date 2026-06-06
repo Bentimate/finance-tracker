@@ -9,6 +9,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import TransactionListScreen from '../screens/Transactions/TransactionListScreen';
 import TransactionFormScreen from '../screens/Transactions/TransactionFormScreen';
+import RecurringTransactionFormScreen from '../screens/Transactions/RecurringTransactionFormScreen';
 import BudgetListScreen from '../screens/Budgets/BudgetListScreen';
 import BudgetFormScreen from '../screens/Budgets/BudgetFormScreen';
 import CategoryListScreen from '../screens/Categories/CategoryListScreen';
@@ -80,6 +81,13 @@ const TransactionNavigator = () => (
       component={TransactionFormScreen}
       options={({route}) => ({
         title: route.params?.transactionId ? 'Edit Transaction' : 'New Transaction',
+      })}
+    />
+    <TransactionStack.Screen
+      name="RecurringTransactionForm"
+      component={RecurringTransactionFormScreen}
+      options={({route}) => ({
+        title: route.params?.recurringTransactionId ? 'Edit Recurrence' : 'New Recurrence',
       })}
     />
   </TransactionStack.Navigator>
