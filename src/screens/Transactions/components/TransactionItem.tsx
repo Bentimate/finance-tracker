@@ -28,12 +28,25 @@ const ParentPill: React.FC<ParentPillProps> = ({name, color}) => (
   </View>
 );
 
+interface AccountPillProps {
+  name: string;
+}
+
+const AccountPill: React.FC<AccountPillProps> = ({name}) => (
+  <View style={styles.accountPill}>
+    <Typography variant="caption" color="textMuted" style={styles.accountPillText}>
+      {name}
+    </Typography>
+  </View>
+);
+
 interface RightColumnProps {
   item: Transaction;
 }
 
 const RightColumn: React.FC<RightColumnProps> = ({item}) => (
   <View style={styles.rightColumn}>
+    {item.account_name && <AccountPill name={item.account_name} />}
     {item.category_parent_name && (
       <ParentPill
         name={item.category_parent_name}

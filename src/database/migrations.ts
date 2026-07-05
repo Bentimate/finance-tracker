@@ -190,6 +190,8 @@ const MIGRATIONS: Migration[] = [
       // Initialise with default settings
       const defaultSettings = JSON.stringify({
         pay_cycle_day: null,
+        transaction_scope_account_id: null,
+        widget_account_id: null,
       });
 
       db.execute(
@@ -292,6 +294,44 @@ const MIGRATIONS: Migration[] = [
       db.execute(`
         CREATE INDEX IF NOT EXISTS idx_transfers_to_account
           ON account_transfers (to_account_id)
+      `);
+    },
+  },
+
+  {
+    version: 6,
+    up(db: DB) {
+      db.execute('ALTER TABLE accounts ADD COLUMN current_balance REAL NOT NULL DEFAULT 0');
+
+      db.execute(`
+        WITH balance_totals AS (
+          SELECT a.id AS account_id,
+                 COALESCE((
+                   SELECT COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0)
+                   FROM transactions
+                   WHERE deleted_at IS NULL
+                     AND account_id = a.id
+                 ), 0)
+                 +
+                 COALESCE((
+                   SELECT COALESCE(SUM(delta), 0)
+                   FROM (
+                     SELECT amount AS delta
+                     FROM account_transfers
+                     WHERE deleted_at IS NULL
+                       AND to_account_id = a.id
+                     UNION ALL
+                     SELECT -amount AS delta
+                     FROM account_transfers
+                     WHERE deleted_at IS NULL
+                       AND from_account_id = a.id
+                   )
+                 ), 0) AS balance
+          FROM accounts a
+          WHERE a.deleted_at IS NULL
+        )
+        UPDATE accounts
+        SET current_balance = COALESCE((SELECT balance FROM balance_totals WHERE balance_totals.account_id = accounts.id), 0)
       `);
     },
   },

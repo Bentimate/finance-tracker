@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -40,6 +41,7 @@ class WidgetEntryActivity : AppCompatActivity() {
     private var selectedCategoryId: Long? = null
     private var selectedDisplayLabel: String = ""
     private var db: SQLiteDatabase? = null
+    private var widgetAccountId: Long? = null
 
     private lateinit var amountInput: EditText
     private lateinit var noteInput: EditText
@@ -69,6 +71,7 @@ class WidgetEntryActivity : AppCompatActivity() {
 
         bindViews()
         openDatabase()
+        loadWidgetAccountId()
         loadCategories()
         setupListeners()
     }
@@ -188,6 +191,75 @@ class WidgetEntryActivity : AppCompatActivity() {
         } catch (_: Exception) {
             Toast.makeText(this, "Could not load categories.", Toast.LENGTH_SHORT).show()
             finish()
+        }
+    }
+
+    private fun loadWidgetAccountId() {
+        val database = db ?: return
+        try {
+            val prefsCursor = database.rawQuery(
+                "SELECT value FROM user_preferences WHERE key = ? LIMIT 1",
+                arrayOf("global_settings"),
+            )
+            val storedAccountId = prefsCursor.use { cursor ->
+                if (!cursor.moveToFirst()) {
+                    return@use null
+                }
+                val rawValue = cursor.getString(0) ?: return@use null
+                try {
+                    val json = JSONObject(rawValue)
+                    if (json.isNull("widget_account_id")) {
+                        null
+                    } else {
+                        val parsed = json.optLong("widget_account_id", -1L)
+                        if (parsed > 0) parsed else null
+                    }
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            widgetAccountId = storedAccountId?.takeIf { accountExists(it) } ?: loadDefaultAccountId()
+        } catch (_: Exception) {
+            widgetAccountId = loadDefaultAccountId()
+        }
+    }
+
+    private fun loadDefaultAccountId(): Long? {
+        val database = db ?: return null
+        return try {
+            val cursor = database.rawQuery(
+                """
+                SELECT id
+                FROM accounts
+                WHERE deleted_at IS NULL
+                ORDER BY is_default DESC, id ASC
+                LIMIT 1
+                """.trimIndent(),
+                null,
+            )
+            cursor.use { c ->
+                if (c.moveToFirst()) {
+                    c.getLong(0)
+                } else {
+                    null
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun accountExists(accountId: Long): Boolean {
+        val database = db ?: return false
+        return try {
+            val cursor = database.rawQuery(
+                "SELECT 1 FROM accounts WHERE id = ? AND deleted_at IS NULL LIMIT 1",
+                arrayOf(accountId.toString()),
+            )
+            cursor.use { it.moveToFirst() }
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -483,6 +555,7 @@ class WidgetEntryActivity : AppCompatActivity() {
             val values = ContentValues().apply {
                 put("amount", amount)
                 put("type", type)
+                put("account_id", widgetAccountId ?: loadDefaultAccountId() ?: 1L)
                 put("category_id", categoryId)
                 put("date", now)
                 put("created_at", now)

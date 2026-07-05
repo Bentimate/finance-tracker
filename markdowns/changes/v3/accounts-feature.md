@@ -1,0 +1,5 @@
+- Added a cached `current_balance` field to `accounts` and backfilled it during migration so the Accounts page can read balances quickly while transactions remain the source of truth.
+- Updated account write paths so transaction create/edit/delete, recurring generation, and transfers keep the cached balance in sync inside the same database transaction.
+- Added reconciliation support in `src\repositories\accountRepository.ts` to recompute account balances from transaction and transfer history if cache drift ever needs repair.
+- Updated the Accounts UI to surface a total balance summary and render balance values as positive for display, even when the underlying balance is negative.
+- Validation: `.\node_modules\.bin\tsc --noEmit` passes cleanly.

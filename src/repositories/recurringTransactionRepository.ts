@@ -1,5 +1,6 @@
 import {CreateRecurringTransactionData, RecurringTransaction} from '../types';
 import {BaseRepository} from './BaseRepository';
+import {accountRepository} from './accountRepository';
 import {recurrenceDateService} from './services/RecurrenceDateService';
 
 const SELECT_WITH_CATEGORY = `
@@ -169,6 +170,12 @@ class RecurringTransactionRepository extends BaseRepository {
 
         if ((result.rowsAffected ?? 0) > 0) {
           generatedCount += 1;
+          await accountRepository.applyBalanceChanges([
+            {
+              accountId: template.account_id,
+              delta: template.type === 'income' ? template.amount : -template.amount,
+            },
+          ]);
         }
 
         occurrence = recurrenceDateService.advanceAfterOccurrence({

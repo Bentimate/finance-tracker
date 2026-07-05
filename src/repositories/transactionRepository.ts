@@ -1,5 +1,6 @@
 import {Transaction} from '../types';
 import {BaseRepository} from './BaseRepository';
+import {accountRepository} from './accountRepository';
 
 export interface CreateTransactionData {
   amount: number;
@@ -26,9 +27,11 @@ const SELECT_WITH_CATEGORY = `
          c.name  AS category_name,
          c.color AS category_color,
          c.icon  AS category_icon,
+         a.name  AS account_name,
          p.name  AS category_parent_name
   FROM   transactions t
   JOIN   categories   c ON c.id = t.category_id
+  JOIN   accounts     a ON a.id = t.account_id
   LEFT JOIN categories p ON p.id = c.parent_id
 `;
 
@@ -40,6 +43,10 @@ function buildAccountWhere(accountId?: number): {sql: string; params: number[]} 
 }
 
 class TransactionRepository extends BaseRepository {
+  private signedAmount(type: 'income' | 'expense', amount: number): number {
+    return type === 'income' ? amount : -amount;
+  }
+
   /**
    * Returns all active (non-deleted) transactions for a calendar day.
    * @param {string} date ISO date string 'YYYY-MM-DD'
@@ -134,6 +141,7 @@ class TransactionRepository extends BaseRepository {
     note,
   }: CreateTransactionData): Promise<number | undefined> {
     const ts = this.now();
+    const delta = this.signedAmount(type, amount);
 
     return this.withTransaction(async () => {
       const result = await this.db.execute(
@@ -141,6 +149,7 @@ class TransactionRepository extends BaseRepository {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [amount, type, account_id, category_id, date ?? ts, note ?? null, ts, ts],
       );
+      await accountRepository.applyBalanceChanges([{accountId: account_id, delta}]);
       return result.insertId;
     });
   }
@@ -153,6 +162,13 @@ class TransactionRepository extends BaseRepository {
     {amount, type, account_id, category_id, date, note}: CreateTransactionData & {date: string},
   ): Promise<void> {
     await this.withTransaction(async () => {
+      const existing = await this.getById(id);
+      if (!existing) {
+        throw new Error('Transaction not found.');
+      }
+      const currentDelta = this.signedAmount(existing.type, existing.amount);
+      const nextDelta = this.signedAmount(type, amount);
+
       await this.db.execute(
         `UPDATE transactions
          SET    amount = ?, type = ?, account_id = ?, category_id = ?, date = ?, note = ?, updated_at = ?
@@ -160,6 +176,10 @@ class TransactionRepository extends BaseRepository {
            AND  deleted_at IS NULL`,
         [amount, type, account_id, category_id, date, note ?? null, this.now(), id],
       );
+      await accountRepository.applyBalanceChanges([
+        {accountId: existing.account_id, delta: -currentDelta},
+        {accountId: account_id, delta: nextDelta},
+      ]);
     });
   }
 
@@ -180,10 +200,18 @@ class TransactionRepository extends BaseRepository {
    * Soft-deletes a transaction by setting deleted_at.
    */
   async delete(id: number): Promise<void> {
-    await this.db.execute('UPDATE transactions SET deleted_at = ? WHERE id = ?', [
-      this.now(),
-      id,
-    ]);
+    await this.withTransaction(async () => {
+      const existing = await this.getById(id);
+      if (!existing) {
+        return;
+      }
+      const delta = this.signedAmount(existing.type, existing.amount);
+      await this.db.execute('UPDATE transactions SET deleted_at = ? WHERE id = ?', [
+        this.now(),
+        id,
+      ]);
+      await accountRepository.applyBalanceChanges([{accountId: existing.account_id, delta: -delta}]);
+    });
   }
 
   /**

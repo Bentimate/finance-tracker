@@ -12,14 +12,14 @@ class UserPrefRepository extends BaseRepository {
 
     const row = this.first<{value: string}>(result);
     if (!row) {
-      return {pay_cycle_day: null};
+      return this.defaultSettings();
     }
 
     try {
-      return JSON.parse(row.value) as UserSettings;
+      return {...this.defaultSettings(), ...(JSON.parse(row.value) as Partial<UserSettings>)};
     } catch (e) {
       console.error('Failed to parse user settings', e);
-      return {pay_cycle_day: null};
+      return this.defaultSettings();
     }
   }
 
@@ -31,6 +31,36 @@ class UserPrefRepository extends BaseRepository {
       'INSERT OR REPLACE INTO user_preferences (key, value) VALUES (?, ?)',
       [this.SETTINGS_KEY, JSON.stringify(updated)],
     );
+  }
+
+  async getPreference<T>(key: string, defaultValue: T): Promise<T> {
+    const result = await this.db.execute('SELECT value FROM user_preferences WHERE key = ?', [key]);
+    const row = this.first<{value: string}>(result);
+    if (!row) {
+      return defaultValue;
+    }
+
+    try {
+      return JSON.parse(row.value) as T;
+    } catch (e) {
+      console.error(`Failed to parse preference ${key}`, e);
+      return defaultValue;
+    }
+  }
+
+  async setPreference<T>(key: string, value: T): Promise<void> {
+    await this.db.execute('INSERT OR REPLACE INTO user_preferences (key, value) VALUES (?, ?)', [
+      key,
+      JSON.stringify(value),
+    ]);
+  }
+
+  private defaultSettings(): UserSettings {
+    return {
+      pay_cycle_day: null,
+      transaction_scope_account_id: null,
+      widget_account_id: null,
+    };
   }
 }
 

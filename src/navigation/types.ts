@@ -7,12 +7,13 @@ export type CategoryStackParamList = {
 
 export type AccountStackParamList = {
   AccountList: undefined;
+  ManageAccounts: undefined;
   AccountForm: { accountId?: number };
   TransferForm: undefined;
 };
 
 export type TransactionStackParamList = {
-  TransactionList: { accountId?: number } | undefined;
+  CalendarView: { accountId?: number } | undefined;
   TransactionForm: { transactionId?: number; accountId?: number } | undefined;
   RecurringTransactionForm:
     | { recurringTransactionId?: number; accountId?: number }
@@ -26,7 +27,7 @@ export type BudgetStackParamList = {
 
 export type RootTabParamList = {
   Dashboard: {accountId?: number} | undefined;
-  Transactions: NavigatorScreenParams<TransactionStackParamList>;
+  Calendar: NavigatorScreenParams<TransactionStackParamList>;
   Accounts: NavigatorScreenParams<AccountStackParamList>;
   Categories: NavigatorScreenParams<CategoryStackParamList>;
   Settings: undefined;

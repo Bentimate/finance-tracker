@@ -8,6 +8,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import TransactionListScreen from '../screens/Transactions/TransactionListScreen';
+import CalendarScreen from '../screens/Transactions/CalendarScreen';
 import TransactionFormScreen from '../screens/Transactions/TransactionFormScreen';
 import RecurringTransactionFormScreen from '../screens/Transactions/RecurringTransactionFormScreen';
 import AccountsScreen from '../screens/Accounts/AccountsScreen';
@@ -60,22 +61,9 @@ const DashboardNavigator = () => (
 const TransactionNavigator = () => (
   <TransactionStack.Navigator screenOptions={{headerShown: true}}>
     <TransactionStack.Screen
-      name="TransactionList"
-      component={TransactionListScreen}
-      options={({route}) => ({
-        header: () => {
-          const params = route.params as any;
-          const handleRefresh = params?.handleRefresh || (() => {});
-          const isLoading = params?.isLoading || false;
-          return (
-            <RefreshHeader
-              title="Transactions"
-              onRefresh={handleRefresh}
-              isLoading={isLoading}
-            />
-          );
-        },
-      })}
+      name="CalendarView"
+      component={CalendarScreen}
+      options={{title: 'Calendar'}}
     />
     <TransactionStack.Screen
       name="TransactionForm"
@@ -98,8 +86,13 @@ const AccountNavigator = () => (
   <AccountStack.Navigator screenOptions={{headerShown: true}}>
     <AccountStack.Screen
       name="AccountList"
-      component={AccountsScreen}
+      component={TransactionListScreen}
       options={{title: 'Accounts'}}
+    />
+    <AccountStack.Screen
+      name="ManageAccounts"
+      component={AccountsScreen}
+      options={{title: 'Manage Accounts'}}
     />
     <AccountStack.Screen
       name="AccountForm"
@@ -149,7 +142,7 @@ const CategoryNavigator = () => (
 function TabIcon({label, color, size}: {label: keyof RootTabParamList; color: string; size: number}) {
   const icons: Record<keyof RootTabParamList, string> = {
     Dashboard: 'view-dashboard-outline',
-    Transactions: 'swap-vertical',
+    Calendar: 'calendar-month-outline',
     Accounts: 'wallet-outline',
     Categories: 'folder-outline',
     Settings: 'cog-outline',
@@ -167,7 +160,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        initialRouteName="Transactions"
+        initialRouteName="Calendar"
         screenOptions={({route}) => ({
           tabBarIcon: ({color, size}) => <TabIcon label={route.name} color={color} size={size} />,
           tabBarActiveTintColor: theme.colors.primary,
@@ -187,8 +180,8 @@ export default function AppNavigator() {
           component={DashboardNavigator}
           options={{headerShown: false}}
         />
+        <Tab.Screen name="Calendar" component={TransactionNavigator} />
         <Tab.Screen name="Accounts" component={AccountNavigator} />
-        <Tab.Screen name="Transactions" component={TransactionNavigator} />
         <Tab.Screen name="Categories" component={CategoryNavigator} />
         <Tab.Screen
           name="Settings"

@@ -12,7 +12,11 @@ interface UserPrefContextType {
 const UserPrefContext = createContext<UserPrefContextType | undefined>(undefined);
 
 export const UserPrefProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const [settings, setSettings] = useState<UserSettings>({pay_cycle_day: null});
+  const [settings, setSettings] = useState<UserSettings>({
+    pay_cycle_day: null,
+    transaction_scope_account_id: null,
+    widget_account_id: null,
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchSettings = useCallback(async () => {

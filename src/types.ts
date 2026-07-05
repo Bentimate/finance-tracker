@@ -11,6 +11,7 @@ export interface Account {
   id: number;
   name: string;
   is_default: number;
+  current_balance: number;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -57,6 +58,7 @@ export interface Transaction {
   // Joined fields
   category_name?: string;
   category_color?: string;
+  account_name?: string;
   // Joined fields for nested display — populated when category is a child
   category_parent_name?: string;
   category_icon?: string | null;
@@ -109,6 +111,8 @@ export interface DailyNetFlow {
 
 export interface UserSettings {
   pay_cycle_day: number | null;
+  transaction_scope_account_id: number | null;
+  widget_account_id: number | null;
 }
 
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';

@@ -5,6 +5,11 @@ export interface CreateAccountData {
   name: string;
 }
 
+export interface BalanceChange {
+  accountId: number;
+  delta: number;
+}
+
 class AccountRepository extends BaseRepository {
   private async getByName(name: string, excludeId?: number): Promise<Account | null> {
     const result = excludeId
@@ -17,6 +22,55 @@ class AccountRepository extends BaseRepository {
           [name.trim()],
         );
     return this.first<Account>(result);
+  }
+
+  private normalizeChanges(changes: BalanceChange[]): BalanceChange[] {
+    const merged = new Map<number, number>();
+    for (const change of changes) {
+      if (!change.delta) {
+        continue;
+      }
+      merged.set(change.accountId, (merged.get(change.accountId) ?? 0) + change.delta);
+    }
+    return [...merged.entries()].map(([accountId, delta]) => ({accountId, delta}));
+  }
+
+  private async computeBalances(): Promise<Map<number, number>> {
+    const result = await this.db.execute(
+      `WITH transaction_totals AS (
+         SELECT account_id,
+                COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS balance
+         FROM transactions
+         WHERE deleted_at IS NULL
+         GROUP BY account_id
+       ),
+       transfer_totals AS (
+         SELECT account_id,
+                COALESCE(SUM(delta), 0) AS balance
+         FROM (
+           SELECT to_account_id AS account_id, amount AS delta
+           FROM account_transfers
+           WHERE deleted_at IS NULL
+           UNION ALL
+           SELECT from_account_id AS account_id, -amount AS delta
+           FROM account_transfers
+           WHERE deleted_at IS NULL
+         )
+         GROUP BY account_id
+       )
+       SELECT a.id AS account_id,
+              COALESCE(tt.balance, 0) + COALESCE(tf.balance, 0) AS balance
+       FROM accounts a
+       LEFT JOIN transaction_totals tt ON tt.account_id = a.id
+       LEFT JOIN transfer_totals tf ON tf.account_id = a.id
+       WHERE a.deleted_at IS NULL`,
+    );
+
+    const balances = new Map<number, number>();
+    for (const row of this.rows<{account_id: number; balance: number}>(result)) {
+      balances.set(row.account_id, row.balance);
+    }
+    return balances;
   }
 
   async getAll(): Promise<Account[]> {
@@ -40,32 +94,9 @@ class AccountRepository extends BaseRepository {
 
   async getAllWithBalances(): Promise<AccountBalance[]> {
     const result = await this.db.execute(
-      `WITH transaction_totals AS (
-         SELECT account_id,
-                COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS balance
-         FROM transactions
-         WHERE deleted_at IS NULL
-         GROUP BY account_id
-       ),
-       transfer_totals AS (
-         SELECT account_id,
-                COALESCE(SUM(delta), 0) AS balance
-         FROM (
-           SELECT to_account_id AS account_id, amount AS delta
-           FROM account_transfers
-           WHERE deleted_at IS NULL
-           UNION ALL
-           SELECT from_account_id AS account_id, -amount AS delta
-           FROM account_transfers
-           WHERE deleted_at IS NULL
-         )
-         GROUP BY account_id
-       )
-       SELECT a.*,
-              COALESCE(tt.balance, 0) + COALESCE(tf.balance, 0) AS balance
+      `SELECT a.*,
+              a.current_balance AS balance
        FROM accounts a
-       LEFT JOIN transaction_totals tt ON tt.account_id = a.id
-       LEFT JOIN transfer_totals tf ON tf.account_id = a.id
        WHERE a.deleted_at IS NULL
        ORDER BY a.is_default DESC, a.name COLLATE NOCASE`,
     );
@@ -80,7 +111,7 @@ class AccountRepository extends BaseRepository {
         throw new Error(`An account named "${name}" already exists.`);
       }
       const result = await this.db.execute(
-        'INSERT INTO accounts (name, is_default, created_at, updated_at) VALUES (?, 0, ?, ?)',
+        'INSERT INTO accounts (name, is_default, current_balance, created_at, updated_at) VALUES (?, 0, 0, ?, ?)',
         [name, this.now(), this.now()],
       );
       return result.insertId;
@@ -97,6 +128,29 @@ class AccountRepository extends BaseRepository {
         'UPDATE accounts SET name = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
         [name.trim(), this.now(), id],
       );
+    });
+  }
+
+  async applyBalanceChanges(changes: BalanceChange[]): Promise<void> {
+    const normalized = this.normalizeChanges(changes);
+    for (const change of normalized) {
+      await this.db.execute(
+        'UPDATE accounts SET current_balance = COALESCE(current_balance, 0) + ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
+        [change.delta, this.now(), change.accountId],
+      );
+    }
+  }
+
+  async reconcileBalances(): Promise<void> {
+    await this.withTransaction(async () => {
+      const balances = await this.computeBalances();
+      const accounts = await this.getAll();
+      for (const account of accounts) {
+        await this.db.execute(
+          'UPDATE accounts SET current_balance = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
+          [balances.get(account.id) ?? 0, this.now(), account.id],
+        );
+      }
     });
   }
 
@@ -159,7 +213,7 @@ class AccountRepository extends BaseRepository {
         throw new Error('Selected account no longer exists.');
       }
 
-      const result = await this.db.execute(
+      await this.db.execute(
         `INSERT INTO account_transfers
           (from_account_id, to_account_id, amount, note, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -173,7 +227,10 @@ class AccountRepository extends BaseRepository {
         ],
       );
 
-      return result.insertId;
+      await this.applyBalanceChanges([
+        {accountId: data.from_account_id, delta: -data.amount},
+        {accountId: data.to_account_id, delta: data.amount},
+      ]);
     });
   }
 }

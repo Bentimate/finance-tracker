@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert, FlatList, View, DeviceEventEmitter} from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 
@@ -17,6 +17,10 @@ const AccountsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [accounts, setAccounts] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(false);
+  const totalBalance = useMemo(
+    () => accounts.reduce((sum, account) => sum + account.balance, 0),
+    [accounts],
+  );
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -78,6 +82,15 @@ const AccountsScreen: React.FC = () => {
         />
       </View>
 
+      <View style={styles.totalCard}>
+        <Typography variant="caption" color="textMuted">
+          Total balance
+        </Typography>
+        <Typography variant="h2" weight="bold" style={styles.totalBalance}>
+          {formatCurrency(totalBalance)}
+        </Typography>
+      </View>
+
       <FlatList
         data={accounts}
         keyExtractor={item => item.id.toString()}
@@ -87,15 +100,15 @@ const AccountsScreen: React.FC = () => {
         ListEmptyComponent={
           <EmptyState message="No accounts yet. Create one to start tracking balances." />
         }
-        renderItem={({item}) => (
-          <View style={styles.card}>
-              <ListItem
+      renderItem={({item}) => (
+        <View style={styles.card}>
+          <ListItem
               title={item.name}
               subtitle={item.is_default === 1 ? 'Default account' : 'Tap to view transactions'}
               onPress={() => {
                 const parent = navigation.getParent?.();
-                parent?.navigate('Transactions', {
-                  screen: 'TransactionList',
+                parent?.navigate('Accounts', {
+                  screen: 'AccountList',
                   params: {accountId: item.id},
                 });
               }}

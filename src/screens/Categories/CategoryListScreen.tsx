@@ -21,8 +21,6 @@ const CategoryListScreen: React.FC = () => {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
-  const route = useRoute();
-
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
@@ -38,13 +36,6 @@ const CategoryListScreen: React.FC = () => {
     await loadCategories();
     setIsLoading(false);
   }, [loadCategories]);
-
-  useEffect(() => {
-    const params = route.params as any;
-    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
-      navigation.setParams({handleRefresh, isLoading} as any);
-    }
-  }, [navigation, handleRefresh, isLoading, route.params]);
 
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener('AppRefresh', loadCategories);

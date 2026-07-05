@@ -37,6 +37,36 @@ export const styles = StyleSheet.create({
       paddingBottom: theme.spacing.sm,
       gap: theme.spacing.sm,
     },
+    accountSelectorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginHorizontal: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    accountSelectorLabel: {
+      marginBottom: 2,
+    },
+    accountSelectorValue: {
+      color: theme.colors.text,
+    },
+    manageAccountsBtn: {
+      alignSelf: 'flex-end',
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      marginBottom: theme.spacing.sm,
+    },
+    manageAccountsBtnText: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.fontSizes.sm,
+      fontWeight: theme.typography.fontWeights.semibold as any,
+    },
     dropdownButton: {
       flexDirection: 'row',
       alignItems: 'center',

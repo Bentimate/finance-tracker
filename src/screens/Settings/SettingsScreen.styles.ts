@@ -39,6 +39,34 @@ export const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
+  accountPickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  accountPickerLabel: {
+    fontSize: theme.typography.fontSizes.xs,
+    color: theme.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: theme.spacing.xs / 2,
+  },
+  accountPickerValue: {
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeights.medium as any,
+  },
+  accountPickerAction: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeights.semibold as any,
+  },
 
   // Month picker row
   monthRow: {

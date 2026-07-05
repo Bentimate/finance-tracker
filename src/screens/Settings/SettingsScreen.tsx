@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,17 @@ import {MonthRow} from './components/MonthRow';
 import {prevMonth, nextMonth} from './helpers';
 import {Screen} from '../../components/Screen';
 import {useUserPrefs} from '../../context/UserPrefContext';
+import {accountRepository} from '../../repositories/accountRepository';
+import {AccountBalance} from '../../types';
+import {AccountPickerSheet} from '../../components/AccountPickerSheet';
+import {formatCurrency} from '../../utils/formatCurrency';
 
 const SettingsScreen: React.FC = () => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
+  const [accounts, setAccounts] = useState<AccountBalance[]>([]);
+  const [isWidgetAccountPickerVisible, setWidgetAccountPickerVisible] = useState(false);
 
   const {settings, updateSettings} = useUserPrefs();
   const [payDayInput, setPayDayInput] = useState(
@@ -30,6 +36,19 @@ const SettingsScreen: React.FC = () => {
   useEffect(() => {
     setPayDayInput(settings.pay_cycle_day ? settings.pay_cycle_day.toString() : '');
   }, [settings.pay_cycle_day]);
+
+  const loadAccounts = useCallback(async () => {
+    try {
+      const data = await accountRepository.getAllWithBalances();
+      setAccounts(data);
+    } catch (error) {
+      console.error('Failed to load accounts for settings', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
 
   useEffect(() => {
     if (status.kind === 'success') {
@@ -87,8 +106,25 @@ const SettingsScreen: React.FC = () => {
     updateSettings({pay_cycle_day: null});
   };
 
+  const selectedWidgetAccount = accounts.find(account => account.id === settings.widget_account_id) ?? null;
+
+  const saveWidgetAccount = async (accountId: number | null) => {
+    await updateSettings({widget_account_id: accountId});
+    setWidgetAccountPickerVisible(false);
+  };
+
   return (
     <Screen edges={['bottom']} scrollable contentStyle={styles.scrollContent}>
+      <AccountPickerSheet
+        visible={isWidgetAccountPickerVisible}
+        title="Widget Default Account"
+        accounts={accounts}
+        selectedAccountId={settings.widget_account_id}
+        allowAllAccounts={false}
+        onSelectAccount={saveWidgetAccount}
+        onClose={() => setWidgetAccountPickerVisible(false)}
+      />
+
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Pay Cycle Settings</Text>
         <View style={styles.card}>
@@ -126,6 +162,40 @@ const SettingsScreen: React.FC = () => {
           {settings.pay_cycle_day !== null && (
             <TouchableOpacity style={styles.resetBtn} onPress={resetPayDay}>
               <Text style={styles.resetBtnText}>Reset to Calendar Month</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Widget</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Default Entry Account</Text>
+          <Text style={styles.cardBody}>
+            Choose which account the widget saves to when you add a transaction from outside the
+            app.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.accountPickerBtn}
+            onPress={() => setWidgetAccountPickerVisible(true)}
+            activeOpacity={0.75}>
+            <View>
+              <Text style={styles.accountPickerLabel}>Widget account</Text>
+              <Text style={styles.accountPickerValue}>
+                {selectedWidgetAccount
+                  ? `${selectedWidgetAccount.name} · ${formatCurrency(selectedWidgetAccount.balance)}`
+                  : 'Main account (default)'}
+              </Text>
+            </View>
+            <Text style={styles.accountPickerAction}>Change</Text>
+          </TouchableOpacity>
+
+          {settings.widget_account_id !== null && (
+            <TouchableOpacity
+              style={styles.resetBtn}
+              onPress={() => updateSettings({widget_account_id: null})}>
+              <Text style={styles.resetBtnText}>Reset to Main Account</Text>
             </TouchableOpacity>
           )}
         </View>

@@ -6,6 +6,17 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: theme.spacing.xs,
   },
+  accountPill: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+  },
+  accountPillText: {
+    lineHeight: 14,
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
