@@ -6,6 +6,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {TransactionStackParamList} from '../../../navigation/types';
 import {ParentCategory} from '../../../types';
 import {categoryRepository} from '../../../repositories/categoryRepository';
+import {accountRepository} from '../../../repositories/accountRepository';
 import {transactionRepository} from '../../../repositories/transactionRepository';
 import {formatDisplayAmount} from '../helpers';
 import {categorySelectionService} from '../../../components/services/CategorySelectionService';
@@ -16,6 +17,7 @@ type FormRouteProp = RouteProp<TransactionStackParamList, 'TransactionForm'>;
 
 export interface TransactionFormViewModel {
   transactionId?: number;
+  accountId: number | null;
   amount: string;
   note: string;
   categoryId: number | null;
@@ -54,8 +56,10 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
   const transactionId = route.params?.transactionId;
+  const routeAccountId = route.params?.accountId;
 
   const [amount, setAmount] = useState('');
+  const [accountId, setAccountId] = useState<number | null>(routeAccountId ?? null);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString());
@@ -73,6 +77,12 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
       let isMounted = true;
 
       const loadData = async () => {
+        if (!routeAccountId && !transactionId) {
+          const defaultAccount = await accountRepository.getDefaultAccount();
+          if (defaultAccount) {
+            setAccountId(defaultAccount.id);
+          }
+        }
         const nested = await categoryRepository.getAllNested();
         if (!isMounted) {
           return;
@@ -83,6 +93,7 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
           const tx = await transactionRepository.getById(transactionId);
           if (tx && isMounted) {
             setAmount(tx.type === 'expense' ? `-${tx.amount}` : tx.amount.toString());
+            setAccountId(tx.account_id);
             setCategoryId(tx.category_id);
             setNote(tx.note || '');
             setDate(tx.date);
@@ -197,12 +208,13 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
       return;
     }
 
-    const payload = transactionFormService.buildPayload({
-      normalizedAmount: amountResult.value,
-      categoryId: categoryId as number,
-      note,
-      date,
-    });
+      const payload = transactionFormService.buildPayload({
+        normalizedAmount: amountResult.value,
+        categoryId: categoryId as number,
+        note,
+        date,
+        accountId: accountId ?? routeAccountId ?? 1,
+      });
 
     setLoading(true);
     try {
@@ -218,7 +230,7 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
     } finally {
       setLoading(false);
     }
-  }, [amount, categoryId, note, date, transactionId, navigation]);
+  }, [amount, accountId, categoryId, note, date, transactionId, navigation, routeAccountId]);
 
   const handleDelete = useCallback(() => {
     Alert.alert('Delete Transaction', 'Are you sure you want to delete this transaction?', [
@@ -264,6 +276,7 @@ export function useTransactionFormViewModel(): TransactionFormViewModel {
 
   return {
     transactionId,
+    accountId,
     amount,
     note,
     categoryId,

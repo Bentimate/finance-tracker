@@ -6,7 +6,7 @@ import {
   DeviceEventEmitter,
   AppState,
 } from 'react-native';
-import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
+import {useFocusEffect, useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import {useDashboardData} from '../../hooks/useDashboardData';
@@ -30,6 +30,7 @@ import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {Screen} from '../../components/Screen';
 import {useUserPrefs} from '../../context/UserPrefContext';
+import {RootTabParamList} from '../../navigation/types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,6 +58,7 @@ function selectionToRange(selection: DateSelection, payCycleDay: number | null):
 
 const DashboardScreen: React.FC = () => {
   const {settings} = useUserPrefs();
+  const route = useRoute<RouteProp<RootTabParamList, 'Dashboard'>>();
 
   // Initialize state based on current date and pay cycle
   const initialSelection = useMemo((): DateSelection => {
@@ -104,10 +106,9 @@ const DashboardScreen: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-  const route = useRoute();
 
   const range = selectionToRange(selection, settings.pay_cycle_day);
-  const {data, loading, error, refresh} = useDashboardData(range);
+  const {data, loading, error, refresh} = useDashboardData(range, route.params?.accountId);
 
   // Fetch the earliest year once on mount — same pattern as TransactionListScreen
   useEffect(() => {

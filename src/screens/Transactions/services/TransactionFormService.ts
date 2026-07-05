@@ -11,6 +11,7 @@ export interface ValidationResult {
 export interface TransactionUpsertPayload {
   amount: number;
   type: 'income' | 'expense';
+  account_id: number;
   category_id: number;
   note?: string;
   date: string;
@@ -49,12 +50,14 @@ export class TransactionFormService {
   public buildPayload(input: {
     normalizedAmount: NormalizedTransactionAmount;
     categoryId: number;
+    accountId: number;
     note: string;
     date: string;
   }): TransactionUpsertPayload {
     return {
       amount: input.normalizedAmount.amount,
       type: input.normalizedAmount.type,
+      account_id: input.accountId,
       category_id: input.categoryId,
       note: input.note.trim() || undefined,
       date: input.date,

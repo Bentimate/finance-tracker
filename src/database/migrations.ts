@@ -236,6 +236,65 @@ const MIGRATIONS: Migration[] = [
       );
     },
   },
+
+  {
+    version: 5,
+    up(db: DB) {
+      db.execute(`
+        CREATE TABLE IF NOT EXISTS accounts (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT NOT NULL,
+          is_default  INTEGER NOT NULL DEFAULT 0,
+          created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          deleted_at  TEXT
+        )
+      `);
+
+      db.execute(`
+        INSERT INTO accounts (id, name, is_default, created_at, updated_at)
+        SELECT 1, 'Main', 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE id = 1)
+      `);
+
+      db.execute('ALTER TABLE transactions ADD COLUMN account_id INTEGER REFERENCES accounts (id) NOT NULL DEFAULT 1');
+      db.execute('ALTER TABLE recurring_transactions ADD COLUMN account_id INTEGER REFERENCES accounts (id) NOT NULL DEFAULT 1');
+
+      db.execute(`
+        CREATE TABLE IF NOT EXISTS account_transfers (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          from_account_id  INTEGER NOT NULL REFERENCES accounts (id),
+          to_account_id    INTEGER NOT NULL REFERENCES accounts (id),
+          amount          REAL    NOT NULL CHECK (amount > 0),
+          note            TEXT,
+          created_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          deleted_at      TEXT
+        )
+      `);
+
+      db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_accounts_default
+          ON accounts (is_default)
+      `);
+      db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_txn_account
+          ON transactions (account_id)
+      `);
+      db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_recurring_account
+          ON recurring_transactions (account_id)
+      `);
+      db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_transfers_from_account
+          ON account_transfers (from_account_id)
+      `);
+      db.execute(`
+        CREATE INDEX IF NOT EXISTS idx_transfers_to_account
+          ON account_transfers (to_account_id)
+      `);
+    },
+  },
 ];
 
 /**

@@ -27,6 +27,13 @@ export interface DateRange {
   label?: string; // Optional label for display (e.g. "Oct 25 - Nov 24")
 }
 
+function buildAccountWhere(accountId?: number): {sql: string; params: number[]} {
+  if (!accountId) {
+    return {sql: '', params: []};
+  }
+  return {sql: ' AND account_id = ?', params: [accountId]};
+}
+
 // ---------------------------------------------------------------------------
 // Helpers (exported so DashboardScreen and useDashboardData can build ranges)
 // ---------------------------------------------------------------------------
@@ -101,15 +108,17 @@ class AnalyticsRepository extends BaseRepository {
   /**
    * Returns total income, total expense, and net cash flow for a date range.
    */
-  async getMonthlyTotals(range: DateRange): Promise<MonthlyTotals> {
+  async getMonthlyTotals(range: DateRange, accountId?: number): Promise<MonthlyTotals> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT
          COALESCE(SUM(CASE WHEN type = 'income'  THEN amount ELSE 0 END), 0) AS total_income,
          COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense
        FROM transactions
        WHERE date(date, 'localtime') BETWEEN ? AND ?
-         AND deleted_at IS NULL`,
-      [range.startDate, range.endDate],
+         AND deleted_at IS NULL
+         ${accountFilter.sql}`,
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     const row = this.first<{total_income: number; total_expense: number}>(result);
@@ -123,8 +132,9 @@ class AnalyticsRepository extends BaseRepository {
    * Returns net cash flow grouped by day for a single calendar month.
    * Intentionally keeps year/month params since CalendarView uses this directly.
    */
-  async getDailyNetFlow(year: number, month: number): Promise<DailyNetFlow[]> {
+  async getDailyNetFlow(year: number, month: number, accountId?: number): Promise<DailyNetFlow[]> {
     const range = monthRange(year, month);
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT
          date(date, 'localtime') AS date,
@@ -132,9 +142,10 @@ class AnalyticsRepository extends BaseRepository {
        FROM transactions
        WHERE date(date, 'localtime') BETWEEN ? AND ?
          AND deleted_at IS NULL
+         ${accountFilter.sql}
        GROUP BY date(date, 'localtime')
        ORDER BY date(date, 'localtime') ASC`,
-      [range.startDate, range.endDate],
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     const raw = this.rows<{date: string; net_flow: number}>(result);
@@ -144,7 +155,8 @@ class AnalyticsRepository extends BaseRepository {
   /**
    * Returns expense totals per category for a date range, sorted descending.
    */
-  async getCategorySpend(range: DateRange): Promise<CategorySpend[]> {
+  async getCategorySpend(range: DateRange, accountId?: number): Promise<CategorySpend[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT
          c.id,
@@ -156,9 +168,10 @@ class AnalyticsRepository extends BaseRepository {
        WHERE  t.type       = 'expense'
          AND  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        GROUP BY c.id
        ORDER BY total DESC`,
-      [range.startDate, range.endDate],
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     return this.rows<CategorySpend>(result);
@@ -167,7 +180,8 @@ class AnalyticsRepository extends BaseRepository {
   /**
    * Returns income and expense totals grouped by ISO week within a date range.
    */
-  async getWeeklyTrend(range: DateRange): Promise<WeeklyTrend[]> {
+  async getWeeklyTrend(range: DateRange, accountId?: number): Promise<WeeklyTrend[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT
          strftime('%W', date, 'localtime') AS week_num,
@@ -176,9 +190,10 @@ class AnalyticsRepository extends BaseRepository {
        FROM transactions
        WHERE date(date, 'localtime') BETWEEN ? AND ?
          AND deleted_at IS NULL
+         ${accountFilter.sql}
        GROUP BY week_num
        ORDER BY week_num`,
-      [range.startDate, range.endDate],
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     const raw = this.rows<{week_num: string; income: number; expense: number}>(result);
@@ -196,7 +211,8 @@ class AnalyticsRepository extends BaseRepository {
    * Child transactions are rolled up into their parent's total.
    * Standalone categories appear as their own slice.
    */
-  async getParentCategorySpend(range: DateRange): Promise<CategorySpend[]> {
+  async getParentCategorySpend(range: DateRange, accountId?: number): Promise<CategorySpend[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT
          COALESCE(c.parent_id, c.id)    AS id,
@@ -209,9 +225,10 @@ class AnalyticsRepository extends BaseRepository {
        WHERE  t.type       = 'expense'
          AND  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        GROUP BY COALESCE(c.parent_id, c.id)
        ORDER BY total DESC`,
-      [range.startDate, range.endDate],
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     return this.rows<CategorySpend>(result);
@@ -225,7 +242,9 @@ class AnalyticsRepository extends BaseRepository {
   async getChildCategorySpend(
     parentId: number,
     range: DateRange,
+    accountId?: number,
   ): Promise<ChildCategorySpendResult> {
+    const accountFilter = buildAccountWhere(accountId);
     const childResult = await this.db.execute(
       `SELECT
          c.id,
@@ -238,9 +257,10 @@ class AnalyticsRepository extends BaseRepository {
          AND  c.parent_id  = ?
          AND  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        GROUP BY c.id
        ORDER BY total DESC`,
-      [parentId, range.startDate, range.endDate],
+      [parentId, range.startDate, range.endDate, ...accountFilter.params],
     );
 
     const othersResult = await this.db.execute(
@@ -249,8 +269,9 @@ class AnalyticsRepository extends BaseRepository {
        WHERE  type        = 'expense'
          AND  category_id = ?
          AND  date(date, 'localtime') BETWEEN ? AND ?
-         AND  deleted_at IS NULL`,
-      [parentId, range.startDate, range.endDate],
+         AND  deleted_at IS NULL
+         ${accountFilter.sql}`,
+      [parentId, range.startDate, range.endDate, ...accountFilter.params],
     );
 
     const children = this.rows<CategorySpend>(childResult);
@@ -264,7 +285,8 @@ class AnalyticsRepository extends BaseRepository {
    * Returns parent categories that have expense transactions in the given
    * date range and have at least one non-archived child.
    */
-  async getDonutParentOptions(range: DateRange): Promise<ParentCategoryOption[]> {
+  async getDonutParentOptions(range: DateRange, accountId?: number): Promise<ParentCategoryOption[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `SELECT p.id, p.name, p.color, p.icon
        FROM   categories p
@@ -283,9 +305,10 @@ class AnalyticsRepository extends BaseRepository {
                  AND  t.type       = 'expense'
                  AND  date(t.date, 'localtime') BETWEEN ? AND ?
                  AND  t.deleted_at IS NULL
+                 ${accountFilter.sql}
              )
        ORDER BY p.name`,
-      [range.startDate, range.endDate],
+      [range.startDate, range.endDate, ...accountFilter.params],
     );
 
     return this.rows<ParentCategoryOption>(result);

@@ -10,8 +10,9 @@ import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import TransactionListScreen from '../screens/Transactions/TransactionListScreen';
 import TransactionFormScreen from '../screens/Transactions/TransactionFormScreen';
 import RecurringTransactionFormScreen from '../screens/Transactions/RecurringTransactionFormScreen';
-import BudgetListScreen from '../screens/Budgets/BudgetListScreen';
-import BudgetFormScreen from '../screens/Budgets/BudgetFormScreen';
+import AccountsScreen from '../screens/Accounts/AccountsScreen';
+import AccountFormScreen from '../screens/Accounts/AccountFormScreen';
+import TransferFormScreen from '../screens/Accounts/TransferFormScreen';
 import CategoryListScreen from '../screens/Categories/CategoryListScreen';
 import CategoryFormScreen from '../screens/Categories/CategoryFormScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
@@ -22,13 +23,13 @@ import {styles} from './styles/AppNavigator.styles';
 import {
   RootTabParamList,
   TransactionStackParamList,
-  BudgetStackParamList,
+  AccountStackParamList,
   CategoryStackParamList,
 } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const TransactionStack = createNativeStackNavigator<TransactionStackParamList>();
-const BudgetStack = createNativeStackNavigator<BudgetStackParamList>();
+const AccountStack = createNativeStackNavigator<AccountStackParamList>();
 const CategoryStack = createNativeStackNavigator<CategoryStackParamList>();
 
 const DashboardStack = createNativeStackNavigator();
@@ -93,32 +94,26 @@ const TransactionNavigator = () => (
   </TransactionStack.Navigator>
 );
 
-const BudgetNavigator = () => (
-  <BudgetStack.Navigator screenOptions={{headerShown: true}}>
-    <BudgetStack.Screen
-      name="BudgetList"
-      component={BudgetListScreen}
+const AccountNavigator = () => (
+  <AccountStack.Navigator screenOptions={{headerShown: true}}>
+    <AccountStack.Screen
+      name="AccountList"
+      component={AccountsScreen}
+      options={{title: 'Accounts'}}
+    />
+    <AccountStack.Screen
+      name="AccountForm"
+      component={AccountFormScreen}
       options={({route}) => ({
-        header: () => {
-          const params = route.params as any;
-          const handleRefresh = params?.handleRefresh || (() => {});
-          const isLoading = params?.isLoading || false;
-          return (
-            <RefreshHeader
-              title="Budgets"
-              onRefresh={handleRefresh}
-              isLoading={isLoading}
-            />
-          );
-        },
+        title: route.params?.accountId ? 'Rename Account' : 'New Account',
       })}
     />
-    <BudgetStack.Screen
-      name="BudgetForm"
-      component={BudgetFormScreen}
-      options={{title: 'Setup Budget'}}
+    <AccountStack.Screen
+      name="TransferForm"
+      component={TransferFormScreen}
+      options={{title: 'Transfer'}}
     />
-  </BudgetStack.Navigator>
+  </AccountStack.Navigator>
 );
 
 const CategoryNavigator = () => (
@@ -155,7 +150,7 @@ function TabIcon({label, color, size}: {label: keyof RootTabParamList; color: st
   const icons: Record<keyof RootTabParamList, string> = {
     Dashboard: 'view-dashboard-outline',
     Transactions: 'swap-vertical',
-    Budgets: 'currency-usd',
+    Accounts: 'wallet-outline',
     Categories: 'folder-outline',
     Settings: 'cog-outline',
   };
@@ -192,7 +187,7 @@ export default function AppNavigator() {
           component={DashboardNavigator}
           options={{headerShown: false}}
         />
-        <Tab.Screen name="Budgets" component={BudgetNavigator} />
+        <Tab.Screen name="Accounts" component={AccountNavigator} />
         <Tab.Screen name="Transactions" component={TransactionNavigator} />
         <Tab.Screen name="Categories" component={CategoryNavigator} />
         <Tab.Screen

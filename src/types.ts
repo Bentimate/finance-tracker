@@ -7,6 +7,19 @@ export interface Category {
   is_archived: number;
 }
 
+export interface Account {
+  id: number;
+  name: string;
+  is_default: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
+export interface AccountBalance extends Account {
+  balance: number;
+}
+
 /**
  * A root category with its active children hydrated in memory.
  * Read/display only — never passed to write methods.
@@ -31,11 +44,13 @@ export interface Transaction {
   id: number;
   amount: number;
   type: 'income' | 'expense';
+  account_id: number;
   date: string;
   category_id: number;
   note?: string | null;
   recurring_transaction_id?: number | null;
   recurring_occurrence_date?: string | null;
+  is_transfer: number;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -102,6 +117,7 @@ export interface RecurringTransaction {
   id: number;
   amount: number;
   type: 'income' | 'expense';
+  account_id: number;
   category_id: number;
   note?: string | null;
   frequency: RecurrenceFrequency;
@@ -120,9 +136,17 @@ export interface RecurringTransaction {
 export interface CreateRecurringTransactionData {
   amount: number;
   type: 'income' | 'expense';
+  account_id: number;
   category_id: number;
   note?: string;
   frequency: RecurrenceFrequency;
   interval_value?: number | null;
   next_occurrence: string;
+}
+
+export interface CreateTransferData {
+  from_account_id: number;
+  to_account_id: number;
+  amount: number;
+  note?: string;
 }

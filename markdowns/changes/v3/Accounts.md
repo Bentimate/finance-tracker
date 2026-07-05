@@ -1,0 +1,5 @@
+- Added an accounts schema, backfilled a default Main account, and threaded account_id through transactions and recurring rules in C:\Users\benny\Desktop\Projects\finance-tracker\src\database\migrations.ts.
+- Added C:\Users\benny\Desktop\Projects\finance-tracker\src\repositories\accountRepository.ts for account CRUD, derived balances, and atomic transfers via account_transfers.
+- Replaced the Budgets tab with Accounts in C:\Users\benny\Desktop\Projects\finance-tracker\src\navigation\AppNavigator.tsx, plus new screens under C:\Users\benny\Desktop\Projects\finance-tracker\src\screens\Accounts\.
+- Updated transaction/recurring flows to be account-aware, and made dashboard analytics optionally accept accountId so the later move under Accounts is low-friction.
+- Validation: .\node_modules\.bin\tsc --noEmit passes cleanly.

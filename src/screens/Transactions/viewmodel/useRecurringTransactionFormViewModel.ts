@@ -7,6 +7,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParentCategory, RecurrenceFrequency} from '../../../types';
 import {TransactionStackParamList} from '../../../navigation/types';
 import {categoryRepository} from '../../../repositories/categoryRepository';
+import {accountRepository} from '../../../repositories/accountRepository';
 import {recurringTransactionRepository} from '../../../repositories/recurringTransactionRepository';
 import {recurrenceDateService} from '../../../repositories/services/RecurrenceDateService';
 import {categorySelectionService} from '../../../components/services/CategorySelectionService';
@@ -63,9 +64,11 @@ export function useRecurringTransactionFormViewModel(): RecurringTransactionForm
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
   const recurringTransactionId = route.params?.recurringTransactionId;
+  const routeAccountId = route.params?.accountId;
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [accountId, setAccountId] = useState<number | null>(routeAccountId ?? null);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<ParentCategory[]>([]);
   const [nextOccurrence, setNextOccurrence] = useState(() => startOfLocalDay(new Date()));
@@ -87,6 +90,12 @@ export function useRecurringTransactionFormViewModel(): RecurringTransactionForm
       let isMounted = true;
 
       const loadData = async () => {
+        if (!routeAccountId && !recurringTransactionId) {
+          const defaultAccount = await accountRepository.getDefaultAccount();
+          if (defaultAccount) {
+            setAccountId(defaultAccount.id);
+          }
+        }
         const nested = await categoryRepository.getAllNested();
         if (!isMounted) {
           return;
@@ -98,6 +107,7 @@ export function useRecurringTransactionFormViewModel(): RecurringTransactionForm
           if (item && isMounted) {
             const occurrence = new Date(item.next_occurrence);
             setAmount(item.type === 'expense' ? `-${item.amount}` : item.amount.toString());
+            setAccountId(item.account_id);
             setCategoryId(item.category_id);
             setNote(item.note ?? '');
             setNextOccurrence(occurrence);
@@ -261,12 +271,13 @@ export function useRecurringTransactionFormViewModel(): RecurringTransactionForm
 
     setLoading(true);
     try {
-      const payload = {
-        amount: amountResult.value.amount,
-        type: amountResult.value.type,
-        category_id: categoryId as number,
-        note,
-        frequency,
+        const payload = {
+          amount: amountResult.value.amount,
+          type: amountResult.value.type,
+          account_id: accountId ?? routeAccountId ?? 1,
+          category_id: categoryId as number,
+          note,
+          frequency,
         interval_value: intervalValue,
         next_occurrence: recurrenceDateService.getOccurrenceDateString(nextOccurrence),
       };
@@ -295,6 +306,8 @@ export function useRecurringTransactionFormViewModel(): RecurringTransactionForm
     recurringTransactionId,
     weeklyDay,
     yearlyDate,
+    accountId,
+    routeAccountId,
   ]);
 
   const handleDelete = useCallback(() => {

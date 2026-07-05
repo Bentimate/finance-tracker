@@ -36,7 +36,7 @@ export interface UseDashboardDataResult {
  * Callers should also call refresh() via useFocusEffect so the dashboard
  * reflects new transactions added from other tabs.
  */
-export function useDashboardData(range: DateRange): UseDashboardDataResult {
+export function useDashboardData(range: DateRange, accountId?: number): UseDashboardDataResult {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +48,11 @@ export function useDashboardData(range: DateRange): UseDashboardDataResult {
       try {
         const [totals, categorySpend, donutSpend, donutParents, weeklyTrend] =
           await Promise.all([
-            analyticsRepository.getMonthlyTotals(range),
-            analyticsRepository.getCategorySpend(range),
-            analyticsRepository.getParentCategorySpend(range),
-            analyticsRepository.getDonutParentOptions(range),
-            analyticsRepository.getWeeklyTrend(range),
+            analyticsRepository.getMonthlyTotals(range, accountId),
+            analyticsRepository.getCategorySpend(range, accountId),
+            analyticsRepository.getParentCategorySpend(range, accountId),
+            analyticsRepository.getDonutParentOptions(range, accountId),
+            analyticsRepository.getWeeklyTrend(range, accountId),
           ]);
         setData({totals, categorySpend, donutSpend, donutParents, weeklyTrend});
       } catch (e: any) {

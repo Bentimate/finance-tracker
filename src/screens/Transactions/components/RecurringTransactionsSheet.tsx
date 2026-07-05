@@ -16,6 +16,7 @@ interface Props {
   onClose: () => void;
   onAdd: () => void;
   onEdit: (id: number) => void;
+  accountId?: number;
 }
 
 const SCREEN_HEIGHT_RATIO = 0.5;
@@ -25,13 +26,14 @@ export const RecurringTransactionsSheet: React.FC<Props> = ({
   onClose,
   onAdd,
   onEdit,
+  accountId,
 }) => {
   const [items, setItems] = useState<RecurringTransaction[]>([]);
 
   const loadItems = useCallback(async () => {
-    const data = await recurringTransactionRepository.getAll();
+    const data = await recurringTransactionRepository.getAll(false, accountId);
     setItems(data);
-  }, []);
+  }, [accountId]);
 
   useEffect(() => {
     if (visible) {

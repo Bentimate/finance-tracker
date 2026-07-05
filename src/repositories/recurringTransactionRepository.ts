@@ -13,13 +13,23 @@ const SELECT_WITH_CATEGORY = `
   LEFT JOIN categories p ON p.id = c.parent_id
 `;
 
+function buildAccountWhere(accountId?: number): {sql: string; params: number[]} {
+  if (!accountId) {
+    return {sql: '', params: []};
+  }
+  return {sql: ' AND account_id = ?', params: [accountId]};
+}
+
 class RecurringTransactionRepository extends BaseRepository {
-  async getAll(includeInactive = false): Promise<RecurringTransaction[]> {
+  async getAll(includeInactive = false, accountId?: number): Promise<RecurringTransaction[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `${SELECT_WITH_CATEGORY}
        WHERE r.deleted_at IS NULL
          ${includeInactive ? '' : 'AND r.is_active = 1'}
+         ${accountFilter.sql}
        ORDER BY r.next_occurrence ASC, r.created_at DESC`,
+      accountFilter.params,
     );
     return this.rows<RecurringTransaction>(result);
   }
@@ -41,11 +51,12 @@ class RecurringTransactionRepository extends BaseRepository {
     return this.withTransaction(async () => {
       const result = await this.db.execute(
         `INSERT INTO recurring_transactions
-          (amount, type, category_id, note, frequency, interval_value, next_occurrence, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (amount, type, account_id, category_id, note, frequency, interval_value, next_occurrence, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           payload.amount,
           payload.type,
+          payload.account_id,
           payload.category_id,
           payload.note ?? null,
           payload.frequency,
@@ -68,6 +79,7 @@ class RecurringTransactionRepository extends BaseRepository {
         `UPDATE recurring_transactions
          SET amount = ?,
              type = ?,
+             account_id = ?,
              category_id = ?,
              note = ?,
              frequency = ?,
@@ -79,6 +91,7 @@ class RecurringTransactionRepository extends BaseRepository {
         [
           payload.amount,
           payload.type,
+          payload.account_id,
           payload.category_id,
           payload.note ?? null,
           payload.frequency,
@@ -137,12 +150,13 @@ class RecurringTransactionRepository extends BaseRepository {
       while (new Date(occurrence) <= now) {
         const ts = this.now();
         const result = await this.db.execute(
-          `INSERT OR IGNORE INTO transactions
-            (amount, type, category_id, date, note, recurring_transaction_id, recurring_occurrence_date, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT OR IGNORE INTO transactions
+            (amount, type, account_id, category_id, date, note, recurring_transaction_id, recurring_occurrence_date, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             template.amount,
             template.type,
+            template.account_id,
             template.category_id,
             occurrence,
             template.note ?? null,

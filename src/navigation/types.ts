@@ -5,10 +5,18 @@ export type CategoryStackParamList = {
   CategoryForm: { categoryId?: number };
 };
 
+export type AccountStackParamList = {
+  AccountList: undefined;
+  AccountForm: { accountId?: number };
+  TransferForm: undefined;
+};
+
 export type TransactionStackParamList = {
-  TransactionList: undefined;
-  TransactionForm: { transactionId?: number };
-  RecurringTransactionForm: { recurringTransactionId?: number };
+  TransactionList: { accountId?: number } | undefined;
+  TransactionForm: { transactionId?: number; accountId?: number } | undefined;
+  RecurringTransactionForm:
+    | { recurringTransactionId?: number; accountId?: number }
+    | undefined;
 };
 
 export type BudgetStackParamList = {
@@ -17,9 +25,9 @@ export type BudgetStackParamList = {
 };
 
 export type RootTabParamList = {
-  Dashboard: undefined;
+  Dashboard: {accountId?: number} | undefined;
   Transactions: NavigatorScreenParams<TransactionStackParamList>;
-  Budgets: NavigatorScreenParams<BudgetStackParamList>;
+  Accounts: NavigatorScreenParams<AccountStackParamList>;
   Categories: NavigatorScreenParams<CategoryStackParamList>;
   Settings: undefined;
 };

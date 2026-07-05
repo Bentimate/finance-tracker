@@ -4,6 +4,7 @@ import {BaseRepository} from './BaseRepository';
 export interface CreateTransactionData {
   amount: number;
   type: 'income' | 'expense';
+  account_id: number;
   category_id: number;
   date?: string;
   note?: string;
@@ -31,18 +32,27 @@ const SELECT_WITH_CATEGORY = `
   LEFT JOIN categories p ON p.id = c.parent_id
 `;
 
+function buildAccountWhere(accountId?: number): {sql: string; params: number[]} {
+  if (!accountId) {
+    return {sql: '', params: []};
+  }
+  return {sql: ' AND account_id = ?', params: [accountId]};
+}
+
 class TransactionRepository extends BaseRepository {
   /**
    * Returns all active (non-deleted) transactions for a calendar day.
    * @param {string} date ISO date string 'YYYY-MM-DD'
    */
-  async getByDay(date: string): Promise<Transaction[]> {
+  async getByDay(date: string, accountId?: number): Promise<Transaction[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `${SELECT_WITH_CATEGORY}
        WHERE  date(t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        ORDER BY t.date DESC`,
-      [date],
+      [date, ...accountFilter.params],
     );
     return this.rows<Transaction>(result);
   }
@@ -52,13 +62,15 @@ class TransactionRepository extends BaseRepository {
    * @param {string} startDate 'YYYY-MM-DD'
    * @param {string} endDate 'YYYY-MM-DD'
    */
-  async getByWeek(startDate: string, endDate: string): Promise<Transaction[]> {
+  async getByWeek(startDate: string, endDate: string, accountId?: number): Promise<Transaction[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `${SELECT_WITH_CATEGORY}
        WHERE  date(t.date, 'localtime') BETWEEN ? AND ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        ORDER BY t.date DESC`,
-      [startDate, endDate],
+      [startDate, endDate, ...accountFilter.params],
     );
     return this.rows<Transaction>(result);
   }
@@ -66,14 +78,16 @@ class TransactionRepository extends BaseRepository {
   /**
    * Returns all active transactions for a given year/month.
    */
-  async getByMonth(year: number, month: number): Promise<Transaction[]> {
+  async getByMonth(year: number, month: number, accountId?: number): Promise<Transaction[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `${SELECT_WITH_CATEGORY}
        WHERE  strftime('%Y', t.date, 'localtime') = ?
          AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        ORDER BY t.date DESC`,
-      [String(year), String(month).padStart(2, '0')],
+      [String(year), String(month).padStart(2, '0'), ...accountFilter.params],
     );
     return this.rows<Transaction>(result);
   }
@@ -94,14 +108,16 @@ class TransactionRepository extends BaseRepository {
   /**
    * Returns all active transactions for CSV export (ordered by date ASC).
    */
-  async getForExport(year: number, month: number): Promise<Transaction[]> {
+  async getForExport(year: number, month: number, accountId?: number): Promise<Transaction[]> {
+    const accountFilter = buildAccountWhere(accountId);
     const result = await this.db.execute(
       `${SELECT_WITH_CATEGORY}
        WHERE  strftime('%Y', t.date, 'localtime') = ?
          AND  strftime('%m', t.date, 'localtime') = ?
          AND  t.deleted_at IS NULL
+         ${accountFilter.sql}
        ORDER BY t.date ASC`,
-      [String(year), String(month).padStart(2, '0')],
+      [String(year), String(month).padStart(2, '0'), ...accountFilter.params],
     );
     return this.rows<Transaction>(result);
   }
@@ -112,6 +128,7 @@ class TransactionRepository extends BaseRepository {
   async create({
     amount,
     type,
+    account_id,
     category_id,
     date,
     note,
@@ -120,9 +137,9 @@ class TransactionRepository extends BaseRepository {
 
     return this.withTransaction(async () => {
       const result = await this.db.execute(
-        `INSERT INTO transactions (amount, type, category_id, date, note, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [amount, type, category_id, date ?? ts, note ?? null, ts, ts],
+        `INSERT INTO transactions (amount, type, account_id, category_id, date, note, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [amount, type, account_id, category_id, date ?? ts, note ?? null, ts, ts],
       );
       return result.insertId;
     });
@@ -133,17 +150,30 @@ class TransactionRepository extends BaseRepository {
    */
   async update(
     id: number,
-    {amount, type, category_id, date, note}: CreateTransactionData & {date: string},
+    {amount, type, account_id, category_id, date, note}: CreateTransactionData & {date: string},
   ): Promise<void> {
     await this.withTransaction(async () => {
       await this.db.execute(
         `UPDATE transactions
-         SET    amount = ?, type = ?, category_id = ?, date = ?, note = ?, updated_at = ?
+         SET    amount = ?, type = ?, account_id = ?, category_id = ?, date = ?, note = ?, updated_at = ?
          WHERE  id = ?
            AND  deleted_at IS NULL`,
-        [amount, type, category_id, date, note ?? null, this.now(), id],
+        [amount, type, account_id, category_id, date, note ?? null, this.now(), id],
       );
     });
+  }
+
+  async getEarliestYear(accountId?: number): Promise<number> {
+    const accountFilter = buildAccountWhere(accountId);
+    const result = await this.db.execute(
+      `SELECT strftime("%Y", MIN(date)) as year
+       FROM transactions
+       WHERE deleted_at IS NULL
+       ${accountFilter.sql}`,
+      accountFilter.params,
+    );
+    const row = this.first<{year: string}>(result);
+    return row?.year ? parseInt(row.year, 10) : new Date().getFullYear();
   }
 
   /**
@@ -160,13 +190,6 @@ class TransactionRepository extends BaseRepository {
    * Returns the year of the earliest transaction in the database.
    * Returns current year if no transactions exist.
    */
-  async getEarliestYear(): Promise<number> {
-    const result = await this.db.execute(
-      'SELECT strftime("%Y", MIN(date)) as year FROM transactions WHERE deleted_at IS NULL',
-    );
-    const row = this.first<{year: string}>(result);
-    return row?.year ? parseInt(row.year, 10) : new Date().getFullYear();
-  }
 }
 
 export const transactionRepository = new TransactionRepository();

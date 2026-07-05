@@ -46,26 +46,27 @@ const TransactionListScreen: React.FC = () => {
 
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
+  const accountId = (route.params as any)?.accountId as number | undefined;
   const isMounted = React.useRef(true);
 
   const fetchBounds = useCallback(async () => {
-    const year = await transactionRepository.getEarliestYear();
+    const year = await transactionRepository.getEarliestYear(accountId);
     if (isMounted.current) {
       setEarliestYear(year);
     }
-  }, []);
+  }, [accountId]);
 
   useEffect(() => {
     isMounted.current = true;
     const fetchBounds = async () => {
-      const year = await transactionRepository.getEarliestYear();
+      const year = await transactionRepository.getEarliestYear(accountId);
       if (isMounted.current) {
         setEarliestYear(year);
       }
     };
     fetchBounds();
     return () => { isMounted.current = false; };
-  }, []);
+  }, [accountId]);
 
   const loadTransactions = useCallback(async () => {
     const today = new Date();
@@ -77,7 +78,7 @@ const TransactionListScreen: React.FC = () => {
         const fetchMonth = async (y: number, m: number) => {
           const key = `${y}-${m}`;
           if (dailyFlowsCache[key]) return dailyFlowsCache[key];
-          const flows = await analyticsRepository.getDailyNetFlow(y, m);
+          const flows = await analyticsRepository.getDailyNetFlow(y, m, accountId);
           setDailyFlowsCache(prev => ({...prev, [key]: flows}));
           return flows;
         };
@@ -98,7 +99,7 @@ const TransactionListScreen: React.FC = () => {
         if (viewMode === 'week') {
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() - 6);
-          data = await transactionRepository.getByWeek(toDateStr(weekStart), toDateStr(today));
+          data = await transactionRepository.getByWeek(toDateStr(weekStart), toDateStr(today), accountId);
         }
         setSections(groupByDate(data));
       }
@@ -107,7 +108,7 @@ const TransactionListScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [viewMode, selectedMonth, selectedYear, dailyFlowsCache]);
+  }, [viewMode, selectedMonth, selectedYear, dailyFlowsCache, accountId]);
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
@@ -155,9 +156,14 @@ const TransactionListScreen: React.FC = () => {
   };
 
   return (
-    <Screen
+      <Screen
       edges={[]}
-      header={<ViewModeTabs viewMode={viewMode} onViewModeChange={setViewMode} />}>
+      header={
+        <ViewModeTabs
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      }>
       {viewMode === 'month' ? (
         <>
           <DateFilter
@@ -209,12 +215,13 @@ const TransactionListScreen: React.FC = () => {
         onClose={() => setRecurringSheetVisible(false)}
         onAdd={() => {
           setRecurringSheetVisible(false);
-          navigation.navigate('RecurringTransactionForm', {});
+          navigation.navigate('RecurringTransactionForm', {accountId});
         }}
         onEdit={(id) => {
           setRecurringSheetVisible(false);
-          navigation.navigate('RecurringTransactionForm', {recurringTransactionId: id});
+          navigation.navigate('RecurringTransactionForm', {recurringTransactionId: id, accountId});
         }}
+        accountId={accountId}
       />
 
       <PlusButton
@@ -222,7 +229,7 @@ const TransactionListScreen: React.FC = () => {
         label="R"
         onPress={() => setRecurringSheetVisible(true)}
       />
-      <PlusButton onPress={() => navigation.navigate('TransactionForm', {})} />
+      <PlusButton onPress={() => navigation.navigate('TransactionForm', {accountId})} />
     </Screen>
   );
 };
