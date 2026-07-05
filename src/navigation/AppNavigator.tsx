@@ -63,7 +63,20 @@ const TransactionNavigator = () => (
     <TransactionStack.Screen
       name="CalendarView"
       component={CalendarScreen}
-      options={{title: 'Calendar'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Calendar"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <TransactionStack.Screen
       name="TransactionForm"
@@ -87,12 +100,38 @@ const AccountNavigator = () => (
     <AccountStack.Screen
       name="AccountList"
       component={TransactionListScreen}
-      options={{title: 'Accounts'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Accounts"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <AccountStack.Screen
       name="ManageAccounts"
       component={AccountsScreen}
-      options={{title: 'Manage Accounts'}}
+      options={({route}) => ({
+        header: () => {
+          const params = route.params as any;
+          const handleRefresh = params?.handleRefresh || (() => {});
+          const isLoading = params?.isLoading || false;
+          return (
+            <RefreshHeader
+              title="Manage Accounts"
+              onRefresh={handleRefresh}
+              isLoading={isLoading}
+            />
+          );
+        },
+      })}
     />
     <AccountStack.Screen
       name="AccountForm"
@@ -105,6 +144,20 @@ const AccountNavigator = () => (
       name="TransferForm"
       component={TransferFormScreen}
       options={{title: 'Transfer'}}
+    />
+    <AccountStack.Screen
+      name="TransactionForm"
+      component={TransactionFormScreen}
+      options={({route}) => ({
+        title: route.params?.transactionId ? 'Edit Transaction' : 'New Transaction',
+      })}
+    />
+    <AccountStack.Screen
+      name="RecurringTransactionForm"
+      component={RecurringTransactionFormScreen}
+      options={({route}) => ({
+        title: route.params?.recurringTransactionId ? 'Edit Recurrence' : 'New Recurrence',
+      })}
     />
   </AccountStack.Navigator>
 );

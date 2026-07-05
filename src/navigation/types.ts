@@ -10,6 +10,10 @@ export type AccountStackParamList = {
   ManageAccounts: undefined;
   AccountForm: { accountId?: number };
   TransferForm: undefined;
+  TransactionForm: { transactionId?: number; accountId?: number } | undefined;
+  RecurringTransactionForm:
+    | { recurringTransactionId?: number; accountId?: number }
+    | undefined;
 };
 
 export type TransactionStackParamList = {

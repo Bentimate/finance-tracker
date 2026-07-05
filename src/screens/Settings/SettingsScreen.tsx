@@ -15,8 +15,10 @@ import {Screen} from '../../components/Screen';
 import {useUserPrefs} from '../../context/UserPrefContext';
 import {accountRepository} from '../../repositories/accountRepository';
 import {AccountBalance} from '../../types';
-import {AccountPickerSheet} from '../../components/AccountPickerSheet';
 import {formatCurrency} from '../../utils/formatCurrency';
+import {Menu} from 'react-native-paper';
+import {theme} from '../../theme';
+import {Dropdown} from '../../components/Dropdown';
 
 const SettingsScreen: React.FC = () => {
   const now = new Date();
@@ -115,16 +117,6 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <Screen edges={['bottom']} scrollable contentStyle={styles.scrollContent}>
-      <AccountPickerSheet
-        visible={isWidgetAccountPickerVisible}
-        title="Widget Default Account"
-        accounts={accounts}
-        selectedAccountId={settings.widget_account_id}
-        allowAllAccounts={false}
-        onSelectAccount={saveWidgetAccount}
-        onClose={() => setWidgetAccountPickerVisible(false)}
-      />
-
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Pay Cycle Settings</Text>
         <View style={styles.card}>
@@ -176,20 +168,35 @@ const SettingsScreen: React.FC = () => {
             app.
           </Text>
 
-          <TouchableOpacity
-            style={styles.accountPickerBtn}
+          <Dropdown
+            label="Widget account"
+            value={selectedWidgetAccount ? selectedWidgetAccount.name : 'Main account (default)'}
+            visible={isWidgetAccountPickerVisible}
+            onDismiss={() => setWidgetAccountPickerVisible(false)}
             onPress={() => setWidgetAccountPickerVisible(true)}
-            activeOpacity={0.75}>
-            <View>
-              <Text style={styles.accountPickerLabel}>Widget account</Text>
-              <Text style={styles.accountPickerValue}>
-                {selectedWidgetAccount
-                  ? `${selectedWidgetAccount.name} · ${formatCurrency(selectedWidgetAccount.balance)}`
-                  : 'Main account (default)'}
-              </Text>
-            </View>
-            <Text style={styles.accountPickerAction}>Change</Text>
-          </TouchableOpacity>
+            style={styles.accountPickerBtn}>
+            <Menu.Item
+              title="Main account (default)"
+              onPress={() => saveWidgetAccount(null)}
+              titleStyle={
+                settings.widget_account_id === null
+                  ? {color: theme.colors.primary, fontWeight: '700'}
+                  : undefined
+              }
+            />
+            {accounts.map(account => (
+              <Menu.Item
+                key={account.id}
+                title={account.name}
+                onPress={() => saveWidgetAccount(account.id)}
+                titleStyle={
+                  settings.widget_account_id === account.id
+                    ? {color: theme.colors.primary, fontWeight: '700'}
+                    : undefined
+                }
+              />
+            ))}
+          </Dropdown>
 
           {settings.widget_account_id !== null && (
             <TouchableOpacity

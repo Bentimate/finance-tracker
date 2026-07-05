@@ -46,14 +46,7 @@ export const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
     backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.border,
   },
   menuContent: {
     backgroundColor: theme.colors.surface,

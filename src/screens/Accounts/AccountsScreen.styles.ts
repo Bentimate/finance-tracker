@@ -43,26 +43,4 @@ export const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  headerButton: {
-    flex: 1,
-  },
-  totalCard: {
-    marginHorizontal: theme.spacing.md,
-    marginTop: theme.spacing.md,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    gap: theme.spacing.xs,
-  },
-  totalBalance: {
-    color: theme.colors.text,
-  },
 });

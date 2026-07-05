@@ -27,7 +27,7 @@ class AccountRepository extends BaseRepository {
   private normalizeChanges(changes: BalanceChange[]): BalanceChange[] {
     const merged = new Map<number, number>();
     for (const change of changes) {
-      if (!change.delta) {
+      if (typeof change.delta !== 'number' || isNaN(change.delta) || change.delta === 0) {
         continue;
       }
       merged.set(change.accountId, (merged.get(change.accountId) ?? 0) + change.delta);
@@ -228,8 +228,8 @@ class AccountRepository extends BaseRepository {
       );
 
       await this.applyBalanceChanges([
-        {accountId: data.from_account_id, delta: -data.amount},
-        {accountId: data.to_account_id, delta: data.amount},
+        {accountId: data.from_account_id, delta: -Math.abs(data.amount)},
+        {accountId: data.to_account_id, delta: Math.abs(data.amount)},
       ]);
     });
   }

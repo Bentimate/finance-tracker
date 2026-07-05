@@ -1,10 +1,10 @@
 import React, {useMemo, useState} from 'react';
-import {TouchableOpacity, View} from 'react-native';
+import {View} from 'react-native';
 import {Menu} from 'react-native-paper';
-import {Typography} from '../../../../components/Typography';
 import {styles} from '../DashboardDateFilter.styles';
 import {useUserPrefs} from '../../../../context/UserPrefContext';
 import {monthRange} from '../../../../repositories/analyticsRepository';
+import {Dropdown} from '../../../../components/Dropdown';
 
 const MONTH_LABELS_FULL = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -69,22 +69,14 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
 
   return (
     <View style={styles.pickerGroup}>
-      {label && (
-        <Typography variant="caption" color="textMuted" style={styles.pickerLabel}>
-          {label}
-        </Typography>
-      )}
       <View style={styles.pickerRow}>
-        <Menu
+        <Dropdown
+          label={label}
+          value={getMonthTitle(month)}
           visible={monthMenuVisible}
           onDismiss={() => setMonthMenuVisible(false)}
-          contentStyle={styles.menuContent}
-          anchor={
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => setMonthMenuVisible(true)} activeOpacity={0.7}>
-              <Typography variant="body" weight="medium">{getMonthTitle(month)}</Typography>
-              <Typography variant="caption" color="textMuted">{'  v'}</Typography>
-            </TouchableOpacity>
-          }>
+          onPress={() => setMonthMenuVisible(true)}
+          style={styles.dropdownButton}>
           {MONTH_LABELS_FULL.map((monthLabel, index) => {
             const monthValue = index + 1;
             const disabled = isMonthDisabled(monthValue);
@@ -105,18 +97,14 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
               />
             );
           })}
-        </Menu>
+        </Dropdown>
 
-        <Menu
+        <Dropdown
+          value={String(year)}
           visible={yearMenuVisible}
           onDismiss={() => setYearMenuVisible(false)}
-          contentStyle={styles.menuContent}
-          anchor={
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => setYearMenuVisible(true)} activeOpacity={0.7}>
-              <Typography variant="body" weight="medium">{year}</Typography>
-              <Typography variant="caption" color="textMuted">{'  v'}</Typography>
-            </TouchableOpacity>
-          }>
+          onPress={() => setYearMenuVisible(true)}
+          style={styles.dropdownButton}>
           {yearOptions.map(yearOption => (
             <Menu.Item
               key={yearOption}
@@ -128,7 +116,7 @@ export const MonthYearPickerGroup: React.FC<Props> = ({
               titleStyle={[styles.menuItemText, year === yearOption && styles.menuItemTextActive]}
             />
           ))}
-        </Menu>
+        </Dropdown>
       </View>
     </View>
   );

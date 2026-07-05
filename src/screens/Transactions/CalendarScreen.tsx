@@ -13,9 +13,7 @@ import {TransactionItem} from './components/TransactionItem';
 import {DateFilter} from './components/DateFilter';
 import {CalendarView} from './components/CalendarView';
 import {DayTransactionsSheet} from './components/DayTransactionsSheet';
-import {RecurringTransactionsSheet} from './components/RecurringTransactionsSheet';
 import {toDateStr} from './helpers';
-import {PlusButton} from '../../components/PlusButton';
 import {styles as plusButtonStyles} from '../../components/styles/PlusButton.styles';
 
 type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'CalendarView'>;
@@ -29,11 +27,25 @@ const CalendarScreen: React.FC = () => {
   const [earliestYear, setEarliestYear] = useState(now.getFullYear());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isSheetVisible, setSheetVisible] = useState(false);
-  const [isRecurringSheetVisible, setRecurringSheetVisible] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const isMounted = React.useRef(true);
+
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    setDailyFlowsCache({});
+    DeviceEventEmitter.emit('AppRefresh');
+    await loadCalendar();
+    setIsLoading(false);
+  }, [loadCalendar]);
+
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
+      navigation.setParams({handleRefresh, isLoading} as any);
+    }
+  }, [navigation, handleRefresh, isLoading, route.params]);
 
   const fetchBounds = useCallback(async () => {
     const year = await transactionRepository.getEarliestYear();
@@ -107,14 +119,16 @@ const CalendarScreen: React.FC = () => {
 
   return (
     <Screen
-      edges={[]}>
-      <DateFilter
-        selectedMonth={selectedMonth}
-        selectedYear={selectedYear}
-        earliestYear={earliestYear}
-        onMonthChange={setSelectedMonth}
-        onYearChange={setSelectedYear}
-      />
+      edges={[]}
+      header={
+        <DateFilter
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          earliestYear={earliestYear}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }>
       <CalendarView
         startDate={new Date(earliestYear, 0, 1)}
         selectedYear={selectedYear}
@@ -133,26 +147,6 @@ const CalendarScreen: React.FC = () => {
         onClose={() => setSheetVisible(false)}
         onTransactionPress={handleTransactionPress}
       />
-
-      <RecurringTransactionsSheet
-        visible={isRecurringSheetVisible}
-        onClose={() => setRecurringSheetVisible(false)}
-        onAdd={() => {
-          setRecurringSheetVisible(false);
-          navigation.navigate('RecurringTransactionForm', undefined);
-        }}
-        onEdit={id => {
-          setRecurringSheetVisible(false);
-          navigation.navigate('RecurringTransactionForm', {recurringTransactionId: id});
-        }}
-      />
-
-      <PlusButton
-        style={plusButtonStyles.fabLeft}
-        label="R"
-        onPress={() => setRecurringSheetVisible(true)}
-      />
-      <PlusButton onPress={() => navigation.navigate('TransactionForm', undefined)} />
     </Screen>
   );
 };

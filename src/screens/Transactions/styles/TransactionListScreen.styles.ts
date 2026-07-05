@@ -37,45 +37,24 @@ export const styles = StyleSheet.create({
       paddingBottom: theme.spacing.sm,
       gap: theme.spacing.sm,
     },
-    accountSelectorRow: {
+    accountSelectorHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginHorizontal: theme.spacing.md,
-      marginBottom: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      paddingTop: theme.spacing.sm,
     },
-    accountSelectorLabel: {
-      marginBottom: 2,
-    },
-    accountSelectorValue: {
-      color: theme.colors.text,
+    dropdownButton: {
+      minWidth: 150,
     },
     manageAccountsBtn: {
-      alignSelf: 'flex-end',
-      paddingHorizontal: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.xs,
-      marginBottom: theme.spacing.sm,
     },
     manageAccountsBtnText: {
       color: theme.colors.primary,
       fontSize: theme.typography.fontSizes.sm,
       fontWeight: theme.typography.fontWeights.semibold as any,
-    },
-    dropdownButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
     },
     menuContent: {
       backgroundColor: theme.colors.surface,
@@ -90,5 +69,18 @@ export const styles = StyleSheet.create({
     dayHeader: {
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.xs,
+    },
+    totalCard: {
+      marginHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      gap: theme.spacing.xs,
+    },
+    totalBalance: {
+      color: theme.colors.text,
     },
   });

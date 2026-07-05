@@ -1,9 +1,9 @@
 import React, {useState, useMemo} from 'react';
-import {View, TouchableOpacity} from 'react-native';
+import {View} from 'react-native';
 import {Menu} from 'react-native-paper';
-import {Typography} from '../../../components/Typography';
 import {theme} from '../../../theme';
 import {styles} from '../styles/TransactionListScreen.styles';
+import {Dropdown} from '../../../components/Dropdown';
 
 interface DateFilterProps {
   selectedMonth: number;
@@ -41,23 +41,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   return (
     <View style={styles.monthSelectorRow}>
       {/* Month picker */}
-      <Menu
+      <Dropdown
+        value={MONTH_LABELS[selectedMonth - 1]}
         visible={monthMenuVisible}
         onDismiss={() => setMonthMenuVisible(false)}
-        contentStyle={styles.menuContent}
-        anchor={
-          <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setMonthMenuVisible(true)}
-            activeOpacity={0.7}>
-            <Typography variant="body" weight="medium">
-              {MONTH_LABELS[selectedMonth - 1]}
-            </Typography>
-            <Typography variant="caption" color="textMuted">
-              {'  ▾'}
-            </Typography>
-          </TouchableOpacity>
-        }>
+        onPress={() => setMonthMenuVisible(true)}
+        style={styles.dropdownButton}>
         {MONTH_LABELS.map((label, i) => (
           <Menu.Item
             key={label}
@@ -73,26 +62,15 @@ export const DateFilter: React.FC<DateFilterProps> = ({
             }
           />
         ))}
-      </Menu>
+      </Dropdown>
 
       {/* Year picker */}
-      <Menu
+      <Dropdown
+        value={String(selectedYear)}
         visible={yearMenuVisible}
         onDismiss={() => setYearMenuVisible(false)}
-        contentStyle={styles.menuContent}
-        anchor={
-          <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setYearMenuVisible(true)}
-            activeOpacity={0.7}>
-            <Typography variant="body" weight="medium">
-              {selectedYear}
-            </Typography>
-            <Typography variant="caption" color="textMuted">
-              {'  ▾'}
-            </Typography>
-          </TouchableOpacity>
-        }>
+        onPress={() => setYearMenuVisible(true)}
+        style={styles.dropdownButton}>
         {yearOptions.map(y => (
           <Menu.Item
             key={y}
@@ -108,7 +86,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
             }
           />
         ))}
-      </Menu>
+      </Dropdown>
     </View>
   );
 };

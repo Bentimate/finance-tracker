@@ -2,6 +2,7 @@ import React, {useState, useCallback, useEffect, useMemo} from 'react';
 import {View, SectionList, DeviceEventEmitter, TouchableOpacity} from 'react-native';
 import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {Menu} from 'react-native-paper';
 
 import {Transaction, AccountBalance} from '../../types';
 import {transactionRepository} from '../../repositories/transactionRepository';
@@ -11,26 +12,24 @@ import {Screen} from '../../components/Screen';
 import {styles} from './styles/TransactionListScreen.styles';
 import {AccountStackParamList, TransactionStackParamList} from '../../navigation/types';
 import {useUserPrefs} from '../../context/UserPrefContext';
-import {AccountPickerSheet} from '../../components/AccountPickerSheet';
+import {RecurringTransactionsSheet} from './components/RecurringTransactionsSheet';
+import {Dropdown} from '../../components/Dropdown';
 
 import {TransactionItem} from './components/TransactionItem';
 import {toDateStr, groupByDate, formatDateLabel, TransactionSection} from './helpers';
 import {PlusButton} from '../../components/PlusButton';
 import {styles as plusButtonStyles} from '../../components/styles/PlusButton.styles';
 import {EmptyState} from '../../components/EmptyState';
+import {formatCurrency} from '../../utils/formatCurrency';
+import {theme} from '../../theme';
 
-type NavigationProp = NativeStackNavigationProp<TransactionStackParamList, 'TransactionForm'> &
-  NativeStackNavigationProp<AccountStackParamList, 'AccountList'>;
+type NavigationProp = NativeStackNavigationProp<AccountStackParamList, 'AccountList'>;
 
 const navigateToTransactionForm = (
   navigation: NavigationProp,
   params: {transactionId?: number; accountId?: number} | undefined,
 ) => {
-  const parent = navigation.getParent?.();
-  (parent as any)?.navigate('Calendar', {
-    screen: 'TransactionForm',
-    params,
-  });
+  navigation.navigate('TransactionForm', params);
 };
 
 const TransactionListScreen: React.FC = () => {
@@ -39,9 +38,23 @@ const TransactionListScreen: React.FC = () => {
   const [accounts, setAccounts] = useState<AccountBalance[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [isAccountPickerVisible, setAccountPickerVisible] = useState(false);
+  const [isRecurringSheetVisible, setRecurringSheetVisible] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
+
+  const handleRefresh = useCallback(async () => {
+    DeviceEventEmitter.emit('AppRefresh');
+    await loadTransactions();
+  }, [loadTransactions]);
+
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.handleRefresh !== handleRefresh || params?.isLoading !== isLoading) {
+      navigation.setParams({handleRefresh, isLoading} as any);
+    }
+  }, [navigation, handleRefresh, isLoading, route.params]);
+
   const accountId = (route.params as any)?.accountId as number | undefined;
   const {settings, updateSettings, loading: prefsLoading} = useUserPrefs();
   const [scopeReady, setScopeReady] = useState(false);
@@ -68,32 +81,25 @@ const TransactionListScreen: React.FC = () => {
 
   useEffect(() => {
     if (accountId !== undefined) {
-      if (selectedAccountId !== accountId) {
-        setSelectedAccountId(accountId);
-      }
-      if (settings.transaction_scope_account_id !== accountId) {
-        void updateSettings({transaction_scope_account_id: accountId});
-      }
-      if (!scopeReady) {
-        setScopeReady(true);
-      }
+      setSelectedAccountId(accountId);
+      void updateSettings({transaction_scope_account_id: accountId});
+      // Clear the param so it doesn't force this account if we change it manually later
+      navigation.setParams({accountId: undefined} as any);
+      setScopeReady(true);
       return;
     }
 
-    if (!prefsLoading && selectedAccountId !== settings.transaction_scope_account_id) {
+    if (!prefsLoading) {
       setSelectedAccountId(settings.transaction_scope_account_id);
-    }
-    if (!prefsLoading && !scopeReady) {
       setScopeReady(true);
     }
-  }, [
-    accountId,
-    prefsLoading,
-    scopeReady,
-    selectedAccountId,
-    settings.transaction_scope_account_id,
-    updateSettings,
-  ]);
+  }, [accountId, prefsLoading, navigation, updateSettings]);
+
+  useEffect(() => {
+    if (!prefsLoading && accountId === undefined) {
+      setSelectedAccountId(settings.transaction_scope_account_id);
+    }
+  }, [settings.transaction_scope_account_id, prefsLoading, accountId]);
 
   useEffect(() => {
     if (selectedAccountId === null) {
@@ -152,50 +158,95 @@ const TransactionListScreen: React.FC = () => {
     [accounts, selectedAccountId],
   );
 
+  const totalBalance = useMemo(() => {
+    if (selectedAccountId) {
+      return selectedAccount?.balance ?? 0;
+    }
+    return accounts.reduce((sum, account) => sum + account.balance, 0);
+  }, [accounts, selectedAccountId, selectedAccount]);
+
   const scopeLabel = selectedAccount ? selectedAccount.name : 'All accounts';
+  const balanceLabel = selectedAccountId ? 'Account balance' : 'Total balance';
 
   return (
     <Screen
       edges={[]}
       header={
         <View>
-          <TouchableOpacity
-            style={styles.accountSelectorRow}
-            onPress={() => setAccountPickerVisible(true)}
-            activeOpacity={0.75}>
-            <View>
-              <Typography variant="caption" color="textMuted" style={styles.accountSelectorLabel}>
-                Viewing
+          <View style={styles.accountSelectorHeader}>
+            <Dropdown
+              label="Viewing"
+              value={scopeLabel}
+              visible={isAccountPickerVisible}
+              onDismiss={() => setAccountPickerVisible(false)}
+              onPress={() => setAccountPickerVisible(true)}
+              style={styles.dropdownButton}>
+              <Menu.Item
+                title="All accounts"
+                onPress={async () => {
+                  setSelectedAccountId(null);
+                  setAccountPickerVisible(false);
+                  await updateSettings({transaction_scope_account_id: null});
+                }}
+                titleStyle={
+                  selectedAccountId === null
+                    ? {color: theme.colors.primary, fontWeight: '700'}
+                    : undefined
+                }
+              />
+              {accounts.map(account => (
+                <Menu.Item
+                  key={account.id}
+                  title={account.name}
+                  onPress={async () => {
+                    setSelectedAccountId(account.id);
+                    setAccountPickerVisible(false);
+                    await updateSettings({transaction_scope_account_id: account.id});
+                  }}
+                  titleStyle={
+                    selectedAccountId === account.id
+                      ? {color: theme.colors.primary, fontWeight: '700'}
+                      : undefined
+                  }
+                />
+              ))}
+            </Dropdown>
+            <TouchableOpacity
+              style={styles.manageAccountsBtn}
+              onPress={() => navigation.navigate('ManageAccounts')}
+              activeOpacity={0.75}>
+              <Typography variant="caption" color="primary" weight="semibold" style={styles.manageAccountsBtnText}>
+                Manage
               </Typography>
-              <Typography variant="body" weight="medium" style={styles.accountSelectorValue}>
-                {scopeLabel}
-              </Typography>
-            </View>
-            <Typography variant="caption" color="primary" weight="semibold">
-              Change
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.totalCard}>
+            <Typography variant="caption" color="textMuted">
+              {balanceLabel}
             </Typography>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.manageAccountsBtn}
-            onPress={() => navigation.navigate('ManageAccounts')}
-            activeOpacity={0.75}>
-            <Typography variant="caption" color="primary" weight="semibold" style={styles.manageAccountsBtnText}>
-              Manage accounts
+            <Typography variant="h2" weight="bold" style={styles.totalBalance}>
+              {formatCurrency(totalBalance)}
             </Typography>
-          </TouchableOpacity>
+          </View>
         </View>
       }>
-      <AccountPickerSheet
-        visible={isAccountPickerVisible}
-        title="Transaction Scope"
-        accounts={accounts}
-        selectedAccountId={selectedAccountId}
-        onSelectAccount={async nextAccountId => {
-          setSelectedAccountId(nextAccountId);
-          setAccountPickerVisible(false);
-          await updateSettings({transaction_scope_account_id: nextAccountId});
+      <RecurringTransactionsSheet
+        visible={isRecurringSheetVisible}
+        onClose={() => setRecurringSheetVisible(false)}
+        onAdd={() => {
+          setRecurringSheetVisible(false);
+          navigation.navigate('RecurringTransactionForm', {
+            accountId: selectedAccountId ?? undefined,
+          });
         }}
-        onClose={() => setAccountPickerVisible(false)}
+        onEdit={id => {
+          setRecurringSheetVisible(false);
+          navigation.navigate('RecurringTransactionForm', {
+            recurringTransactionId: id,
+            accountId: selectedAccountId ?? undefined,
+          });
+        }}
       />
 
       <SectionList
@@ -214,6 +265,11 @@ const TransactionListScreen: React.FC = () => {
         ListEmptyComponent={<EmptyState message="No transactions for this period." />}
       />
 
+      <PlusButton
+        style={plusButtonStyles.fabLeft}
+        label="R"
+        onPress={() => setRecurringSheetVisible(true)}
+      />
       <PlusButton
         onPress={() =>
           navigateToTransactionForm(navigation, {accountId: selectedAccountId ?? undefined})

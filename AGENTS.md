@@ -194,3 +194,26 @@ See `nested-categories-plan.md` for the full step-by-step breakdown.
 - Do not use magic values
 - ALWAYS separate styles from components ie. create all relevant styles in a separate stylesheet and inject them into the component when needed.
 - break down big components into smaller individual components
+
+---
+
+## Common Pitfalls & Navigation Patterns
+
+### Preventing Navigation "Flashes"
+When a screen's state is driven by both **Route Parameters** (e.g., from a 'Manage' screen) and **Local/Global State** (e.g., a picker or User Preferences), always "consume" the route parameter once and then clear it.
+
+**Problem:** Changing an account via a local picker would update the state, but a `useEffect` watching `route.params` would see the old parameter and immediately revert the state, causing a visual flash.
+
+**Solution:**
+```typescript
+useEffect(() => {
+  if (route.params?.accountId !== undefined) {
+    // 1. Apply the parameter to state/preferences
+    setSelectedAccountId(route.params.accountId);
+    
+    // 2. IMMEDIATELY clear the parameter to prevent revert-loops
+    navigation.setParams({ accountId: undefined } as any);
+    return;
+  }
+}, [route.params?.accountId]);
+```
