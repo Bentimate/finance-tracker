@@ -213,7 +213,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        initialRouteName="Calendar"
+        initialRouteName="Accounts"
         screenOptions={({route}) => ({
           tabBarIcon: ({color, size}) => <TabIcon label={route.name} color={color} size={size} />,
           tabBarActiveTintColor: theme.colors.primary,

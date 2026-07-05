@@ -24,6 +24,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-paper": "^5.15.1",
     "react-native-reanimated": "^4.3.0",
+    "react-native-restart": "^0.0.28",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.6.0",
     "react-native-svg": "^15.11.1",

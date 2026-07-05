@@ -77,9 +77,14 @@ class Database {
 
   private clearHandle(): void {
     try {
-      (this.dbInstance as any)?.close?.();
+      this.dbInstance?.close();
     } catch (_e) {}
     this.dbInstance = null;
+  }
+
+  public async close(): Promise<void> {
+    this.clearHandle();
+    this.state = 'idle';
   }
 
   public async init(): Promise<void> {

@@ -6,8 +6,10 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
+  Platform,
 } from 'react-native';
 import {useExport} from '../../hooks/useExport';
+import {useBackup} from '../../hooks/useBackup';
 import {styles} from './SettingsScreen.styles';
 import {MonthRow} from './components/MonthRow';
 import {prevMonth, nextMonth} from './helpers';
@@ -34,6 +36,14 @@ const SettingsScreen: React.FC = () => {
 
   const {status, runExport, reset} = useExport();
   const isLoading = status.kind === 'loading';
+
+  const {
+    status: backupStatus,
+    runBackup: runDbBackup,
+    runRestore: runDbRestore,
+    reset: resetBackup,
+  } = useBackup();
+  const isBackupLoading = backupStatus.kind === 'loading';
 
   useEffect(() => {
     setPayDayInput(settings.pay_cycle_day ? settings.pay_cycle_day.toString() : '');
@@ -66,6 +76,21 @@ const SettingsScreen: React.FC = () => {
       ]);
     }
   }, [status.kind, year, month, reset]);
+
+  useEffect(() => {
+    if (backupStatus.kind === 'success') {
+      Alert.alert(
+        'Backup Complete',
+        `Database backup saved successfully to:\n\n${backupStatus.path}`,
+        [{text: 'OK', onPress: resetBackup}],
+      );
+    }
+    if (backupStatus.kind === 'error') {
+      Alert.alert('Backup Failed', backupStatus.message, [
+        {text: 'OK', onPress: resetBackup},
+      ]);
+    }
+  }, [backupStatus.kind, backupStatus.path, resetBackup]);
 
   const handleExport = () => {
     runExport(year, month);
@@ -113,6 +138,17 @@ const SettingsScreen: React.FC = () => {
   const saveWidgetAccount = async (accountId: number | null) => {
     await updateSettings({widget_account_id: accountId});
     setWidgetAccountPickerVisible(false);
+  };
+
+  const handleRestore = () => {
+    Alert.alert(
+      'Restore Database',
+      'This will replace all your current data with the backup file. This action cannot be undone. Are you sure?',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {text: 'Restore', style: 'destructive', onPress: runDbRestore},
+      ],
+    );
   };
 
   return (
@@ -233,6 +269,45 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.exportNote}>
             Files are saved to <Text style={styles.exportNoteMono}>Downloads/</Text> on your device
             and are not uploaded anywhere.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Database Backup</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Backup & Restore</Text>
+          <Text style={styles.cardBody}>
+            Manage your local database backups. Backing up creates a copy with today's date.
+            Restoring will replace your current data with the selected backup file.
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.exportBtn, isBackupLoading && styles.exportBtnDisabled]}
+            onPress={runDbBackup}
+            disabled={isBackupLoading}
+            activeOpacity={0.75}>
+            {isBackupLoading ? (
+              <ActivityIndicator color="#ffffff" size="small" style={styles.btnSpinner} />
+            ) : null}
+            <Text style={styles.exportBtnText}>
+              {isBackupLoading ? 'Backing up…' : 'Backup Database'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.resetBtn, isBackupLoading && {opacity: 0.6}]}
+            onPress={handleRestore}
+            disabled={isBackupLoading}>
+            <Text style={styles.resetBtnText}>Restore from Backup</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.exportNote}>
+            Backups are saved to{' '}
+            <Text style={styles.exportNoteMono}>
+              {Platform.OS === 'android' ? 'Downloads/' : 'Documents/'}
+            </Text>{' '}
+            on your device.
           </Text>
         </View>
       </View>

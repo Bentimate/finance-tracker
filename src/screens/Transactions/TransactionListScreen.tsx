@@ -102,7 +102,7 @@ const TransactionListScreen: React.FC = () => {
   }, [settings.transaction_scope_account_id, prefsLoading, accountId]);
 
   useEffect(() => {
-    if (selectedAccountId === null) {
+    if (selectedAccountId === null || accounts.length === 0) {
       return;
     }
     const selectedStillExists = accounts.some(account => account.id === selectedAccountId);

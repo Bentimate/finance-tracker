@@ -42,7 +42,7 @@ function withDb(Component) {
 
     if (error) {
       // Show error state if DB cannot be opened at all.
-      const {View, Text, StyleSheet} = require('react-native');
+      const {View, Text} = require('react-native');
       return (
         <View style={errStyles.container}>
           <Text style={errStyles.title}>Database Error</Text>
