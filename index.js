@@ -10,6 +10,7 @@ import {AppRegistry} from 'react-native';
 import React from 'react';
 import App from './App';
 import {database} from './src/database/db';
+import {recurringTransactionRepository} from './src/repositories/recurringTransactionRepository';
 import { name as appName } from './app.json';
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,7 @@ function withDb(Component) {
 
     React.useEffect(() => {
       database.init()
+        .then(() => recurringTransactionRepository.generateDueTransactions())
         .then(() => setReady(true))
         .catch((e) => {
           console.error('Database initialization failed:', e);

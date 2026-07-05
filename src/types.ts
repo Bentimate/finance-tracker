@@ -34,6 +34,8 @@ export interface Transaction {
   date: string;
   category_id: number;
   note?: string | null;
+  recurring_transaction_id?: number | null;
+  recurring_occurrence_date?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -92,4 +94,35 @@ export interface DailyNetFlow {
 
 export interface UserSettings {
   pay_cycle_day: number | null;
+}
+
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export interface RecurringTransaction {
+  id: number;
+  amount: number;
+  type: 'income' | 'expense';
+  category_id: number;
+  note?: string | null;
+  frequency: RecurrenceFrequency;
+  interval_value: number | null;
+  next_occurrence: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  category_name?: string;
+  category_color?: string;
+  category_icon?: string | null;
+  category_parent_name?: string;
+}
+
+export interface CreateRecurringTransactionData {
+  amount: number;
+  type: 'income' | 'expense';
+  category_id: number;
+  note?: string;
+  frequency: RecurrenceFrequency;
+  interval_value?: number | null;
+  next_occurrence: string;
 }

@@ -30,8 +30,10 @@ export const BudgetItem: React.FC<BudgetItemProps> = ({item, onPress}) => {
       <View style={styles.budgetTop}>
         <View>
           <View style={styles.categoryInfo}>
-            <ColorDot color={item.category_color} />
-            <Typography variant="body" weight="bold" style={styles.categoryName}>{item.category_name}</Typography>
+            <ColorDot color={item.category_color ?? theme.colors.primary} />
+            <Typography variant="body" weight="bold" style={styles.categoryName}>
+              {item.category_name ?? 'Uncategorised'}
+            </Typography>
           </View>
           <Typography variant="caption" color="textMuted" style={styles.periodLabel}>
             {item.period.toUpperCase()}

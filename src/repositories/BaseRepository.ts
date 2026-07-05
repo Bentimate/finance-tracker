@@ -66,7 +66,7 @@ export abstract class BaseRepository {
     };
   }
 
-  protected async runQuery(statement: string, params: unknown[] = []): Promise<QueryResult> {
+  protected async runQuery(statement: string, params: any[] = []): Promise<QueryResult> {
     try {
       await database.ensureReady();
       return await database.instance.execute(statement, params);

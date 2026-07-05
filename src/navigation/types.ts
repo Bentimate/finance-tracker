@@ -8,6 +8,7 @@ export type CategoryStackParamList = {
 export type TransactionStackParamList = {
   TransactionList: undefined;
   TransactionForm: { transactionId?: number };
+  RecurringTransactionForm: { recurringTransactionId?: number };
 };
 
 export type BudgetStackParamList = {
